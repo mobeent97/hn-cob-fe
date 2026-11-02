@@ -310,9 +310,9 @@ legend {
     color: var(--muted);
   }
 }
-.select.kind {
+app-select.kind {
   width: 160px;
-  height: 30px;
+  --control-h: 30px; // the trigger reads the control-height token
 }
 td.keep-right {
   width: 40px;
@@ -806,7 +806,7 @@ td.keep-right {
     gap: 12px;
     flex-wrap: wrap;
   }
-  .select {
+  app-select {
     width: calc((100% - 32px) / 3);
     min-width: 220px;
   }

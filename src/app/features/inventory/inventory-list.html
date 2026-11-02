@@ -37,10 +37,10 @@
                  [value]="q()" (input)="q.set($any($event.target).value)" />
         </label>
         <label class="sr-only" for="inv-pkg">Package</label>
-        <select id="inv-pkg" class="select pkg" [value]="pkg()" (change)="pkg.set($any($event.target).value)">
-          <option value="all">All packages</option>
-          @for (p of packages; track p) { <option [value]="p">{{ p }}</option> }
-        </select>
+        <app-select id="inv-pkg" class="pkg" [value]="pkg()" (valueChange)="pkg.set($event)">
+          <app-option value="all">All packages</app-option>
+          @for (p of packages; track p) { <app-option [value]="p">{{ p }}</app-option> }
+        </app-select>
         @if (orgs.showOrg()) { <app-org-filter [(value)]="orgId" /> }
       </div>
       <div class="right">
@@ -179,13 +179,13 @@
   <div class="stack-form">
     <div class="field">
       <label for="alloc-customer">Customer</label>
-      <select id="alloc-customer" class="select" [class.invalid]="allocTouched() && allocCustomer() == null"
-              [value]="allocCustomer() ?? ''" (change)="allocCustomer.set($any($event.target).value ? +$any($event.target).value : null)">
-        <option value="" disabled>Choose a customer</option>
+      <app-select id="alloc-customer" [class.invalid]="allocTouched() && allocCustomer() == null"
+              [value]="allocCustomer() ?? ''" (valueChange)="allocCustomer.set($event ? +$event : null)">
+        <app-option value="" disabled>Choose a customer</app-option>
         @for (c of allocCustomers(); track c.id) {
-          <option [value]="c.id">{{ c.company }} · {{ c.package }}</option>
+          <app-option [value]="c.id">{{ c.company }} · {{ c.package }}</app-option>
         }
-      </select>
+      </app-select>
       @if (allocTouched() && allocCustomer() == null) {
         <span class="error">Choose who receives these devices.</span>
       } @else {
@@ -275,13 +275,13 @@
     </div>
     <div class="field full">
       <label for="add-type">Device type<span class="req">*</span></label>
-      <select id="add-type" class="select" [class.invalid]="addTried() && addErrors().type"
-              [value]="form.typeId() ?? ''" (change)="form.typeId.set($any($event.target).value ? +$any($event.target).value : null)">
-        <option value="" disabled>Choose a type</option>
+      <app-select id="add-type" [class.invalid]="addTried() && addErrors().type"
+              [value]="form.typeId() ?? ''" (valueChange)="form.typeId.set($event ? +$event : null)">
+        <app-option value="" disabled>Choose a type</app-option>
         @for (t of store.deviceTypes(); track t.id) {
-          <option [value]="t.id">{{ t.name }} · {{ t.make }} {{ t.category }}</option>
+          <app-option [value]="t.id">{{ t.name }} · {{ t.make }} {{ t.category }}</app-option>
         }
-      </select>
+      </app-select>
       @if (addTried() && addErrors().type) { <span class="error">{{ addErrors().type }}</span> }
     </div>
     <div class="field">

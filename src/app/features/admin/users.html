@@ -39,16 +39,16 @@
         <span class="count num">{{ rows().length }} {{ rows().length === 1 ? 'user' : 'users' }}</span>
         @if (allOrgs()) {
           <label class="sr-only" for="u-org-f">Organization</label>
-          <select id="u-org-f" class="select auto" [value]="org()" (change)="org.set($any($event.target).value === 'all' ? 'all' : +$any($event.target).value); group.set('all')">
-            <option value="all">All organizations</option>
-            @for (o of orgOptions(); track o.id) { <option [value]="o.id" [selected]="org() === o.id">{{ o.name }}</option> }
-          </select>
+          <app-select id="u-org-f" class="auto" [value]="org()" (valueChange)="org.set($event === 'all' ? 'all' : +$event); group.set('all')">
+            <app-option value="all">All organizations</app-option>
+            @for (o of orgOptions(); track o.id) { <app-option [value]="o.id" [selected]="org() === o.id">{{ o.name }}</app-option> }
+          </app-select>
         }
         <label class="sr-only" for="grp">Role</label>
-        <select id="grp" class="select auto" [value]="group()" (change)="group.set($any($event.target).value)">
-          <option value="all">All roles</option>
-          @for (g of roleNames(); track g) { <option [value]="g" [selected]="group() === g">{{ g }}</option> }
-        </select>
+        <app-select id="grp" class="auto" [value]="group()" (valueChange)="group.set($event)">
+          <app-option value="all">All roles</app-option>
+          @for (g of roleNames(); track g) { <app-option [value]="g" [selected]="group() === g">{{ g }}</app-option> }
+        </app-select>
       </div>
     </div>
 
@@ -149,15 +149,15 @@
     @if (pickOrg()) {
       <div class="field full">
         <label for="u-org">Organization<span class="req">*</span></label>
-        <select id="u-org" class="select" [value]="draft().orgId ?? ''" (change)="setOrg($any($event.target).value)"
+        <app-select id="u-org" [value]="draft().orgId ?? ''" (valueChange)="setOrg($event)"
                 [class.invalid]="tried() && errors().orgId">
-          <option value="" disabled [selected]="draft().orgId == null">Choose an organization</option>
+          <app-option value="" disabled [selected]="draft().orgId == null">Choose an organization</app-option>
           @for (o of orgChoices(); track o.id) {
-            <option [value]="o.id" [selected]="draft().orgId === o.id">
+            <app-option [value]="o.id" [selected]="draft().orgId === o.id">
               {{ o.name }}@if (o.limits.maxUsers != null) { · {{ seatsUsed(o.id) }} of {{ o.limits.maxUsers }} seats }
-            </option>
+            </app-option>
           }
-        </select>
+        </app-select>
         @if (tried() && errors().orgId) { <span class="error">{{ errors().orgId }}</span> }
         @else if (draft().orgId != null && errors().orgId) { <span class="error">{{ errors().orgId }}</span> }
         @else { <span class="hint">They only see this organization's data, through its roles.</span> }
@@ -183,10 +183,10 @@
     </div>
     <div class="field">
       <label for="u-mgr">Manager</label>
-      <select id="u-mgr" class="select" [value]="draft().manager" [disabled]="draft().orgId == null" (change)="set('manager', $any($event.target).value)">
-        <option value="">No manager</option>
-        @for (m of managers(); track m.id) { <option [value]="m.name" [selected]="draft().manager === m.name">{{ m.name }}</option> }
-      </select>
+      <app-select id="u-mgr" [value]="draft().manager" [disabled]="draft().orgId == null" (valueChange)="set('manager', $event)">
+        <app-option value="">No manager</app-option>
+        @for (m of managers(); track m.id) { <app-option [value]="m.name" [selected]="draft().manager === m.name">{{ m.name }}</app-option> }
+      </app-select>
     </div>
     <fieldset class="field full">
       <legend class="label">Roles<span class="req">*</span></legend>

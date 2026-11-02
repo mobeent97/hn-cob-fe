@@ -41,9 +41,9 @@
             <div class="field">
               <label for="pf-phone">Mobile</label>
               <div class="input-group">
-                <select class="select" aria-label="Country code" [value]="dial()" (change)="dial.set($any($event.target).value)">
-                  @for (c of store.countries; track c.code) { <option [value]="c.dial" [selected]="c.dial === dial()">{{ c.dial }}</option> }
-                </select>
+                <app-select aria-label="Country code" [value]="dial()" (valueChange)="dial.set($event)">
+                  @for (c of store.countries; track c.code) { <app-option [value]="c.dial" [selected]="c.dial === dial()">{{ c.dial }}</app-option> }
+                </app-select>
                 <input id="pf-phone" class="input num" inputmode="tel" autocomplete="tel-national" [value]="phone()" (input)="phone.set($any($event.target).value)"
                        [class.invalid]="detailsTried() && detailErrors().phone" />
               </div>

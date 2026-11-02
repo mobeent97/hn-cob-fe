@@ -3,6 +3,7 @@ import { Store } from '../core/data/store';
 import { Access } from '../core/access/access';
 import { Organization } from '../core/data/models';
 import { Icon } from '../shared/ui/icon';
+import { Select, SelectOption } from '../shared/ui/select';
 
 /**
  * Tenant context for list screens. `showOrg` is true only when a platform user looks at
@@ -41,15 +42,16 @@ export class OrgTag {
 /** Toolbar select: All organizations or one. Value null = all. */
 @Component({
   selector: 'app-org-filter',
+  imports: [Select, SelectOption],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <label class="sr-only" [attr.for]="fid">Organization</label>
-    <select [id]="fid" class="select" [value]="value() ?? ''" (change)="pick($any($event.target).value)">
-      <option value="">All organizations</option>
+    <app-select [id]="fid" [value]="value() ?? ''" (valueChange)="pick($event)">
+      <app-option value="">All organizations</app-option>
       @for (o of orgs(); track o.id) {
-        <option [value]="o.id" [selected]="value() === o.id">{{ o.name }}</option>
+        <app-option [value]="o.id" [selected]="value() === o.id">{{ o.name }}</app-option>
       }
-    </select>
+    </app-select>
   `,
 })
 export class OrgFilter {

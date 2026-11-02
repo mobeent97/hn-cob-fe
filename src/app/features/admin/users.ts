@@ -10,6 +10,7 @@ import { Menu, MenuItem } from '../../shared/ui/menu';
 import { Dialog } from '../../shared/ui/dialog';
 import { Toaster } from '../../shared/ui/toast';
 import { simulateLoad } from '../../shared/ui/loading';
+import { Select, SelectOption } from '../../shared/ui/select';
 
 type View = 'all' | 'Active' | 'Inactive' | 'never';
 type Draft = { id: number | null; orgId: number | null; name: string; email: string; username: string; groups: string[]; manager: string };
@@ -30,7 +31,7 @@ export const isAdminRole = (g: Group) => g.permissions['Users'] === 'RW' && g.st
  */
 @Component({
   selector: 'app-users',
-  imports: [Icon, Tabs, Pager, Menu, Dialog, RelativePipe, TonePipe],
+  imports: [Select, SelectOption, Icon, Tabs, Pager, Menu, Dialog, RelativePipe, TonePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './users.html',
   styleUrl: './users.scss',

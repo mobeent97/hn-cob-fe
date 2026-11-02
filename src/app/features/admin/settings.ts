@@ -7,6 +7,7 @@ import { KIND_META } from '../../core/notifications/notification-feed';
 import { Toaster } from '../../shared/ui/toast';
 import { simulateLoad } from '../../shared/ui/loading';
 import { ReadOnlyNote, writeAccess } from '../tenancy';
+import { Select, SelectOption } from '../../shared/ui/select';
 
 type Section = keyof PortalSettings;
 type Ranges<T> = Partial<Record<keyof T, [number, number]>>;
@@ -49,7 +50,7 @@ const minutes = (t: string) => {
  */
 @Component({
   selector: 'app-settings',
-  imports: [ReadOnlyNote],
+  imports: [Select, SelectOption, ReadOnlyNote],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './settings.html',
   styleUrl: './settings.scss',

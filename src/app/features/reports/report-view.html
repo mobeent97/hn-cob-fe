@@ -21,19 +21,19 @@
     <div class="filters">
       <div class="left no-print" role="group" aria-label="Report filters">
         <label class="sr-only" for="rv-range">Date range</label>
-        <select id="rv-range" class="select" (change)="setRange($any($event.target).value)">
-          @for (r of ranges(); track r.id) { <option [value]="r.id" [selected]="r.id === filters().range">{{ r.label }}</option> }
-        </select>
+        <app-select id="rv-range" (valueChange)="setRange($event)">
+          @for (r of ranges(); track r.id) { <app-option [value]="r.id" [selected]="r.id === filters().range">{{ r.label }}</app-option> }
+        </app-select>
         <label class="sr-only" for="rv-country">Country</label>
-        <select id="rv-country" class="select" (change)="setFilter('country', $any($event.target).value)">
-          <option value="all" [selected]="filters().country === 'all'">All countries</option>
-          @for (c of countries; track c.code) { <option [value]="c.code" [selected]="c.code === filters().country">{{ c.name }}</option> }
-        </select>
+        <app-select id="rv-country" (valueChange)="setFilter('country', $event)">
+          <app-option value="all" [selected]="filters().country === 'all'">All countries</app-option>
+          @for (c of countries; track c.code) { <app-option [value]="c.code" [selected]="c.code === filters().country">{{ c.name }}</app-option> }
+        </app-select>
         <label class="sr-only" for="rv-pkg">Package</label>
-        <select id="rv-pkg" class="select" (change)="setFilter('pkg', $any($event.target).value)">
-          <option value="all" [selected]="filters().pkg === 'all'">All packages</option>
-          @for (p of packages; track p) { <option [value]="p" [selected]="p === filters().pkg">{{ p }}</option> }
-        </select>
+        <app-select id="rv-pkg" (valueChange)="setFilter('pkg', $event)">
+          <app-option value="all" [selected]="filters().pkg === 'all'">All packages</app-option>
+          @for (p of packages; track p) { <app-option [value]="p" [selected]="p === filters().pkg">{{ p }}</app-option> }
+        </app-select>
         @if (!isDefault()) { <button class="btn ghost sm" (click)="reset()">Reset</button> }
       </div>
       <p class="print-only scope">{{ summary() }}</p>
@@ -107,16 +107,7 @@
                 <app-line-chart [data]="r.chart.data" [compare]="r.chart.compare" [height]="240" [label]="r.chartTitle" />
               }
               @case ('hbars') {
-                <ul class="bar-list">
-                  @for (b of r.chart.rows; track b.label) {
-                    <li>
-                      <span class="name">{{ b.label }}</span>
-                      <span class="track"><span [style.width.%]="b.pct"></span></span>
-                      <span class="val num">{{ b.display }}</span>
-                      <span class="aside num">{{ b.sub ?? '' }}</span>
-                    </li>
-                  }
-                </ul>
+                <app-hbar-chart [rows]="r.chart.rows" [label]="r.chartTitle" [labelWidth]="210" />
               }
               @case ('ring') {
                 <div class="ring-wrap">

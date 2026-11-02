@@ -30,15 +30,15 @@
                    [value]="q()" (input)="q.set($any($event.target).value)" />
           </label>
           <label class="sr-only" for="qr-type">Device type</label>
-          <select id="qr-type" class="select auto" [value]="typeId()" (change)="typeId.set($any($event.target).value === 'all' ? 'all' : +$any($event.target).value)">
-            <option value="all">All types</option>
-            @for (t of store.deviceTypes(); track t.id) { <option [value]="t.id">{{ t.name }}</option> }
-          </select>
+          <app-select id="qr-type" class="auto" [value]="typeId()" (valueChange)="typeId.set($event === 'all' ? 'all' : +$event)">
+            <app-option value="all">All types</app-option>
+            @for (t of store.deviceTypes(); track t.id) { <app-option [value]="t.id">{{ t.name }}</app-option> }
+          </app-select>
           <label class="sr-only" for="qr-status">Status</label>
-          <select id="qr-status" class="select auto" [value]="status()" (change)="status.set($any($event.target).value)">
-            <option value="all">All statuses</option>
-            @for (s of statuses; track s) { <option [value]="s">{{ label[s] }}</option> }
-          </select>
+          <app-select id="qr-status" class="auto" [value]="status()" (valueChange)="status.set($event)">
+            <app-option value="all">All statuses</app-option>
+            @for (s of statuses; track s) { <app-option [value]="s">{{ label[s] }}</app-option> }
+          </app-select>
         </div>
         <div class="right">
           <span class="count num">{{ rows().length }} {{ rows().length === 1 ? 'device' : 'devices' }}</span>

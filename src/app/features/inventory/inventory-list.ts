@@ -15,6 +15,7 @@ import { OrgFilter, OrgTag, ReadOnlyNote, orgContext, writeAccess } from '../ten
 import { simulateLoad } from '../../shared/ui/loading';
 import { STATUS_LABEL } from './device-status';
 import { DEVICE_ID_RE, IMEI_RE, IMPORT_COLUMNS, ImportRow, MSISDN_RE, SIM_RE, toDevice, validateImport } from './device-import';
+import { Select, SelectOption } from '../../shared/ui/select';
 
 type StatusFilter = DeviceStatus | 'all';
 interface Owner {
@@ -42,7 +43,7 @@ const FROM: Record<BulkAction | 'allocate', DeviceStatus[]> = {
  */
 @Component({
   selector: 'app-inventory-list',
-  imports: [RouterLink, Icon, Pager, Menu, Dialog, AnimatedNumber, DatePipe, DateTimePipe, RelativePipe, TonePipe, OrgTag, OrgFilter, ReadOnlyNote],
+  imports: [Select, SelectOption, RouterLink, Icon, Pager, Menu, Dialog, AnimatedNumber, DatePipe, DateTimePipe, RelativePipe, TonePipe, OrgTag, OrgFilter, ReadOnlyNote],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './inventory-list.html',
   styleUrl: './inventory-list.scss',

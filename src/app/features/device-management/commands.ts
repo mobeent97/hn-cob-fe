@@ -12,6 +12,7 @@ import { downloadCsv } from '../../shared/ui/csv';
 import { simulateLoad } from '../../shared/ui/loading';
 import { COMMAND_TONE, fmtLatency, median } from './iot-format';
 import { ReadOnlyNote, writeAccess } from '../tenancy';
+import { Select, SelectOption } from '../../shared/ui/select';
 
 type TabId = 'All' | Exclude<CommandStatus, 'Succeeded'>;
 const TAB_IDS: TabId[] = ['All', 'Failed', 'Timed out', 'Queued', 'Pending'];
@@ -26,7 +27,7 @@ const retryable = (c: CommandRecord) => c.status === 'Failed' || c.status === 'T
  */
 @Component({
   selector: 'app-commands',
-  imports: [ReadOnlyNote, RouterLink, Icon, Tabs, Pager, Dialog, DateTimePipe],
+  imports: [Select, SelectOption, ReadOnlyNote, RouterLink, Icon, Tabs, Pager, Dialog, DateTimePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './commands.html',
   styleUrl: './commands.scss',

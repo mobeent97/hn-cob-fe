@@ -22,20 +22,20 @@
                  [value]="q()" (input)="setFilter(q, $any($event.target).value)" />
         </label>
         <label class="sr-only" for="cmd-method">Method</label>
-        <select id="cmd-method" class="select auto" [value]="method()" (change)="setFilter(method, $any($event.target).value)">
-          <option value="">All methods</option>
-          @for (m of methods(); track m) { <option [value]="m">{{ m }}</option> }
-        </select>
+        <app-select id="cmd-method" class="auto" [value]="method()" (valueChange)="setFilter(method, $event)">
+          <app-option value="">All methods</app-option>
+          @for (m of methods(); track m) { <app-option [value]="m">{{ m }}</app-option> }
+        </app-select>
         <label class="sr-only" for="cmd-kind">Kind</label>
-        <select id="cmd-kind" class="select auto" [value]="kind()" (change)="setFilter(kind, $any($event.target).value)">
-          <option value="">All kinds</option>
-          @for (k of kinds; track k) { <option [value]="k">{{ k }}</option> }
-        </select>
+        <app-select id="cmd-kind" class="auto" [value]="kind()" (valueChange)="setFilter(kind, $event)">
+          <app-option value="">All kinds</app-option>
+          @for (k of kinds; track k) { <app-option [value]="k">{{ k }}</app-option> }
+        </app-select>
         <label class="sr-only" for="cmd-by">Sent by</label>
-        <select id="cmd-by" class="select auto" [value]="sentBy()" (change)="setFilter(sentBy, $any($event.target).value)">
-          <option value="">Anyone</option>
-          @for (u of senders(); track u) { <option [value]="u">{{ u }}</option> }
-        </select>
+        <app-select id="cmd-by" class="auto" [value]="sentBy()" (valueChange)="setFilter(sentBy, $event)">
+          <app-option value="">Anyone</app-option>
+          @for (u of senders(); track u) { <app-option [value]="u">{{ u }}</app-option> }
+        </app-select>
       </div>
       <div class="right">
         <span class="count num">{{ rows().length }} {{ rows().length === 1 ? 'command' : 'commands' }}</span>

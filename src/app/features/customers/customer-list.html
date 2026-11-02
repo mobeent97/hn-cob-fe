@@ -42,12 +42,12 @@
       <div class="right">
         <span class="count num">{{ rows().length }} {{ rows().length === 1 ? 'customer' : 'customers' }}</span>
         <label class="sr-only" for="sort">Sort</label>
-        <select id="sort" class="select sort" [value]="sort()" (change)="sort.set($any($event.target).value)">
-          <option value="recent">Newest first</option>
-          <option value="name">Company A–Z</option>
-          <option value="devices">Most devices</option>
-          <option value="expiry">Contract ending soonest</option>
-        </select>
+        <app-select id="sort" class="sort" [value]="sort()" (valueChange)="sort.set($event)">
+          <app-option value="recent">Newest first</app-option>
+          <app-option value="name">Company A–Z</app-option>
+          <app-option value="devices">Most devices</app-option>
+          <app-option value="expiry">Contract ending soonest</app-option>
+        </app-select>
       </div>
     </div>
 

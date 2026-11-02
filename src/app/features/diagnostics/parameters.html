@@ -120,15 +120,15 @@
         <app-icon name="search" />
         <input id="t-find" class="input" type="search" placeholder="Device ID, IMEI or plate" [value]="deviceQ()" (input)="deviceQ.set($any($event.target).value)" />
       </label>
-      <select class="select" aria-label="Device" [value]="deviceId() ?? ''" (change)="pick($any($event.target).value)">
-        @if (!deviceOptions().length) { <option value="">No device matches</option> }
+      <app-select aria-label="Device" [value]="deviceId() ?? ''" (valueChange)="pick($event)">
+        @if (!deviceOptions().length) { <app-option value="">No device matches</app-option> }
         @if (device() && !deviceOptions().includes(device()!)) {
-          <option [value]="device()!.id">{{ device()!.id }} · {{ device()!.plate }}</option>
+          <app-option [value]="device()!.id">{{ device()!.id }} · {{ device()!.plate }}</app-option>
         }
         @for (d of deviceOptions(); track d.id) {
-          <option [value]="d.id">{{ d.id }} · {{ d.plate ?? 'no plate' }} · {{ store.deviceType(d.typeId).name }}</option>
+          <app-option [value]="d.id">{{ d.id }} · {{ d.plate ?? 'no plate' }} · {{ store.deviceType(d.typeId).name }}</app-option>
         }
-      </select>
+      </app-select>
       <span class="hint num">{{ soldDevices().length }} devices in service · showing {{ deviceOptions().length }}</span>
     </div>
 

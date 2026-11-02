@@ -39,12 +39,12 @@
     <div class="trk-list-area" id="trk-list-area">
       <div class="trk-filters">
         <label class="sr-only" for="trk-customer">Customer</label>
-        <select id="trk-customer" class="select" [value]="customerId() === 'all' ? 'all' : customerId()" (change)="setCustomer($any($event.target).value)">
-          <option value="all">All customers</option>
+        <app-select id="trk-customer" [value]="customerId() === 'all' ? 'all' : customerId()" (valueChange)="setCustomer($event)">
+          <app-option value="all">All customers</app-option>
           @for (c of customerOptions(); track c.id) {
-            <option [value]="c.id">{{ c.name }} ({{ c.count }})</option>
+            <app-option [value]="c.id">{{ c.name }} ({{ c.count }})</app-option>
           }
-        </select>
+        </app-select>
         <label class="search">
           <app-icon name="search" />
           <input class="input" type="search" placeholder="Plate, device ID or driver" aria-label="Search vehicles"

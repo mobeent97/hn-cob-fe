@@ -12,9 +12,9 @@
     gap: 8px;
     flex-wrap: wrap;
   }
-  .select {
+  app-select {
     width: auto;
-    height: 34px;
+    --control-h: 34px; // the trigger reads the control-height token
   }
   .fresh {
     display: inline-flex;
@@ -197,7 +197,7 @@
 @media (max-width: 640px) {
   .filters .left {
     width: 100%;
-    .select {
+    app-select {
       flex: 1 1 140px;
     }
   }

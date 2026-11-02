@@ -44,21 +44,21 @@
                  [value]="q()" (input)="q.set($any($event.target).value)" />
         </label>
         <label class="sr-only" for="c-status">Status</label>
-        <select id="c-status" class="select auto" [value]="status()" (change)="status.set($any($event.target).value)">
-          <option value="all">All statuses</option>
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
-        </select>
+        <app-select id="c-status" class="auto" [value]="status()" (valueChange)="status.set($event)">
+          <app-option value="all">All statuses</app-option>
+          <app-option value="Active">Active</app-option>
+          <app-option value="Inactive">Inactive</app-option>
+        </app-select>
         @if (orgs.showOrg()) { <app-org-filter [(value)]="orgId" /> }
       </div>
       <div class="right">
         <span class="count num">{{ rows().length }} {{ rows().length === 1 ? 'consumer' : 'consumers' }}</span>
         <label class="sr-only" for="c-sort">Sort</label>
-        <select id="c-sort" class="select auto" [value]="sort()" (change)="sort.set($any($event.target).value)">
-          <option value="recent">Newest first</option>
-          <option value="name">Name A–Z</option>
-          <option value="devices">Most devices</option>
-        </select>
+        <app-select id="c-sort" class="auto" [value]="sort()" (valueChange)="sort.set($event)">
+          <app-option value="recent">Newest first</app-option>
+          <app-option value="name">Name A–Z</app-option>
+          <app-option value="devices">Most devices</app-option>
+        </app-select>
       </div>
     </div>
 
@@ -152,9 +152,9 @@
     <div class="field">
       <label for="c-phone">Phone<span class="req">*</span></label>
       <div class="input-group">
-        <select class="select" formControlName="dial" aria-label="Dial code">
-          @for (c of store.countries; track c.code) { <option [value]="c.dial">{{ c.dial }}</option> }
-        </select>
+        <app-select formControlName="dial" aria-label="Dial code">
+          @for (c of store.countries; track c.code) { <app-option [value]="c.dial" [hint]="c.name">{{ c.dial }}</app-option> }
+        </app-select>
         <input id="c-phone" class="input num" formControlName="phone" inputmode="tel" autocomplete="tel-national" [class.invalid]="err(form.controls.phone, 'x')" />
       </div>
       @if (err(form.controls.phone, 'a phone number', 'Use 7 to 15 digits, without the dial code.'); as e) { <span class="error">{{ e }}</span> }
@@ -214,10 +214,10 @@
         } @else if (pickStock().length) {
           <div class="alloc">
             <label class="sr-only" for="pick">Device</label>
-            <select id="pick" class="select" [value]="pick()" (change)="pick.set($any($event.target).value)">
-              <option value="">Next in stock ({{ pickStock()[0].id }})</option>
-              @for (d of pickStock(); track d.id) { <option [value]="d.id">{{ d.id }} · IMEI {{ d.imei }}</option> }
-            </select>
+            <app-select id="pick" [value]="pick()" (valueChange)="pick.set($event)">
+              <app-option value="">Next in stock ({{ pickStock()[0].id }})</app-option>
+              @for (d of pickStock(); track d.id) { <app-option [value]="d.id">{{ d.id }} · IMEI {{ d.imei }}</app-option> }
+            </app-select>
             <button class="btn primary" (click)="allocate()"><app-icon name="plus" />Allocate device</button>
           </div>
           <p class="muted small num">{{ pickStock().length }} FMC003 {{ pickStock().length === 1 ? 'tracker' : 'trackers' }} available in stock</p>

@@ -18,6 +18,7 @@ import {
   COMMAND_DEFS, CommandDef, SettingMeta, SyncState, commandLabel, commandTone, compactPayload, finding, fmtTwin, settingMeta,
   since, syncTone, validateSetting, voltageSeries,
 } from './device-meta';
+import { Select, SelectOption } from '../../shared/ui/select';
 
 type Tab = 'overview' | 'configuration' | 'commands' | 'telemetry' | 'history';
 const TABS: Tab[] = ['overview', 'configuration', 'commands', 'telemetry', 'history'];
@@ -32,7 +33,7 @@ interface ConfigRow { key: string; meta: SettingMeta; desired: TwinValue; report
  */
 @Component({
   selector: 'app-device-detail',
-  imports: [RouterLink, Icon, Tabs, Menu, Dialog, AnimatedNumber, LineChart, DatePipe, DateTimePipe, RelativePipe, TonePipe, ReadOnlyNote],
+  imports: [Select, SelectOption, RouterLink, Icon, Tabs, Menu, Dialog, AnimatedNumber, LineChart, DatePipe, DateTimePipe, RelativePipe, TonePipe, ReadOnlyNote],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './device-detail.html',
   styleUrl: './device-detail.scss',

@@ -10,6 +10,7 @@ import { Toaster } from '../../shared/ui/toast';
 import { simulateLoad } from '../../shared/ui/loading';
 import { Access } from '../../core/access/access';
 import { groupByDay, plural } from './notification-groups';
+import { Select, SelectOption } from '../../shared/ui/select';
 
 type View = 'all' | 'unread';
 type KindFilter = NotificationKind | 'all';
@@ -27,7 +28,7 @@ const KINDS = Object.keys(KIND_META) as NotificationKind[];
  */
 @Component({
   selector: 'app-notifications',
-  imports: [RouterLink, Icon, Tabs, RelativePipe, DateTimePipe],
+  imports: [Select, SelectOption, RouterLink, Icon, Tabs, RelativePipe, DateTimePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './notifications.html',
   styleUrl: './notifications.scss',

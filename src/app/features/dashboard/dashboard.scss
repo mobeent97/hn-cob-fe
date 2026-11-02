@@ -120,37 +120,6 @@
   }
 }
 
-.bar-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-
-  li {
-    display: grid;
-    grid-template-columns: 150px 1fr 56px;
-    align-items: center;
-    gap: 12px;
-  }
-  .track {
-    height: 8px;
-    background: var(--active);
-    border-radius: 999px;
-    overflow: hidden;
-    span {
-      display: block;
-      height: 100%;
-      background: var(--chart-1);
-      border-radius: inherit;
-      transition: width var(--duration-medium) var(--ease-out);
-    }
-  }
-  .val {
-    text-align: right;
-  }
-}
 
 @media (max-width: 640px) {
   .status {
@@ -159,9 +128,6 @@
     app-ring {
       align-self: center;
     }
-  }
-  .bar-list li {
-    grid-template-columns: 110px 1fr 48px;
   }
   .card-head {
     flex-wrap: wrap;

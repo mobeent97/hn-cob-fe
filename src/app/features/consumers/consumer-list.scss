@@ -4,7 +4,7 @@
   gap: 16px;
 }
 
-.select.auto {
+app-select.auto {
   width: auto;
 }
 
@@ -75,7 +75,7 @@
 .alloc {
   display: flex;
   gap: 8px;
-  .select {
+  app-select {
     flex: 1;
     min-width: 0;
   }

@@ -179,15 +179,7 @@
         @if (can.packages()) { <a class="btn ghost sm" routerLink="/packages">Packages</a> }
       </div>
       <div class="card-body">
-        <ul class="bar-list">
-          @for (p of byPackage(); track p.name) {
-            <li>
-              <span class="name">{{ p.name }} <span class="muted num">({{ p.customers }})</span></span>
-              <span class="track"><span [style.width.%]="p.pct"></span></span>
-              <span class="num val">{{ fmtNum(p.devices) }}</span>
-            </li>
-          }
-        </ul>
+        <app-hbar-chart [rows]="packageRows()" [labelWidth]="120" label="Devices in service by package" />
       </div>
     </section>
 

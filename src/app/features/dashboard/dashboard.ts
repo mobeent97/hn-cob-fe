@@ -6,7 +6,7 @@ import { DatePipe, MONTHS, RelativePipe, daysFrom, fmtNum } from '../../core/dat
 import { DeviceStatus, ONBOARDING_STEPS, PackageName } from '../../core/data/models';
 import { Icon } from '../../shared/ui/icon';
 import { AnimatedNumber } from '../../shared/ui/animated-number';
-import { BarChart, BarDatum, Ring, RingSegment } from '../../shared/charts/charts';
+import { BarChart, BarDatum, HBarChart, HBarRow, Ring, RingSegment } from '../../shared/charts/charts';
 import { simulateLoad } from '../../shared/ui/loading';
 
 type Range = 6 | 12;
@@ -18,7 +18,7 @@ type Range = 6 | 12;
  */
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink, Icon, AnimatedNumber, BarChart, Ring, DatePipe, RelativePipe],
+  imports: [RouterLink, Icon, AnimatedNumber, BarChart, HBarChart, Ring, DatePipe, RelativePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
@@ -104,6 +104,15 @@ export class Dashboard {
     const max = Math.max(...rows.map((r) => r.devices), 1);
     return rows.map((r) => ({ ...r, pct: (r.devices / max) * 100 }));
   });
+
+  protected readonly packageRows = computed<HBarRow[]>(() =>
+    this.byPackage().map((p) => ({
+      label: p.name,
+      value: p.devices,
+      display: fmtNum(p.devices),
+      sub: `${p.customers} ${p.customers === 1 ? 'customer' : 'customers'}`,
+    })),
+  );
 
   protected readonly finding = computed(() => {
     const n = this.onboarding().length;

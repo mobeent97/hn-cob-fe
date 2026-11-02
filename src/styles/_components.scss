@@ -401,6 +401,23 @@
   }
 }
 
+// Custom dropdown (<app-select>) in shared layouts
+.input-group app-select {
+  width: auto;
+  flex: none;
+  .trigger {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: 0;
+    background: var(--raised);
+  }
+}
+.toolbar app-select,
+.title-row app-select {
+  width: auto;
+  min-width: 160px;
+}
+
 // ── Pills ────────────────────────────────────────────────────
 .pill {
   display: inline-flex;

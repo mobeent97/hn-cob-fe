@@ -13,6 +13,7 @@ import { downloadCsv } from '../../shared/ui/csv';
 import { OrgFilter, OrgTag, ReadOnlyNote, orgContext, writeAccess } from '../tenancy';
 import { simulateLoad } from '../../shared/ui/loading';
 import { EMAIL_RE, PHONE_RE, QID_RE, messageFor, notBlank, splitPhone } from '../customers/onboarding';
+import { Select, SelectOption } from '../../shared/ui/select';
 
 type StatusFilter = 'all' | 'Active' | 'Inactive';
 type Sort = 'recent' | 'name' | 'devices';
@@ -24,7 +25,7 @@ const PLUG_AND_GO_TYPE = 2;
  */
 @Component({
   selector: 'app-consumer-list',
-  imports: [ReactiveFormsModule, Icon, Pager, Menu, Dialog, AnimatedNumber, DatePipe, RelativePipe, TonePipe, OrgTag, OrgFilter, ReadOnlyNote],
+  imports: [Select, SelectOption, ReactiveFormsModule, Icon, Pager, Menu, Dialog, AnimatedNumber, DatePipe, RelativePipe, TonePipe, OrgTag, OrgFilter, ReadOnlyNote],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './consumer-list.html',
   styleUrl: './consumer-list.scss',

@@ -8,6 +8,7 @@ import { Pager, pageOf } from '../../shared/ui/pager';
 import { Toaster } from '../../shared/ui/toast';
 import { simulateLoad } from '../../shared/ui/loading';
 import { STATUS_LABEL } from './device-status';
+import { Select, SelectOption } from '../../shared/ui/select';
 
 /** Avery L7160 / A4: 3 × 7 labels of 63.5 × 38.1 mm. */
 const PER_SHEET = 21;
@@ -19,7 +20,7 @@ const PER_SHEET = 21;
  */
 @Component({
   selector: 'app-qr-codes',
-  imports: [Icon, Pager, DatePipe, TonePipe],
+  imports: [Select, SelectOption, Icon, Pager, DatePipe, TonePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './qr-codes.html',
   styleUrl: './qr-codes.scss',

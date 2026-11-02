@@ -100,27 +100,27 @@
                       </div>
                       <div class="field">
                         <label for="industry">Industry<span class="req">*</span></label>
-                        <select id="industry" class="select" formControlName="industry" [class.invalid]="bad(general.controls.industry)">
-                          <option value="" disabled>Choose an industry</option>
-                          @for (x of store.industries; track x) { <option [value]="x">{{ x }}</option> }
-                        </select>
+                        <app-select id="industry" formControlName="industry" [class.invalid]="bad(general.controls.industry)">
+                          <app-option value="" disabled>Choose an industry</app-option>
+                          @for (x of store.industries; track x) { <app-option [value]="x">{{ x }}</app-option> }
+                        </app-select>
                         @if (err(general.controls.industry, 'an industry'); as e) { <span class="error">Choose an industry.</span> }
                       </div>
 
                       <div class="field">
                         <label for="country">Country<span class="req">*</span></label>
-                        <select id="country" class="select" formControlName="countryCode" [class.invalid]="bad(general.controls.countryCode)">
-                          <option value="" disabled>Choose a country</option>
-                          @for (c of countryOptions(); track c.code) { <option [value]="c.code">{{ c.name }}</option> }
-                        </select>
+                        <app-select id="country" formControlName="countryCode" [class.invalid]="bad(general.controls.countryCode)">
+                          <app-option value="" disabled>Choose a country</app-option>
+                          @for (c of countryOptions(); track c.code) { <app-option [value]="c.code">{{ c.name }}</app-option> }
+                        </app-select>
                         @if (err(general.controls.countryCode, 'a country')) { <span class="error">Choose a country.</span> }
                       </div>
                       <div class="field">
                         <label for="zone">Zone<span class="req">*</span></label>
-                        <select id="zone" class="select" formControlName="zone" [class.invalid]="bad(general.controls.zone)">
-                          <option value="" disabled>{{ country() ? 'Choose a zone' : 'Choose a country first' }}</option>
-                          @for (z of zonesFor(); track z) { <option [value]="z">{{ z }}</option> }
-                        </select>
+                        <app-select id="zone" formControlName="zone" [class.invalid]="bad(general.controls.zone)">
+                          <app-option value="" disabled>{{ country() ? 'Choose a zone' : 'Choose a country first' }}</app-option>
+                          @for (z of zonesFor(); track z) { <app-option [value]="z">{{ z }}</app-option> }
+                        </app-select>
                         @if (err(general.controls.zone, 'a zone')) { <span class="error">Choose a zone.</span> }
                       </div>
                       <div class="field">
@@ -133,11 +133,11 @@
                         @if (pickOrg()) {
                           <label for="org">Organization<span class="req">*</span></label>
                           <div class="org-line">
-                            <select id="org" class="select" [value]="orgChoice() ?? ''" (change)="orgChoice.set(+$any($event.target).value || null)"
+                            <app-select id="org" [value]="orgChoice() ?? ''" (valueChange)="orgChoice.set(+$event || null)"
                                     [class.invalid]="submitted() && !orgChoice()" [disabled]="!orgOptions().length">
-                              @if (!orgOptions().length) { <option value="">No organization serves this country</option> }
-                              @for (o of orgOptions(); track o.id) { <option [value]="o.id" [selected]="o.id === orgChoice()">{{ o.name }}{{ o.kind === 'Platform' ? ' (direct)' : '' }}</option> }
-                            </select>
+                              @if (!orgOptions().length) { <app-option value="">No organization serves this country</app-option> }
+                              @for (o of orgOptions(); track o.id) { <app-option [value]="o.id" [selected]="o.id === orgChoice()">{{ o.name }}{{ o.kind === 'Platform' ? ' (direct)' : '' }}</app-option> }
+                            </app-select>
                             @if (orgUsage(); as u) {
                               <span class="hint num" [class.limit]="u.full">
                                 @if (u.max != null) { {{ u.used }} of {{ u.max }} customers used{{ u.full ? ' · limit reached' : '' }} } @else { {{ u.used }} customers · no limit }
@@ -161,9 +161,9 @@
                       <div class="field">
                         <label for="phone">Phone<span class="req">*</span></label>
                         <div class="input-group">
-                          <select class="select" formControlName="phoneDial" aria-label="Dial code">
-                            @for (c of store.countries; track c.code) { <option [value]="c.dial">{{ c.dial }}</option> }
-                          </select>
+                          <app-select formControlName="phoneDial" aria-label="Dial code">
+                            @for (c of store.countries; track c.code) { <app-option [value]="c.dial" [hint]="c.name">{{ c.dial }}</app-option> }
+                          </app-select>
                           <input id="phone" class="input num" formControlName="phone" inputmode="tel" autocomplete="tel-national" [class.invalid]="bad(general.controls.phone)" />
                         </div>
                         @if (err(general.controls.phone, 'a phone number', 'Use 7 to 15 digits, without the dial code.'); as e) { <span class="error">{{ e }}</span> }
@@ -216,9 +216,9 @@
                       <div class="field">
                         <label for="cphone">Phone<span class="req">*</span></label>
                         <div class="input-group">
-                          <select class="select" formControlName="contactDial" aria-label="Dial code">
-                            @for (c of store.countries; track c.code) { <option [value]="c.dial">{{ c.dial }}</option> }
-                          </select>
+                          <app-select formControlName="contactDial" aria-label="Dial code">
+                            @for (c of store.countries; track c.code) { <app-option [value]="c.dial" [hint]="c.name">{{ c.dial }}</app-option> }
+                          </app-select>
                           <input id="cphone" class="input num" formControlName="contactPhone" inputmode="tel" [class.invalid]="bad(general.controls.contactPhone)" />
                         </div>
                         @if (err(general.controls.contactPhone, 'a phone number', 'Use 7 to 15 digits, without the dial code.'); as e) { <span class="error">{{ e }}</span> }
@@ -260,9 +260,9 @@
                               <td class="phone-only">{{ d.kind }} · {{ fmtSize(d.sizeKb) }}</td>
                               <td class="desk-only">
                                 <label class="sr-only" [for]="'kind-' + d.id">Kind of {{ d.name }}</label>
-                                <select class="select kind" [id]="'kind-' + d.id" (change)="setKind(d.id, $any($event.target).value)">
-                                  @for (k of docKinds; track k) { <option [value]="k" [selected]="k === d.kind">{{ k }}</option> }
-                                </select>
+                                <app-select class="kind" [id]="'kind-' + d.id" (valueChange)="setKind(d.id, $event)">
+                                  @for (k of docKinds; track k) { <app-option [value]="k" [selected]="k === d.kind">{{ k }}</app-option> }
+                                </app-select>
                               </td>
                               <td class="num desk-only">{{ fmtSize(d.sizeKb) }}</td>
                               <td class="num desk-only">{{ d.uploadedAt | date }}</td>
@@ -401,9 +401,9 @@
                       <div class="field">
                         <label for="a-phone">Phone<span class="req">*</span></label>
                         <div class="input-group">
-                          <select class="select" formControlName="dial" aria-label="Dial code">
-                            @for (c of store.countries; track c.code) { <option [value]="c.dial">{{ c.dial }}</option> }
-                          </select>
+                          <app-select formControlName="dial" aria-label="Dial code">
+                            @for (c of store.countries; track c.code) { <app-option [value]="c.dial" [hint]="c.name">{{ c.dial }}</app-option> }
+                          </app-select>
                           <input id="a-phone" class="input num" formControlName="phone" inputmode="tel" [class.invalid]="adminErr(adminForm.controls.phone, 'x')" />
                         </div>
                         @if (adminErr(adminForm.controls.phone, 'a phone number', 'Use 7 to 15 digits, without the dial code.'); as e) { <span class="error">{{ e }}</span> }
@@ -502,9 +502,9 @@
                         <div class="field">
                           <label for="iphone">Contact phone<span class="req">*</span></label>
                           <div class="input-group">
-                            <select class="select" formControlName="contactDial" aria-label="Dial code">
-                              @for (c of store.countries; track c.code) { <option [value]="c.dial">{{ c.dial }}</option> }
-                            </select>
+                            <app-select formControlName="contactDial" aria-label="Dial code">
+                              @for (c of store.countries; track c.code) { <app-option [value]="c.dial" [hint]="c.name">{{ c.dial }}</app-option> }
+                            </app-select>
                             <input id="iphone" class="input num" formControlName="contactPhone" inputmode="tel" [class.invalid]="bad(shipment.controls.contactPhone)" />
                           </div>
                           @if (err(shipment.controls.contactPhone, 'a phone number', 'Use 7 to 15 digits, without the dial code.'); as e) { <span class="error">{{ e }}</span> }

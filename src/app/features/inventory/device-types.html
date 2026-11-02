@@ -123,10 +123,10 @@
       </div>
       <div class="field">
         <label for="dt-cat">Category<span class="req">*</span></label>
-        <select id="dt-cat" class="select" [value]="draft().category" (change)="patch({ category: $any($event.target).value })">
-          <option value="Gateway">Gateway</option>
-          <option value="Dashcam">Dashcam</option>
-        </select>
+        <app-select id="dt-cat" [value]="draft().category" (valueChange)="patch({ category: $event })">
+          <app-option value="Gateway">Gateway</app-option>
+          <app-option value="Dashcam">Dashcam</app-option>
+        </app-select>
       </div>
       <div class="field">
         <label for="dt-warranty">Warranty (years)<span class="req">*</span></label>

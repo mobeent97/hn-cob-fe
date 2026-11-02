@@ -142,10 +142,10 @@
 
     <div class="field">
       <label for="v-uc">Use case<span class="req">*</span></label>
-      <select id="v-uc" class="select" [value]="draft().useCase" [disabled]="locked()" (change)="set('useCase', $any($event.target).value)"
+      <app-select id="v-uc" [value]="draft().useCase" [disabled]="locked()" (valueChange)="set('useCase', $event)"
               [class.invalid]="tried() && errors().useCase">
-        @for (u of store.useCases(); track u.id) { <option [value]="u.name">{{ u.name }}</option> }
-      </select>
+        @for (u of store.useCases(); track u.id) { <app-option [value]="u.name">{{ u.name }}</app-option> }
+      </app-select>
       @if (tried() && errors().useCase) { <span class="error">{{ errors().useCase }}</span> }
     </div>
 

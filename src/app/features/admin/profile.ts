@@ -7,6 +7,7 @@ import { RelativePipe } from '../../core/data/format';
 import { Icon } from '../../shared/ui/icon';
 import { Toaster } from '../../shared/ui/toast';
 import { simulateLoad } from '../../shared/ui/loading';
+import { Select, SelectOption } from '../../shared/ui/select';
 
 type Rule = { id: string; label: string; ok: boolean };
 type AccessRow = { f: FeatureDef; level: Permission; reason: string | null };
@@ -24,7 +25,7 @@ export const LEVEL_LABEL: Record<string, string> = { none: 'None', R: 'Read', RW
  */
 @Component({
   selector: 'app-profile',
-  imports: [Icon, RelativePipe],
+  imports: [Select, SelectOption, Icon, RelativePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './profile.html',
   styleUrl: './profile.scss',

@@ -8,6 +8,7 @@ import { Toaster } from '../../shared/ui/toast';
 import { simulateLoad } from '../../shared/ui/loading';
 import { Reading, sampleReadings } from './readings';
 import { ReadOnlyNote, writeAccess } from '../tenancy';
+import { Select, SelectOption } from '../../shared/ui/select';
 
 type Draft = { id: number | null; parameter: string; responseKey: string; typeIds: number[] };
 const KEY_RE = /^[a-z][a-z0-9_]{1,39}$/;
@@ -19,7 +20,7 @@ const KEY_RE = /^[a-z][a-z0-9_]{1,39}$/;
  */
 @Component({
   selector: 'app-parameters',
-  imports: [ReadOnlyNote, Icon, Menu, Dialog],
+  imports: [Select, SelectOption, ReadOnlyNote, Icon, Menu, Dialog],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './parameters.html',
   styleUrl: './parameters.scss',

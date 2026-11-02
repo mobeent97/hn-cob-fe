@@ -102,8 +102,9 @@ accent is lifted to `#4fb0d9`, and the primary button inverts.
 | Status | `<span class="pill" [class]="status \| tone">`. Tones: positive, negative, warning, info, neutral |
 | Dialog / drawer | `<app-dialog [(open)] heading subheading variant="modal\|drawer" width>`; buttons go in `<ng-container slot="footer">` |
 | Toast | `inject(Toaster).show(title, { body, tone, action: { label: 'Undo', run } })` |
+| Dropdowns | `<app-select [value] (valueChange)>` or `formControlName`, with `<app-option [value] [hint] disabled selected>` children. Never use a native `<select>`. Values are strings like a native select. A disabled `value=""` option is the placeholder. Lists with more than 8 options get a search box (`[searchable]` overrides that). The panel is position: fixed and flips up near the bottom of the screen. Size it with `--control-h` and width on the host |
 | Forms | `.form-grid` (3 columns) → `.field` → `label` + `.input/.select/.textarea` + `.hint/.error`; `.check`, `.toggle`; `.input-group` for dial code + phone |
-| Charts | `<app-bar-chart [data]>`, `<app-line-chart [data] [compare]>`, `<app-ring [segments]>` with the legend as a table beside it |
+| Charts | Apache ECharts (SVG renderer), wrapped to the house rules in `shared/charts`: `<app-bar-chart [data]>`, `<app-line-chart [data] [compare] [scale]>`, `<app-ring [segments]>` (legend as a table beside it), and `<app-hbar-chart [rows]>` for ranked horizontal bars. Colours come from the tokens and re-theme live. There's no entrance animation, and updates morph in place. For a new chart type, write a component that hands `<app-echart>` an option builder `(tokens) => option`. Never use ECharts' default palette or styling |
 | Icons | `<app-icon name="…">`: Lucide outline, 16px, grey. Add a new icon in `shared/ui/icon.ts` |
 | Formatting | Pipes `date`, `datetime`, `rel`, `n`, `tone`; `fmtMoney(n, 'AED')`; `downloadCsv()` |
 

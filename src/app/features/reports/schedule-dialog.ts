@@ -8,13 +8,14 @@ import { DEFAULT_FILTERS, Filters, filterSummary, reportById } from './report-da
 import {
   Frequency, RUN_HOUR, ReportSchedule, WEEKDAYS, cadence, nextRun, nextScheduleId, saveSchedule,
 } from './report-schedules';
+import { Select, SelectOption } from '../../shared/ui/select';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 /** Create or edit a report schedule: cadence, day, and who receives it. */
 @Component({
   selector: 'app-schedule-dialog',
-  imports: [Dialog, Icon],
+  imports: [Select, SelectOption, Dialog, Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-dialog [(open)]="open" [heading]="existing() ? 'Edit schedule' : 'Schedule this report'" [subheading]="subheading()" width="520px">
@@ -22,20 +23,20 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
         <div class="row">
           <div class="field">
             <label for="sch-freq">Frequency</label>
-            <select id="sch-freq" class="select" (change)="setFrequency($any($event.target).value)">
-              <option value="Weekly" [selected]="frequency() === 'Weekly'">Weekly</option>
-              <option value="Monthly" [selected]="frequency() === 'Monthly'">Monthly</option>
-            </select>
+            <app-select id="sch-freq" (valueChange)="setFrequency($event)">
+              <app-option value="Weekly" [selected]="frequency() === 'Weekly'">Weekly</app-option>
+              <app-option value="Monthly" [selected]="frequency() === 'Monthly'">Monthly</app-option>
+            </app-select>
           </div>
           <div class="field">
             <label for="sch-day">{{ frequency() === 'Weekly' ? 'Day of the week' : 'Day of the month' }}</label>
-            <select id="sch-day" class="select" (change)="day.set(+$any($event.target).value)">
+            <app-select id="sch-day" (valueChange)="day.set(+$event)">
               @if (frequency() === 'Weekly') {
-                @for (d of weekdays; track d; let i = $index) { <option [value]="'' + (i + 1)" [selected]="day() === i + 1">{{ d }}</option> }
+                @for (d of weekdays; track d; let i = $index) { <app-option [value]="'' + (i + 1)" [selected]="day() === i + 1">{{ d }}</app-option> }
               } @else {
-                @for (d of monthDays; track d) { <option [value]="'' + d" [selected]="day() === d">{{ d }}</option> }
+                @for (d of monthDays; track d) { <app-option [value]="'' + d" [selected]="day() === d">{{ d }}</app-option> }
               }
-            </select>
+            </app-select>
           </div>
         </div>
 

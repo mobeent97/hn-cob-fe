@@ -136,13 +136,13 @@
             <app-icon name="search" />
             <input id="s-find" class="input" type="search" placeholder="Device ID, IMEI or plate" [value]="deviceQ()" (input)="deviceQ.set($any($event.target).value)" />
           </label>
-          <select class="select" aria-label="Device" [value]="deviceId() ?? ''" (change)="pick($any($event.target).value)">
-            @if (!deviceOptions().length) { <option value="">No device matches</option> }
-            @if (device() && !deviceOptions().includes(device()!)) { <option [value]="device()!.id">{{ device()!.id }} · {{ device()!.plate }}</option> }
+          <app-select aria-label="Device" [value]="deviceId() ?? ''" (valueChange)="pick($event)">
+            @if (!deviceOptions().length) { <app-option value="">No device matches</app-option> }
+            @if (device() && !deviceOptions().includes(device()!)) { <app-option [value]="device()!.id">{{ device()!.id }} · {{ device()!.plate }}</app-option> }
             @for (d of deviceOptions(); track d.id) {
-              <option [value]="d.id">{{ d.plate }} · {{ d.id }} · {{ customerName(d.customerId) }}</option>
+              <app-option [value]="d.id">{{ d.plate }} · {{ d.id }} · {{ customerName(d.customerId) }}</app-option>
             }
-          </select>
+          </app-select>
         </div>
       }
 

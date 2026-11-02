@@ -192,30 +192,30 @@
           @for (r of d.rows; track $index; let i = $index) {
             <div class="clause">
               <span class="join muted">{{ i === 0 ? 'Where' : 'and' }}</span>
-              <select class="select" [attr.aria-label]="'Tag, row ' + (i + 1)" [value]="r.tag" (change)="setTag(i, $any($event.target).value)">
-                @for (t of tagKeys; track t.key) { <option [value]="t.key" [selected]="t.key === r.tag">{{ t.label }}</option> }
-              </select>
-              <select class="select op" [attr.aria-label]="'Operator, row ' + (i + 1)" [value]="r.op" (change)="setOp(i, $any($event.target).value)">
-                @for (o of ops; track o.op) { <option [value]="o.op" [selected]="o.op === r.op">{{ o.label }}</option> }
-              </select>
+              <app-select [aria-label]="'Tag, row ' + (i + 1)" [value]="r.tag" (valueChange)="setTag(i, $event)">
+                @for (t of tagKeys; track t.key) { <app-option [value]="t.key" [selected]="t.key === r.tag">{{ t.label }}</app-option> }
+              </app-select>
+              <app-select class="op" [aria-label]="'Operator, row ' + (i + 1)" [value]="r.op" (valueChange)="setOp(i, $event)">
+                @for (o of ops; track o.op) { <app-option [value]="o.op" [selected]="o.op === r.op">{{ o.label }}</app-option> }
+              </app-select>
               @if (r.op === 'in') {
                 <div class="multi" [class.invalid]="tried() && !r.values.length">
                   @for (v of r.values; track v) {
                     <span class="chip">{{ valueLabel(r.tag, v) }}<button type="button" [attr.aria-label]="'Remove ' + v" (click)="removeValue(i, v)"><app-icon name="x" [size]="12" /></button></span>
                   }
-                  <select #addSel class="select add-val" [attr.aria-label]="'Add value, row ' + (i + 1)" (change)="addValue(i, addSel.value, addSel)">
-                    <option value="">{{ r.values.length ? 'Add…' : 'Choose values…' }}</option>
+                  <app-select #addSel class="add-val" [aria-label]="'Add value, row ' + (i + 1)" (valueChange)="addValue(i, $event, addSel)">
+                    <app-option value="">{{ r.values.length ? 'Add…' : 'Choose values…' }}</app-option>
                     @for (o of tagValues().get(r.tag); track o.value) {
-                      @if (!r.values.includes(o.value)) { <option [value]="o.value">{{ o.label }}</option> }
+                      @if (!r.values.includes(o.value)) { <app-option [value]="o.value">{{ o.label }}</app-option> }
                     }
-                  </select>
+                  </app-select>
                 </div>
               } @else {
-                <select class="select" [attr.aria-label]="'Value, row ' + (i + 1)" [value]="r.values[0] ?? ''" (change)="setValue(i, $any($event.target).value)"
+                <app-select [aria-label]="'Value, row ' + (i + 1)" [value]="r.values[0] ?? ''" (valueChange)="setValue(i, $event)"
                         [class.invalid]="tried() && !r.values.length">
-                  <option value="" disabled>Choose…</option>
-                  @for (o of tagValues().get(r.tag); track o.value) { <option [value]="o.value" [selected]="o.value === r.values[0]">{{ o.label }}</option> }
-                </select>
+                  <app-option value="" disabled>Choose…</app-option>
+                  @for (o of tagValues().get(r.tag); track o.value) { <app-option [value]="o.value" [selected]="o.value === r.values[0]">{{ o.label }}</app-option> }
+                </app-select>
               }
               <button type="button" class="btn ghost icon sm" [attr.aria-label]="'Remove row ' + (i + 1)" (click)="removeRow(i)"><app-icon name="x" /></button>
             </div>
@@ -275,9 +275,9 @@
         @for (s of d.settings; track s.key; let i = $index) {
           @let m = meta.get(s.key);
           <div class="setting" [class.invalid]="tried() && settingErr(s)">
-            <select class="select" [attr.aria-label]="'Setting ' + (i + 1)" [value]="s.key" (change)="setSettingKey(i, $any($event.target).value)">
-              @for (k of freeKeys(i); track k.key) { <option [value]="k.key" [selected]="k.key === s.key">{{ k.label }}</option> }
-            </select>
+            <app-select [aria-label]="'Setting ' + (i + 1)" [value]="s.key" (valueChange)="setSettingKey(i, $event)">
+              @for (k of freeKeys(i); track k.key) { <app-option [value]="k.key" [selected]="k.key === s.key">{{ k.label }}</app-option> }
+            </app-select>
             <div class="val">
               @switch (m?.kind) {
                 @case ('number') {
@@ -292,9 +292,9 @@
                   <label class="toggle"><input type="checkbox" [checked]="s.value === true" (change)="setSettingValue(i, $any($event.target).checked)" />{{ s.value ? 'On' : 'Off' }}</label>
                 }
                 @case ('enum') {
-                  <select class="select" [attr.aria-label]="m!.label" [value]="s.value" (change)="setSettingValue(i, $any($event.target).value)">
-                    @for (o of m!.options; track o) { <option [value]="o" [selected]="o === s.value">{{ o }}</option> }
-                  </select>
+                  <app-select [aria-label]="m!.label" [value]="s.value" (valueChange)="setSettingValue(i, $event)">
+                    @for (o of m!.options; track o) { <app-option [value]="o" [selected]="o === s.value">{{ o }}</app-option> }
+                  </app-select>
                 }
                 @default {
                   <input class="input mono" [attr.list]="s.key === 'firmware' ? 'cp-fw' : null" [value]="s.value" [attr.aria-label]="m?.label ?? s.key"

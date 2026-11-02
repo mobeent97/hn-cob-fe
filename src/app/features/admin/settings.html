@@ -92,9 +92,9 @@
           <div class="fields">
             <div class="field narrow">
               <label for="pg-size">Rows per page</label>
-              <select id="pg-size" class="select" [value]="pagination().pageSize" (change)="pagination.set({ pageSize: +$any($event.target).value })">
-                @for (n of pageSizes; track n) { <option [value]="n" [selected]="n === pagination().pageSize">{{ n }}</option> }
-              </select>
+              <app-select id="pg-size" [value]="pagination().pageSize" (valueChange)="pagination.set({ pageSize: +$event })">
+                @for (n of pageSizes; track n) { <app-option [value]="n" [selected]="n === pagination().pageSize">{{ n }}</app-option> }
+              </app-select>
             </div>
             <p class="preview num">
               With {{ pagination().pageSize }} rows, the {{ store.customers().length }} customers fit on
@@ -219,12 +219,12 @@
           <div class="fields digest">
             <div class="field narrow-wide">
               <label for="nt-digest">Email digest</label>
-              <select id="nt-digest" class="select" [value]="notif().digest" [disabled]="!emailCount()"
-                      (change)="setNotif('digest', $any($event.target).value)">
-                <option value="off" [selected]="notif().digest === 'off'">Off</option>
-                <option value="daily" [selected]="notif().digest === 'daily'">Daily at 08:00</option>
-                <option value="weekly" [selected]="notif().digest === 'weekly'">Weekly on Monday</option>
-              </select>
+              <app-select id="nt-digest" [value]="notif().digest" [disabled]="!emailCount()"
+                      (valueChange)="setNotif('digest', $event)">
+                <app-option value="off" [selected]="notif().digest === 'off'">Off</app-option>
+                <app-option value="daily" [selected]="notif().digest === 'daily'">Daily at 08:00</app-option>
+                <app-option value="weekly" [selected]="notif().digest === 'weekly'">Weekly on Monday</app-option>
+              </app-select>
               <span class="hint">
                 @if (!emailCount()) { Turn on email for at least one kind to get a digest. }
                 @else if (notif().digest === 'off') { One email for each event, as it happens. }

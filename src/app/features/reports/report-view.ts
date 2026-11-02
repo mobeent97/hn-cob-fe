@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, input, si
 import { RouterLink } from '@angular/router';
 import { Store } from '../../core/data/store';
 import { fmtDateTime, fmtMoney, fmtNum } from '../../core/data/format';
-import { BarChart, LineChart, Ring } from '../../shared/charts/charts';
+import { BarChart, LineChart, Ring, HBarChart } from '../../shared/charts/charts';
 import { AnimatedNumber } from '../../shared/ui/animated-number';
 import { Icon } from '../../shared/ui/icon';
 import { Tabs, TabItem } from '../../shared/ui/tabs';
@@ -14,6 +14,7 @@ import {
 } from './report-data';
 import { ScheduleDialog } from './schedule-dialog';
 import { writeAccess } from '../tenancy';
+import { Select, SelectOption } from '../../shared/ui/select';
 
 /**
  * Report — one shared frame for every report: "What does this report answer for the chosen period?"
@@ -23,7 +24,7 @@ import { writeAccess } from '../tenancy';
  */
 @Component({
   selector: 'app-reportview',
-  imports: [RouterLink, Icon, Tabs, AnimatedNumber, BarChart, LineChart, Ring, ScheduleDialog],
+  imports: [HBarChart, Select, SelectOption, RouterLink, Icon, Tabs, AnimatedNumber, BarChart, LineChart, Ring, ScheduleDialog],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './report-view.html',
   styleUrl: './report-view.scss',

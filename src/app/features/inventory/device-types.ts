@@ -10,6 +10,7 @@ import { Toaster } from '../../shared/ui/toast';
 import { downloadCsv } from '../../shared/ui/csv';
 import { simulateLoad } from '../../shared/ui/loading';
 import { ReadOnlyNote, writeAccess } from '../tenancy';
+import { Select, SelectOption } from '../../shared/ui/select';
 
 type Draft = Omit<DeviceType, 'id' | 'warrantyYears' | 'unitPrice'> & { id: number | null; warrantyYears: string; unitPrice: string };
 
@@ -25,7 +26,7 @@ const blank = (): Draft => ({
  */
 @Component({
   selector: 'app-devicetypes',
-  imports: [Icon, Pager, Menu, Dialog, ReadOnlyNote],
+  imports: [Select, SelectOption, Icon, Pager, Menu, Dialog, ReadOnlyNote],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './device-types.html',
   styleUrl: './device-types.scss',

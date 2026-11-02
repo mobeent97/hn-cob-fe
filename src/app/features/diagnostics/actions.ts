@@ -8,6 +8,7 @@ import { Toaster } from '../../shared/ui/toast';
 import { simulateLoad } from '../../shared/ui/loading';
 import { ReadOnlyNote, writeAccess } from '../tenancy';
 import { Access } from '../../core/access/access';
+import { Select, SelectOption } from '../../shared/ui/select';
 
 type Draft = { id: number | null; name: string; endpoint: string; parameter: string; responseKey: string };
 type Phase = 'choose' | 'sending' | 'done';
@@ -25,7 +26,7 @@ export const isCritical = (a: DeviceAction) => /immobil/i.test(a.name) || a.para
  */
 @Component({
   selector: 'app-deviceactions',
-  imports: [ReadOnlyNote, Icon, Menu, Dialog],
+  imports: [Select, SelectOption, ReadOnlyNote, Icon, Menu, Dialog],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './actions.html',
   styleUrl: './actions.scss',

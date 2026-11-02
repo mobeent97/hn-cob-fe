@@ -15,6 +15,7 @@ import {
   settingError, toCondition,
 } from './config-profile-helpers';
 import { ReadOnlyNote, writeAccess } from '../tenancy';
+import { Select, SelectOption } from '../../shared/ui/select';
 
 type Status = ConfigProfile['status'];
 type Tags = Record<TagKey, string>;
@@ -68,7 +69,7 @@ const blankStat = (): Stat => ({ targeted: 0, applied: 0, pending: 0, error: 0, 
  */
 @Component({
   selector: 'app-configprofiles',
-  imports: [ReadOnlyNote, RouterLink, Icon, Menu, Dialog, AnimatedNumber, RelativePipe, LowerCasePipe],
+  imports: [Select, SelectOption, ReadOnlyNote, RouterLink, Icon, Menu, Dialog, AnimatedNumber, RelativePipe, LowerCasePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './config-profiles.html',
   styleUrl: './config-profiles.scss',
@@ -441,8 +442,9 @@ export class ConfigProfiles {
   protected setValue(i: number, v: string) {
     this.setRows((rows) => rows.map((r, j) => (j === i ? { ...r, values: v ? [v] : [] } : r)));
   }
-  protected addValue(i: number, v: string, sel: HTMLSelectElement) {
-    sel.value = '';
+  protected addValue(i: number, v: string, sel: Select) {
+    // Reset the picker to its prompt once the value is added as a chip.
+    queueMicrotask(() => sel.value.set(''));
     if (!v) return;
     this.setRows((rows) => rows.map((r, j) => (j === i && !r.values.includes(v) ? { ...r, values: [...r.values, v] } : r)));
   }

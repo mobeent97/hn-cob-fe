@@ -18,6 +18,7 @@ import {
   BRAND_SWATCHES, DOC_KINDS, EMAIL_RE, HEX_RE, PHONE_RE, URL_RE, USER_GROUP_OPTIONS, QID_RE,
   fmtSize, isoDay, messageFor, notBlank, notPast, splitPhone,
 } from './onboarding';
+import { Select, SelectOption } from '../../shared/ui/select';
 
 type DocKind = (typeof DOC_KINDS)[number];
 interface DocRow { id: number; name: string; kind: string; sizeKb: number; uploadedAt: string; file?: File }
@@ -35,7 +36,7 @@ const DOC_TYPES = /\.(pdf|jpe?g|png)$/i;
  */
 @Component({
   selector: 'app-customer-form',
-  imports: [RouterLink, ReactiveFormsModule, Icon, DatePipe, OrgTag],
+  imports: [Select, SelectOption, RouterLink, ReactiveFormsModule, Icon, DatePipe, OrgTag],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './customer-form.html',
   styleUrl: './customer-form.scss',

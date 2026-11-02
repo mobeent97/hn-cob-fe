@@ -10,6 +10,7 @@ import { Dialog } from '../../shared/ui/dialog';
 import { Toaster } from '../../shared/ui/toast';
 import { simulateLoad } from '../../shared/ui/loading';
 import { ReadOnlyNote, writeAccess } from '../tenancy';
+import { Select, SelectOption } from '../../shared/ui/select';
 
 type Status = Voucher['status'];
 type View = Status | 'All';
@@ -32,7 +33,7 @@ const CODE_RE = /^[A-Z0-9]{4,16}$/;
  */
 @Component({
   selector: 'app-vouchers',
-  imports: [ReadOnlyNote, Icon, Tabs, Pager, Menu, Dialog, DatePipe, NumPipe, TonePipe],
+  imports: [Select, SelectOption, ReadOnlyNote, Icon, Tabs, Pager, Menu, Dialog, DatePipe, NumPipe, TonePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './vouchers.html',
   styleUrl: './vouchers.scss',

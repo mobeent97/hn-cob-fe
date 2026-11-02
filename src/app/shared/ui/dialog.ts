@@ -49,7 +49,7 @@ import { Icon } from './icon';
       width: min(var(--w, 560px), calc(100vw - 32px)); border-radius: 12px;
       transition: opacity var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
     }
-    .modal[open] { opacity: 1; transform: scale(1); }
+    .modal[open] { opacity: 1; transform: none; } /* none, not scale(1): a transform would trap fixed dropdowns inside */
     @starting-style { .modal[open] { opacity: 0; transform: scale(var(--scale-modal)); } }
     .modal.closing { opacity: 0; transform: scale(0.98); transition-duration: var(--duration-quick); }
 
@@ -58,7 +58,7 @@ import { Icon } from './icon';
       border-radius: 0; border-width: 0 0 0 1px;
       transition: transform var(--duration-medium) var(--ease-drawer);
     }
-    .drawer[open] { transform: translateX(0); }
+    .drawer[open] { transform: none; }
     @starting-style { .drawer[open] { transform: translateX(100%); } }
     .drawer.closing { transform: translateX(100%); transition-duration: var(--duration-fast); }
 

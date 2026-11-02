@@ -13,6 +13,7 @@ import { AnimatedNumber } from '../../shared/ui/animated-number';
 import { simulateLoad } from '../../shared/ui/loading';
 import { DEVICE_ID_RE, parseCsv } from '../inventory/device-import';
 import { ReadOnlyNote, writeAccess } from '../tenancy';
+import { Select, SelectOption } from '../../shared/ui/select';
 
 type RegFilter = IotRegistration | 'all';
 interface RegRow {
@@ -57,7 +58,7 @@ const TAG_KEYS = ['deviceType', 'package', 'customerId', 'country', 'useCase'];
  */
 @Component({
   selector: 'app-provisioning',
-  imports: [ReadOnlyNote, RouterLink, Icon, Menu, Dialog, Pager, AnimatedNumber, RelativePipe],
+  imports: [Select, SelectOption, ReadOnlyNote, RouterLink, Icon, Menu, Dialog, Pager, AnimatedNumber, RelativePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './provisioning.html',
   styleUrl: './provisioning.scss',

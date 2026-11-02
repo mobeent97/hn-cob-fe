@@ -13,6 +13,7 @@ import { AnimatedNumber } from '../../shared/ui/animated-number';
 import { downloadCsv } from '../../shared/ui/csv';
 import { simulateLoad } from '../../shared/ui/loading';
 import { OrgFilter, OrgTag, ReadOnlyNote, orgContext, writeAccess } from '../tenancy';
+import { Select, SelectOption } from '../../shared/ui/select';
 
 type View = 'all' | 'active' | 'onboarding' | 'inactive' | 'deletion';
 type Sort = 'recent' | 'name' | 'devices' | 'expiry';
@@ -24,7 +25,7 @@ type Confirm = { kind: 'deactivate' | 'activate' | 'delete' | 'cancel-delete'; c
  */
 @Component({
   selector: 'app-customer-list',
-  imports: [RouterLink, Icon, Tabs, Pager, Menu, Dialog, AnimatedNumber, DatePipe, TonePipe, OrgTag, OrgFilter, ReadOnlyNote],
+  imports: [Select, SelectOption, RouterLink, Icon, Tabs, Pager, Menu, Dialog, AnimatedNumber, DatePipe, TonePipe, OrgTag, OrgFilter, ReadOnlyNote],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './customer-list.html',
   styleUrl: './customer-list.scss',

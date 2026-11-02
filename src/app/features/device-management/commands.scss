@@ -4,7 +4,7 @@
   gap: 20px;
 }
 
-.select.auto {
+app-select.auto {
   width: auto;
 }
 
@@ -162,7 +162,7 @@ pre.code {
 }
 
 @media (max-width: 640px) {
-  .toolbar .left .select.auto {
+  .toolbar .left app-select.auto {
     flex: 1;
     min-width: 0;
   }
