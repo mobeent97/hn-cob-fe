@@ -1,0 +1,90 @@
+<div class="page">
+  <div class="title-row">
+    <div class="title-block">
+      <h1>Help &amp; FAQs</h1>
+      <p class="subline num">{{ faqs().length }} answers about onboarding, devices, billing and your account</p>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="span-8 faq-col">
+      <label class="search wide">
+        <app-icon name="search" />
+        <input class="input" type="search" placeholder="Search questions and answers" aria-label="Search FAQs"
+               [value]="q()" (input)="q.set($any($event.target).value)" />
+      </label>
+
+      @if (loading()) {
+        @for (i of [1, 2, 3]; track i) {
+          <section class="topic">
+            <span class="skeleton" style="width:100px;height:16px"></span>
+            @for (j of [1, 2, 3]; track j) { <div class="sk-item"><span class="skeleton" style="width:60%;height:14px"></span></div> }
+          </section>
+        }
+      } @else {
+        @for (g of grouped(); track g.id) {
+          <section class="topic" [attr.aria-labelledby]="'t-' + g.id">
+            <h2 [id]="'t-' + g.id">{{ g.label }} <span class="muted num">{{ g.items.length }}</span></h2>
+            <div class="acc-list">
+              @for (f of g.items; track f.id) {
+                <div class="acc" [attr.data-open]="isOpen(f)">
+                  <h3>
+                    <button class="acc-head" [attr.aria-expanded]="isOpen(f)" [attr.aria-controls]="'a-' + f.id" (click)="toggle(f)">
+                      <span>{{ f.q }}</span>
+                      <span class="chev" aria-hidden="true">
+                        <svg viewBox="0 0 16 16" width="16" height="16"><path d="M4 6.5L8 10.5L12 6.5" /></svg>
+                      </span>
+                    </button>
+                  </h3>
+                  <div class="acc-panel" [id]="'a-' + f.id" role="region" [attr.aria-hidden]="!isOpen(f)" [attr.inert]="isOpen(f) ? null : ''">
+                    <div class="acc-inner">
+                      @for (p of f.a; track $index) { <p>{{ p }}</p> }
+                      @if (f.link) { <a class="link" [routerLink]="f.link.to">{{ f.link.label }}</a> }
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </section>
+        } @empty {
+          <div class="empty">
+            No answer mentions “{{ q() }}”. Try fewer words, or ask support.
+            <button class="btn sm" (click)="q.set('')">Clear search</button>
+          </div>
+        }
+      }
+    </div>
+
+    <aside class="span-4 card support">
+      <div class="card-head">
+        <div>
+          <h2>Still stuck?</h2>
+          <p class="card-sub">The HyperNym support team answers within one working day.</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <dl class="contact">
+          <div>
+            <dt>Email</dt>
+            <dd>
+              <a class="link" href="mailto:support@hypernymbiz.com">support&#64;hypernymbiz.com</a>
+              <button class="btn ghost icon sm" aria-label="Copy email address" (click)="copyEmail()"><app-icon name="copy" [size]="14" /></button>
+            </dd>
+          </div>
+          <div>
+            <dt>Hours</dt>
+            <dd class="num">Sunday to Thursday, 08:00–18:00 GST</dd>
+          </div>
+        </dl>
+        <div class="tray tip">
+          <strong>Include in your message</strong>
+          <ul>
+            <li>The customer's company name</li>
+            <li>Device ID and plate, for a device issue</li>
+            <li>What you expected and what happened</li>
+          </ul>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>

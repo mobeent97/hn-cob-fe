@@ -1,0 +1,186 @@
+<div class="page">
+  <div class="title-row">
+    <div class="title-block">
+      <h1>My profile</h1>
+      <p class="subline">
+        Signed in as {{ me().username }}
+        @if (me().lastLogin) { · last sign-in {{ me().lastLogin | rel }} }
+      </p>
+    </div>
+  </div>
+
+  <div class="settings">
+    <section class="row" aria-labelledby="p-details">
+      <div class="label-col">
+        <h2 id="p-details">Your details</h2>
+        <p class="desc">Shown to colleagues on audit records and as the manager on users who report to you.</p>
+        <div class="who">
+          <span class="avatar" aria-hidden="true">{{ initials() }}</span>
+          <div>
+            <span class="strong">{{ org().name }}</span>
+            <span class="muted small">{{ me().isSuperuser ? 'Superuser' : (me().groups.join(', ') || 'No role') }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        @if (loading()) {
+          <span class="skeleton" style="width:100%;height:150px"></span>
+        } @else {
+          <div class="fields two">
+            <div class="field">
+              <label for="pf-name">Full name</label>
+              <input id="pf-name" class="input" maxlength="120" autocomplete="name" [value]="name()" (input)="name.set($any($event.target).value)"
+                     [class.invalid]="detailsTried() && detailErrors().name" />
+              @if (detailsTried() && detailErrors().name) { <span class="error">{{ detailErrors().name }}</span> }
+            </div>
+            <div class="field">
+              <label for="pf-email">Email</label>
+              <input id="pf-email" class="input" readonly [value]="me().email" />
+              <span class="hint">Your sign-in. An administrator can change it from Users.</span>
+            </div>
+            <div class="field">
+              <label for="pf-phone">Mobile</label>
+              <div class="input-group">
+                <select class="select" aria-label="Country code" [value]="dial()" (change)="dial.set($any($event.target).value)">
+                  @for (c of store.countries; track c.code) { <option [value]="c.dial" [selected]="c.dial === dial()">{{ c.dial }}</option> }
+                </select>
+                <input id="pf-phone" class="input num" inputmode="tel" autocomplete="tel-national" [value]="phone()" (input)="phone.set($any($event.target).value)"
+                       [class.invalid]="detailsTried() && detailErrors().phone" />
+              </div>
+              @if (detailsTried() && detailErrors().phone) { <span class="error">{{ detailErrors().phone }}</span> }
+              @else { <span class="hint">Used for one-time codes when you reset your password.</span> }
+            </div>
+            <div class="field">
+              <label for="pf-user">Username</label>
+              <input id="pf-user" class="input" readonly [value]="me().username" />
+            </div>
+          </div>
+          <div class="panel-foot">
+            @if (detailsDirty()) { <button class="btn ghost" (click)="discardDetails()">Discard</button> }
+            <button class="btn" [class.primary]="detailsDirty()" [disabled]="!detailsDirty()" (click)="saveDetails()">Save details</button>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="row" aria-labelledby="p-access">
+      <div class="label-col">
+        <h2 id="p-access">Organization &amp; access</h2>
+        <p class="desc">What you can see and change. Each feature gets the lower of your best role and your organization's plan.</p>
+        <p class="small muted num">{{ accessSum().rw }} read &amp; write · {{ accessSum().r }} read · {{ accessSum().total - accessSum().rw - accessSum().r }} none</p>
+      </div>
+      <div class="panel">
+        @if (loading()) {
+          <span class="skeleton" style="width:100%;height:240px"></span>
+        } @else {
+          <dl class="dl org-dl">
+            <div>
+              <dt>Organization</dt>
+              <dd>{{ org().name }} <span class="pill">{{ org().kind }}</span></dd>
+            </div>
+            <div class="span-2">
+              <dt>Roles</dt>
+              <dd>
+                @if (access.isSuperuser()) {
+                  Superuser — full access to every organization
+                } @else {
+                  <span class="chips">
+                    @for (r of access.roles(); track r.id) { <span class="pill">{{ r.name }}</span> }
+                    @empty { <span class="dash">—</span> }
+                  </span>
+                }
+              </dd>
+            </div>
+          </dl>
+
+          <table class="table access">
+            <caption class="sr-only">Effective access per feature</caption>
+            <thead>
+              <tr><th>Feature</th><th>Your access</th><th class="desk-only"><span class="sr-only">Reason</span></th></tr>
+            </thead>
+            @for (a of accessAreas(); track a.area) {
+              <tbody>
+                <tr class="area-row"><th scope="rowgroup" colspan="3">{{ a.area }}</th></tr>
+                @for (row of a.rows; track row.f.key) {
+                  <tr>
+                    <th scope="row">{{ row.f.label }}</th>
+                    <td><span class="lvl" [attr.data-level]="row.level ?? 'none'">{{ levelLabel(row.level) }}</span>
+                      @if (row.reason) { <span class="reason-sm">{{ row.reason }}</span> }
+                    </td>
+                    <td class="desk-only reason">@if (row.reason) { {{ row.reason }} }</td>
+                  </tr>
+                }
+              </tbody>
+            }
+          </table>
+        }
+      </div>
+    </section>
+
+    <section class="row" aria-labelledby="p-pw">
+      <div class="label-col">
+        <h2 id="p-pw">Password</h2>
+        <p class="desc">You stay signed in here; other sessions are signed out when the password changes.</p>
+        <p class="small muted num">
+          @if (policy().expiryDays) { Passwords expire every {{ policy().expiryDays }} days. }
+          @if (policy().history) { Your last {{ policy().history }} can't be reused. }
+        </p>
+      </div>
+      <div class="panel">
+        @if (loading()) {
+          <span class="skeleton" style="width:100%;height:200px"></span>
+        } @else {
+          <form class="pw" (submit)="$event.preventDefault(); changePassword()">
+            <input class="sr-only" autocomplete="username" [value]="me().username" readonly tabindex="-1" aria-hidden="true" />
+            <div class="fields">
+              <div class="field">
+                <label for="pw-cur">Current password</label>
+                <input id="pw-cur" class="input" [type]="show() ? 'text' : 'password'" autocomplete="current-password" [value]="current()"
+                       (input)="current.set($any($event.target).value)" [class.invalid]="pwTried() && !current()" />
+                @if (pwTried() && !current()) { <span class="error">Enter your current password.</span> }
+              </div>
+              <div class="field">
+                <div class="label-row">
+                  <label for="pw-new">New password</label>
+                  <button type="button" class="btn ghost sm show-btn" (click)="show.set(!show())" [attr.aria-pressed]="show()">
+                    <span class="swap" [attr.data-on]="show()">
+                      <app-icon name="eye" [size]="15" class="a" /><app-icon name="eye-off" [size]="15" class="b" />
+                    </span>
+                    {{ show() ? 'Hide' : 'Show' }}
+                  </button>
+                </div>
+                <input id="pw-new" class="input" [type]="show() ? 'text' : 'password'" autocomplete="new-password" [value]="next()"
+                       (input)="next.set($any($event.target).value)" aria-describedby="pw-rules" />
+              </div>
+              <div class="field">
+                <label for="pw-conf">Confirm new password</label>
+                <input id="pw-conf" class="input" [type]="show() ? 'text' : 'password'" autocomplete="new-password" [value]="confirm()"
+                       (input)="confirm.set($any($event.target).value)" />
+              </div>
+            </div>
+
+            <ul class="checklist" id="pw-rules" aria-live="polite">
+              @for (r of rules(); track r.id) {
+                <li [class.ok]="r.ok" [class.bad]="pwTried() && !r.ok">
+                  <span class="mark" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" width="16" height="16" fill="none">
+                      <circle cx="8" cy="8" r="7" class="ring" />
+                      <path d="M5 8.2l2 2 4-4.4" class="tick" />
+                    </svg>
+                  </span>
+                  <span>{{ r.label }}</span>
+                  <span class="sr-only">{{ r.ok ? 'met' : 'not met' }}</span>
+                </li>
+              }
+            </ul>
+
+            <div class="panel-foot">
+              <span class="muted small num meet">{{ passed() }} of {{ rules().length }} rules met</span>
+              <button type="submit" class="btn" [class.primary]="canChange()">Change password</button>
+            </div>
+          </form>
+        }
+      </div>
+    </section>
+  </div>
+</div>

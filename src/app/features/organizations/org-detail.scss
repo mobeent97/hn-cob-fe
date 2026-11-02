@@ -1,0 +1,233 @@
+@use './org-shared';
+
+.name-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.crumb-current {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  span + span::before {
+    content: '·';
+    margin: 0 8px;
+    color: var(--faint);
+  }
+}
+
+.sw.lg {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+.notice {
+  align-items: center;
+  app-icon {
+    flex: none;
+  }
+  .grow {
+    flex: 1;
+  }
+}
+// Information, not a warning: the platform note and pending invitations.
+.info-notice {
+  border-color: var(--border);
+  background: var(--raised);
+  color: var(--text);
+  app-icon {
+    color: var(--muted);
+  }
+}
+
+dl {
+  margin: 0;
+}
+.dl.one {
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+.brand-dd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ro-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  margin: 0;
+}
+.small {
+  font-size: var(--fs-small);
+}
+
+// ── Features ────────────────────────────────────────────────
+.feat-head p {
+  margin: 0;
+  max-width: 760px;
+}
+.areas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 40px;
+  align-items: start;
+}
+.area {
+  h3 {
+    margin: 0;
+    padding: 12px 0 8px;
+    font-size: var(--fs-small);
+    color: var(--muted);
+    font-weight: 500;
+  }
+}
+.feat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 0;
+    border-top: 1px solid var(--rule);
+    transition: background-color var(--duration-quick) ease;
+  }
+  // A staged row carries a quiet marker until it is saved or discarded.
+  li.staged {
+    background: var(--accent-weak);
+    margin: 0 -10px;
+    padding: 10px;
+    border-radius: var(--radius-control);
+    border-top-color: transparent;
+  }
+}
+.f-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.f-name {
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  .pill {
+    height: 20px;
+    font-weight: 400;
+  }
+}
+.f-desc {
+  font-size: 13px;
+}
+.impact {
+  font-size: 13px;
+  color: var(--accent-strong);
+  &.down {
+    color: var(--warning);
+  }
+}
+.seg {
+  flex: none;
+}
+.seg.locked button.on[data-level='RW'] {
+  color: var(--text);
+}
+
+// ── Limits ──────────────────────────────────────────────────
+.limit {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  p {
+    margin: 0;
+  }
+}
+.usage-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  .big {
+    font-size: var(--fs-kpi);
+    font-weight: 500;
+    line-height: 1;
+  }
+}
+.meter.over > span {
+  background: var(--negative);
+}
+.limit .field {
+  max-width: 240px;
+}
+
+// ── People / roles ──────────────────────────────────────────
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.toolbar .right {
+  align-items: center;
+}
+.su-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  code {
+    color: var(--text);
+    background: var(--raised);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 12px;
+  }
+}
+
+// ── Edit drawer ─────────────────────────────────────────────
+.pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.sep {
+  border-top: 1px solid var(--rule);
+}
+
+@media (max-width: 1100px) {
+  .areas {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .title-row .actions {
+    width: 100%;
+    .btn:first-child {
+      flex: 1;
+    }
+  }
+  .feat-list li {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .pair {
+    grid-template-columns: 1fr;
+  }
+  .limit .field {
+    max-width: none;
+  }
+}

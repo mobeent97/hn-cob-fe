@@ -1,0 +1,210 @@
+<div class="page">
+  <div class="title-row">
+    <div class="title-block">
+      <h1>Roles</h1>
+      <p class="subline num">
+        @if (allOrgs()) {
+          {{ ownRoles().length }} roles across {{ sections().length - (templateCount() ? 1 : 0) }} organizations · {{ templateCount() }} templates
+        } @else {
+          {{ ownRoles().length }} {{ ownRoles().length === 1 ? 'role' : 'roles' }} in {{ writeOrg().name }}
+          @if (templateCount()) { · {{ templateCount() }} {{ templateCount() === 1 ? 'template' : 'templates' }} to copy from }
+        }
+        @if (noRole()) { · {{ noRole() }} {{ noRole() === 1 ? 'user has' : 'users have' }} no role }
+      </p>
+    </div>
+    @if (canWrite()) {
+      <div class="actions">
+        <button class="btn primary" (click)="add()"><app-icon name="plus" />New role</button>
+      </div>
+    }
+  </div>
+
+  @if (!canWrite()) {
+    <p class="ro-hint"><app-icon name="lock" [size]="14" />You can view roles. Ask an administrator to change them.</p>
+  }
+
+  <div class="table-wrap">
+    <table class="table stack roles">
+      <thead>
+        <tr>
+          <th>Role</th>
+          <th class="num">Members</th>
+          <th>Features</th>
+          <th>Status</th>
+          <th><span class="sr-only">Actions</span></th>
+        </tr>
+      </thead>
+      @if (loading()) {
+        <tbody>
+          @for (i of [1, 2, 3, 4, 5]; track i) {
+            <tr>
+              <td><span class="skeleton" style="width:120px;height:14px"></span><span class="sub"><span class="skeleton" style="width:220px;height:10px"></span></span></td>
+              <td class="num"><span class="skeleton" style="width:20px;height:14px"></span></td>
+              <td><span class="skeleton" style="width:260px;height:14px"></span></td>
+              <td><span class="skeleton" style="width:54px;height:20px"></span></td>
+              <td></td>
+            </tr>
+          }
+        </tbody>
+      } @else {
+        @for (s of sections(); track s.key) {
+          <tbody>
+            @if (s.heading) {
+              <tr class="group-row">
+                <th scope="rowgroup" colspan="5">{{ s.heading }} @if (s.sub) { <span class="muted group-sub">{{ s.sub }}</span> }</th>
+              </tr>
+            }
+            @for (g of s.rows; track g.id) {
+              <tr class="clickable" (click)="edit(g)">
+                <td>
+                  <span class="primary-cell">{{ g.name }}</span>
+                  @if (g.template) { <span class="pill tag">Template</span> }
+                  <span class="sub">{{ g.description }}</span>
+                </td>
+                <td class="phone-only num">
+                  @if (!g.template) { {{ g.members }} {{ g.members === 1 ? 'member' : 'members' }} · }
+                  {{ g.sum.rw }} read & write · {{ g.sum.r }} read
+                </td>
+                <td class="num desk-only">
+                  @if (g.template) { <span class="dash">—</span> }
+                  @else {
+                    {{ g.members }}
+                    @if (g.members !== g.activeMembers) { <span class="sub">{{ g.activeMembers }} active</span> }
+                  }
+                </td>
+                <td class="desk-only">
+                  <div class="perm-sum">
+                    <span class="perm-bar" [attr.aria-hidden]="true">
+                      <i class="rw" [style.flex-grow]="g.sum.rw"></i><i class="r" [style.flex-grow]="g.sum.r"></i><i class="n" [style.flex-grow]="g.sum.none"></i>
+                    </span>
+                    <span class="num muted">{{ g.sum.rw }} read & write · {{ g.sum.r }} read · {{ g.sum.none }} none</span>
+                  </div>
+                </td>
+                <td class="keep"><span class="pill" [class]="g.status | tone">{{ g.status }}</span></td>
+                <td class="actions-cell row-menu" (click)="$event.stopPropagation()">
+                  <app-menu [items]="menu(g)" [label]="'Actions for ' + g.name" />
+                </td>
+              </tr>
+            }
+          </tbody>
+        } @empty {
+          <tbody>
+            <tr><td colspan="5" class="empty-row"><div class="empty">No roles yet. Users need one to see any screen.
+              @if (canWrite()) { <button class="btn sm" (click)="add()">New role</button> }</div></td></tr>
+          </tbody>
+        }
+      }
+    </table>
+  </div>
+</div>
+
+<app-dialog [(open)]="open" variant="drawer" width="640px"
+            [heading]="draft().id ? draft().name || 'Edit role' : 'New role'"
+            [subheading]="draftTemplate() ? 'Template · a starting point organizations copy' : (draftOrg()?.name ?? '') + (draft().id ? ' · ' + memberCount() + (memberCount() === 1 ? ' member' : ' members') : ' · choose what members can see and change')">
+  <div class="form">
+    @if (readOnly()) {
+      <p class="ro-hint">
+        <app-icon name="lock" [size]="14" />
+        @if (draftTemplate() && canWrite()) { Templates are maintained by HyperNym. Copy it to make changes for {{ writeOrg().name }}. }
+        @else { You can view this role. Ask an administrator to change it. }
+      </p>
+    }
+    <div class="pair">
+      <div class="field">
+        <label for="g-name">Role name<span class="req">*</span></label>
+        <input id="g-name" class="input" maxlength="60" [readOnly]="readOnly()" [value]="draft().name" (input)="set('name', $any($event.target).value)"
+               [class.invalid]="tried() && errors().name" />
+        @if (tried() && errors().name) { <span class="error">{{ errors().name }}</span> }
+      </div>
+      @if (draft().id) {
+        <div class="field">
+          <span class="label">Status</span>
+          <label class="toggle status-toggle">
+            <input type="checkbox" [disabled]="readOnly()" [checked]="draft().status === 'Active'" (change)="set('status', $any($event.target).checked ? 'Active' : 'Inactive')" />
+            {{ draft().status }}
+          </label>
+        </div>
+      }
+    </div>
+    <div class="field">
+      <label for="g-desc">Description<span class="req">*</span></label>
+      <input id="g-desc" class="input" maxlength="160" [readOnly]="readOnly()" [value]="draft().description" (input)="set('description', $any($event.target).value)"
+             [class.invalid]="tried() && errors().description" />
+      @if (tried() && errors().description) { <span class="error">{{ errors().description }}</span> }
+    </div>
+    @if (draft().id && draft().status === 'Inactive' && wasActive()) {
+      <div class="notice"><app-icon name="alert" /><span>{{ memberCount() }} {{ memberCount() === 1 ? 'member loses' : 'members lose' }} the access this role grants.</span></div>
+    }
+
+    <div class="matrix-head">
+      <div>
+        <h3>Permissions</h3>
+        <p class="muted small num">
+          {{ draftSum().rw }} read & write · {{ draftSum().r }} read · {{ draftSum().none }} none
+          @if (!draftTemplate() && draft().id) { · <strong class="reach">{{ reach() }} {{ reach() === 1 ? 'member gets' : 'members get' }} this access</strong> }
+        </p>
+        @if (draftOrg()?.kind === 'Partner') { <p class="muted small">Capped by {{ draftOrg()!.name }}'s plan. HyperNym-only features are not listed.</p> }
+        @else if (draftTemplate()) { <p class="muted small">Copies are capped by each organization's plan. HyperNym-only features are not listed.</p> }
+      </div>
+      @if (!readOnly()) {
+        <div class="set-all">
+          <span class="muted small">Set all</span>
+          @for (l of levels; track $index) {
+            <button type="button" class="btn sm" (click)="setAll(l)">{{ label(l) }}</button>
+          }
+        </div>
+      }
+    </div>
+
+    @if (losers().length) {
+      <div class="notice losers" aria-live="polite">
+        <app-icon name="alert" />
+        <div>
+          <strong>{{ losers().length }} {{ losers().length === 1 ? 'member loses' : 'members lose' }} access</strong>
+          <ul>
+            @for (l of losers(); track l.user.id) { <li><span class="who">{{ l.user.name }}</span> · {{ l.features.join(', ') }}</li> }
+          </ul>
+        </div>
+      </div>
+    }
+    <table class="table perms">
+      @for (a of areas(); track a.area) {
+        <tbody>
+          <tr class="area-row"><th scope="rowgroup" colspan="2">{{ a.area }}</th></tr>
+          @for (f of a.features; track f.key) {
+            <tr>
+              <th scope="row">
+                <span class="f-label">{{ f.label }}</span>
+                <span class="f-desc">{{ f.description }}</span>
+                @if (capHint(f.key); as hint) { <span class="f-cap"><app-icon name="lock" [size]="12" />{{ hint }}</span> }
+              </th>
+              <td>
+                <div class="seg" role="radiogroup" [attr.aria-label]="f.label + ' permission'">
+                  @for (l of levels; track $index) {
+                    <button type="button" role="radio" [attr.aria-checked]="draft().permissions[f.key] === l" [class.on]="draft().permissions[f.key] === l"
+                            [attr.data-level]="l ?? 'none'" [disabled]="readOnly() || !allowed(f.key, l)"
+                            [attr.title]="allowed(f.key, l) ? null : capHint(f.key)" (click)="setPerm(f.key, l)">{{ label(l) }}</button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      }
+    </table>
+    @if (tried() && errors().permissions) { <span class="error">{{ errors().permissions }}</span> }
+
+  </div>
+  <ng-container slot="footer">
+    @if (readOnly()) {
+      <button class="btn" (click)="open.set(false)">Close</button>
+      @if (draftTemplate() && canWrite()) {
+        <button class="btn primary" (click)="copy(original()!)"><app-icon name="copy" />Copy to {{ writeOrg().name }}</button>
+      }
+    } @else {
+      @if (changed()) { <span class="muted footer-note num">{{ changed() }} {{ changed() === 1 ? 'change' : 'changes' }}</span> }
+      <button class="btn" (click)="open.set(false)">Cancel</button>
+      <button class="btn primary" (click)="save()">{{ draft().id ? 'Save role' : 'Create role' }}</button>
+    }
+  </ng-container>
+</app-dialog>

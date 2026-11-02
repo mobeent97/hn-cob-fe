@@ -1,0 +1,155 @@
+<div class="page">
+  <div class="title-row">
+    <div class="title-block">
+      <h1>Customers</h1>
+      <p class="subline num">{{ store.customers().length }} business accounts · {{ packageCounts().all }} shown</p>
+      @if (access.ro()) { <app-ro-note noun="customers" /> }
+    </div>
+    <div class="actions">
+      <button class="btn" (click)="export()" [disabled]="!rows().length"><app-icon name="download" />Export CSV</button>
+      @if (access.rw()) {
+        <a class="btn primary" routerLink="/customers/new"><app-icon name="plus" />New customer</a>
+      }
+    </div>
+  </div>
+
+  <!-- Count cards are the package filter -->
+  <div class="count-cards" role="group" aria-label="Filter by package">
+    <button class="count-card" [class.selected]="pkg() === 'all'" (click)="pkg.set('all')" [attr.aria-pressed]="pkg() === 'all'">
+      <span class="cc-label">All packages</span>
+      <span class="cc-value"><app-num [value]="packageCounts().all" /></span>
+    </button>
+    @for (p of packages; track p) {
+      <button class="count-card" [class.selected]="pkg() === p" (click)="pkg.set(pkg() === p ? 'all' : p)" [attr.aria-pressed]="pkg() === p">
+        <span class="cc-label">{{ p }}</span>
+        <span class="cc-value"><app-num [value]="packageCounts()[p]" /></span>
+      </button>
+    }
+  </div>
+
+  <div class="list">
+    <app-tabs [tabs]="tabs()" [(value)]="view" />
+
+    <div class="toolbar">
+      <div class="left">
+        <label class="search">
+          <app-icon name="search" />
+          <input class="input" type="search" placeholder="Company, contact, email or phone" aria-label="Search customers"
+                 [value]="q()" (input)="q.set($any($event.target).value)" />
+        </label>
+        @if (orgs.showOrg()) { <app-org-filter [(value)]="orgId" /> }
+      </div>
+      <div class="right">
+        <span class="count num">{{ rows().length }} {{ rows().length === 1 ? 'customer' : 'customers' }}</span>
+        <label class="sr-only" for="sort">Sort</label>
+        <select id="sort" class="select sort" [value]="sort()" (change)="sort.set($any($event.target).value)">
+          <option value="recent">Newest first</option>
+          <option value="name">Company A–Z</option>
+          <option value="devices">Most devices</option>
+          <option value="expiry">Contract ending soonest</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table stack">
+        <thead>
+          <tr>
+            <th>Company</th>
+            @if (orgs.showOrg()) { <th class="desk-only">Organization</th> }
+            <th>Contact</th>
+            <th>Location</th>
+            <th>Package</th>
+            <th class="num">Devices</th>
+            <th>Status</th>
+            <th>Contract ends</th>
+            <th><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+              <tr>
+                <td><span class="skeleton" style="width:160px;height:14px"></span><span class="sub"><span class="skeleton" style="width:90px;height:10px"></span></span></td>
+                @if (orgs.showOrg()) { <td class="desk-only"><span class="skeleton" style="width:100px;height:14px"></span></td> }
+                <td><span class="skeleton" style="width:120px;height:14px"></span></td>
+                <td><span class="skeleton" style="width:90px;height:14px"></span></td>
+                <td><span class="skeleton" style="width:70px;height:14px"></span></td>
+                <td class="num"><span class="skeleton" style="width:24px;height:14px"></span></td>
+                <td><span class="skeleton" style="width:54px;height:20px"></span></td>
+                <td><span class="skeleton" style="width:80px;height:14px"></span></td>
+                <td></td>
+              </tr>
+            }
+          } @else {
+            @for (c of pageRows(); track c.id) {
+              <tr class="clickable" [routerLink]="['/customers', c.id]">
+                <td>
+                  <span class="primary-cell">{{ c.company }}</span>
+                  <span class="sub">{{ c.industry }}</span>
+                </td>
+                @if (orgs.showOrg()) { <td class="desk-only"><app-org-tag [id]="c.orgId" /></td> }
+                <td class="phone-only">
+                  {{ c.package }} · {{ c.zone }} · ends {{ c.contractExpiry | date }}
+                </td>
+                <td class="desk-only">
+                  {{ c.contact.firstName }} {{ c.contact.lastName }}
+                  <span class="sub">{{ c.contact.email }}</span>
+                </td>
+                <td class="desk-only">{{ c.zone }}<span class="sub">{{ store.country(c.countryCode).name }}</span></td>
+                <td class="desk-only">{{ c.package }}<span class="sub">{{ c.customerType }}</span></td>
+                <td class="num desk-only">
+                  @if (c.stepsDone < 7) { <span class="dash" title="Hardware not assigned yet">—</span> }
+                  @else { {{ c.deviceCount }} }
+                </td>
+                <td class="keep">
+                  @if (c.deletionStatus === 'Requested') {
+                    <span class="pill negative">Deletion requested</span>
+                  } @else if (c.status === 'Active' && c.stepsDone < 9) {
+                    <span class="pill info">Onboarding {{ c.stepsDone }}/9</span>
+                  } @else {
+                    <span class="pill" [class]="c.status | tone">{{ c.status }}</span>
+                  }
+                </td>
+                <td class="num desk-only" [class]="expiryClass(c.contractExpiry)">
+                  {{ c.contractExpiry | date }}
+                  @if (daysFrom(c.contractExpiry) <= 60 && daysFrom(c.contractExpiry) >= 0) {
+                    <span class="sub">in {{ daysFrom(c.contractExpiry) }} days</span>
+                  }
+                </td>
+                <td class="actions-cell row-menu" (click)="$event.stopPropagation()">
+                  <app-menu [items]="menu(c)" [label]="'Actions for ' + c.company" />
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td [attr.colspan]="orgs.showOrg() ? 9 : 8" class="empty-row">
+                  <div class="empty">
+                    @if (q()) { No customer matches “{{ q() }}” in this view. }
+                    @else { No customers in this view. }
+                    <button class="btn sm" (click)="q.set(''); pkg.set('all'); view.set('all'); orgId.set(null)">Clear filters</button>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (!loading() && rows().length) {
+      <app-pager [total]="rows().length" [size]="size()" [(page)]="page" noun="customers" />
+    }
+  </div>
+</div>
+
+<app-dialog [(open)]="confirmOpen" [heading]="confirmCopy().title" width="440px">
+  <p class="confirm-body">{{ confirmCopy().body }}</p>
+  <ng-container slot="footer">
+    <button class="btn" (click)="confirmOpen.set(false)">Keep as is</button>
+    <button class="btn" [class.primary]="confirm()?.kind === 'activate' || confirm()?.kind === 'cancel-delete'"
+            [class.danger]="confirm()?.kind === 'deactivate' || confirm()?.kind === 'delete'" (click)="runConfirm()">
+      {{ confirmCopy().action }}
+    </button>
+  </ng-container>
+</app-dialog>

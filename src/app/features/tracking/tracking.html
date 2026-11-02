@@ -1,0 +1,117 @@
+<div class="trk-title title-row">
+  <div class="title-block">
+    <h1>Live tracking</h1>
+    <p class="subline num">{{ finding() }}</p>
+  </div>
+  <div class="actions">
+    <span class="trk-fresh num" [class.paused]="paused()" aria-live="off">
+      <span class="dot" aria-hidden="true"></span>
+      {{ paused() ? 'Paused at' : 'Updated' }} {{ stamp() }}
+    </span>
+    <button class="btn sm" type="button" (click)="togglePause()" [attr.aria-pressed]="paused()">
+      {{ paused() ? 'Resume updates' : 'Pause updates' }}
+    </button>
+  </div>
+</div>
+
+<div class="trk-body">
+  <aside class="trk-panel" #panel [class.list-open]="listOpen()" aria-label="Vehicles">
+    <div class="count-cards trk-counts" role="group" aria-label="Filter by state">
+      <button class="count-card" type="button" [class.selected]="state() === 'all'" [attr.aria-pressed]="state() === 'all'" (click)="state.set('all')">
+        <span class="cc-label">All</span>
+        <span class="cc-value"><app-num [value]="counts().all" /></span>
+      </button>
+      @for (s of states; track s) {
+        <button class="count-card" type="button" [class.selected]="state() === s" [attr.aria-pressed]="state() === s"
+                (click)="state.set(state() === s ? 'all' : s)">
+          <span class="cc-label"><span class="dot" [style.color]="dotColour[s]" aria-hidden="true"></span>{{ s }}</span>
+          <span class="cc-value"><app-num [value]="counts()[s]" /></span>
+        </button>
+      }
+    </div>
+
+    <button class="btn sm trk-list-toggle" type="button" (click)="listOpen.set(!listOpen())" [attr.aria-expanded]="listOpen()" aria-controls="trk-list-area">
+      <app-icon [name]="listOpen() ? 'chevron-down' : 'chevron-right'" />
+      {{ listOpen() ? 'Hide list' : 'List' }}
+      <span class="muted num">{{ rows().length }}</span>
+    </button>
+
+    <div class="trk-list-area" id="trk-list-area">
+      <div class="trk-filters">
+        <label class="sr-only" for="trk-customer">Customer</label>
+        <select id="trk-customer" class="select" [value]="customerId() === 'all' ? 'all' : customerId()" (change)="setCustomer($any($event.target).value)">
+          <option value="all">All customers</option>
+          @for (c of customerOptions(); track c.id) {
+            <option [value]="c.id">{{ c.name }} ({{ c.count }})</option>
+          }
+        </select>
+        <label class="search">
+          <app-icon name="search" />
+          <input class="input" type="search" placeholder="Plate, device ID or driver" aria-label="Search vehicles"
+                 [value]="q()" (input)="q.set($any($event.target).value)" />
+        </label>
+      </div>
+
+      <ul class="trk-list" #list role="listbox" aria-label="Vehicles on the map">
+        @if (loading()) {
+          @for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) {
+            <li class="trk-row skeleton-row" aria-hidden="true">
+              <span class="skeleton" style="width:6px;height:6px;border-radius:50%"></span>
+              <span class="trk-main">
+                <span class="skeleton" style="width:90px;height:14px"></span>
+                <span class="skeleton" style="width:150px;height:10px;margin-top:6px"></span>
+              </span>
+              <span class="trk-side"><span class="skeleton" style="width:48px;height:14px"></span></span>
+            </li>
+          }
+        } @else {
+          @for (v of rows(); track v.deviceId) {
+            <li
+              class="trk-row"
+              role="option"
+              tabindex="0"
+              [attr.data-id]="v.deviceId"
+              [class.selected]="v.deviceId === selectedId()"
+              [attr.aria-selected]="v.deviceId === selectedId()"
+              (click)="select(v.deviceId, 'list')"
+              (keydown.enter)="select(v.deviceId, 'list')"
+              (keydown.space)="$event.preventDefault(); select(v.deviceId, 'list')"
+            >
+              <span class="dot" [style.color]="dotColour[v.state]" [attr.aria-label]="v.state"></span>
+              <span class="trk-main">
+                <strong>{{ v.plate }}</strong>
+                <span class="sub">{{ v.driver }} · {{ company(v.customerId) }}</span>
+              </span>
+              <span class="trk-side num">
+                @if (v.state === 'Offline') {
+                  <span class="dash">—</span>
+                } @else {
+                  <span>{{ v.speedKmh }}<span class="unit">km/h</span></span>
+                }
+                <span class="sub" [class.stale]="v.state === 'Offline'">{{ rel(v.updatedAt) }}</span>
+              </span>
+            </li>
+          } @empty {
+            <li class="trk-empty">
+              <div class="empty">
+                @if (q()) { No vehicle matches “{{ q() }}”. } @else { No vehicles in this view. }
+                <button class="btn sm" type="button" (click)="clearFilters()">Clear filters</button>
+              </div>
+            </li>
+          }
+        }
+      </ul>
+    </div>
+  </aside>
+
+  <div class="trk-map-wrap">
+    <div class="trk-map" #map role="region" aria-label="Map of vehicle positions"></div>
+    @if (tilesFailed()) {
+      <div class="trk-tile-error" role="alert">
+        <app-icon name="alert" />
+        <span>The map background didn't load. Vehicle positions are still shown.</span>
+        <button class="btn sm" type="button" (click)="retryTiles()">Retry</button>
+      </div>
+    }
+  </div>
+</div>

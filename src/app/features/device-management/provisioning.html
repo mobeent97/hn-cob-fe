@@ -1,0 +1,363 @@
+<div class="page">
+  <div class="title-row">
+    <div class="title-block">
+      <h1>Provisioning</h1>
+      <p class="subline num">
+        @if (loading()) { <span class="skeleton" style="width:420px;height:12px"></span> } @else { {{ subline() }} }
+      </p>
+      @if (!w.rw() && !loading()) { <app-ro-note noun="enrollment groups and device registrations" /> }
+    </div>
+    <div class="actions">
+      @if (w.rw()) { <button class="btn primary" (click)="openRegister()"><app-icon name="plus" />Register devices</button> }
+    </div>
+  </div>
+
+  <!-- Enrollment groups -->
+  <section class="block">
+    <div class="block-head">
+      <h2>Enrollment groups</h2>
+      <p class="muted">Device Provisioning Service lets a device of each type register itself on first power-up and gives it these starting tags.</p>
+    </div>
+    <div class="table-wrap">
+      <table class="table stack groups">
+        <thead>
+          <tr>
+            <th>Group</th>
+            <th>Attestation</th>
+            <th>Allocation</th>
+            <th>Initial twin tags</th>
+            <th class="num">Enrolled</th>
+            <th>Enabled</th>
+            <th><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (i of [1, 2, 3, 4, 5]; track i) {
+              <tr>
+                <td><span class="skeleton" style="width:140px;height:14px"></span><span class="sub"><span class="skeleton" style="width:80px;height:10px"></span></span></td>
+                <td class="desk-only"><span class="skeleton" style="width:90px;height:14px"></span></td>
+                <td class="desk-only"><span class="skeleton" style="width:200px;height:14px"></span></td>
+                <td class="desk-only"><span class="skeleton" style="width:160px;height:20px"></span></td>
+                <td class="desk-only num"><span class="skeleton" style="width:28px;height:14px"></span></td>
+                <td class="keep"><span class="skeleton" style="width:32px;height:18px"></span></td>
+                <td></td>
+              </tr>
+            }
+          } @else {
+            @for (g of groups(); track g.id) {
+              <tr [class.clickable]="w.rw()" (click)="w.rw() && editGroup(g)">
+                <td>
+                  <span class="primary-cell mono">{{ g.id }}</span>
+                  <span class="sub">{{ g.type }}</span>
+                </td>
+                <td class="phone-only num">{{ g.attestation }} · {{ g.enrolled }} enrolled @if (!g.enabled && g.waiting) { · {{ g.waiting }} can’t register }</td>
+                <td class="desk-only">{{ g.attestation }}</td>
+                <td class="desk-only alloc">{{ g.allocation }}</td>
+                <td class="desk-only">
+                  <span class="tags">@for (t of g.tags; track t[0]) { <span class="tag mono">{{ t[0] }}={{ t[1] }}</span> }</span>
+                </td>
+                <td class="desk-only num">
+                  <app-num [value]="g.enrolled" />
+                  @if (g.waiting) { <span class="sub" [class.warn]="!g.enabled">{{ g.waiting }} {{ g.enabled ? 'waiting' : 'can’t register' }}</span> }
+                </td>
+                <td class="keep" (click)="$event.stopPropagation()">
+                  <label class="toggle" [title]="g.enabled ? 'New devices can register' : 'New devices of this type can’t register'">
+                    <input #tg type="checkbox" [checked]="g.enabled" [disabled]="!w.rw()" [attr.aria-label]="'Enable ' + g.id" (change)="toggleGroup(g, tg.checked, tg)" />
+                    <span class="desk-only">{{ g.enabled ? 'On' : 'Off' }}</span>
+                  </label>
+                </td>
+                <td class="actions-cell row-menu" (click)="$event.stopPropagation()">
+                  @if (w.rw()) { <app-menu [items]="groupMenu(g)" [label]="'Actions for ' + g.id" /> }
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="empty-row"><div class="empty">No enrollment groups. Devices can only be registered one by one.</div></td></tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (!loading() && individual()) {
+      <p class="muted small num">Plus {{ individual() }} individual {{ individual() === 1 ? 'enrollment' : 'enrollments' }} registered from this screen.</p>
+    }
+  </section>
+
+  <!-- Registrations -->
+  <section class="block">
+    <div class="block-head">
+      <h2>Device registrations</h2>
+      <p class="muted">Every device identity on {{ store.hub().hubName }}, by registration state.</p>
+    </div>
+
+    <div class="count-cards" role="group" aria-label="Filter by registration state">
+      <button class="count-card" [class.selected]="filter() === 'all'" (click)="filter.set('all')" [attr.aria-pressed]="filter() === 'all'">
+        <span class="cc-label">All identities</span>
+        <span class="cc-value">@if (loading()) { <span class="skeleton" style="width:40px;height:18px"></span> } @else { <app-num [value]="counts().all" /> }</span>
+      </button>
+      @for (r of registrations; track r) {
+        <button class="count-card" [class.selected]="filter() === r" (click)="filter.set(filter() === r ? 'all' : r)" [attr.aria-pressed]="filter() === r">
+          <span class="cc-label">{{ r }}</span>
+          <span class="cc-value" [class.neg]="r === 'Attestation failed' && counts()[r]">
+            @if (loading()) { <span class="skeleton" style="width:32px;height:18px"></span> } @else { <app-num [value]="counts()[r]" /> }
+          </span>
+        </button>
+      }
+    </div>
+
+    @if (filter() === 'all' || filter() === 'Awaiting first connection') {
+      <p class="hint-line"><app-icon name="info" [size]="14" />
+        <span><strong>Awaiting first connection</strong> means the identity exists on the hub but the device hasn’t connected yet. That’s normal for stock
+        and devices in transit; look into it if the device was installed more than a day ago.</span></p>
+    } @else if (filter() === 'Attestation failed') {
+      <p class="hint-line"><app-icon name="info" [size]="14" />
+        <span>The device’s key or certificate didn’t match its enrollment group. Re-issue credentials, or check the group’s attestation.</span></p>
+    }
+
+    <div class="toolbar">
+      <div class="left">
+        <label class="search">
+          <app-icon name="search" />
+          <input class="input" type="search" placeholder="Device ID or customer" aria-label="Search registrations"
+                 [value]="q()" (input)="q.set($any($event.target).value)" />
+        </label>
+        <label class="sr-only" for="pv-type">Device type</label>
+        <select id="pv-type" class="select type-sel" [value]="typeFilter()" (change)="typeFilter.set($any($event.target).value)">
+          <option value="all">All types</option>
+          @for (t of typeNames(); track t) { <option [value]="t">{{ t }}</option> }
+        </select>
+      </div>
+      <div class="right">
+        <span class="count num">{{ rows().length }} {{ rows().length === 1 ? 'device' : 'devices' }}</span>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table stack">
+        <thead>
+          <tr>
+            <th>
+              <span class="id-cell">
+                @if (w.rw()) {
+                <label class="check" title="Select this page">
+                  <input type="checkbox" aria-label="Select all devices on this page" [checked]="pageAllSelected()"
+                         [indeterminate]="pageSomeSelected()" [disabled]="loading() || !pageRows().length"
+                         (change)="togglePage($any($event.target).checked)" />
+                </label>
+                }
+                Device ID
+              </span>
+            </th>
+            <th>Type</th>
+            <th>Registration</th>
+            <th>Auth</th>
+            <th>Transport</th>
+            <th>Enrolled via</th>
+            <th class="num">Last activity</th>
+            <th>Customer</th>
+            <th><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) {
+              <tr>
+                <td><span class="id-cell"><span class="skeleton" style="width:16px;height:16px"></span><span class="skeleton" style="width:90px;height:14px"></span></span></td>
+                <td class="desk-only"><span class="skeleton" style="width:80px;height:14px"></span></td>
+                <td class="keep"><span class="skeleton" style="width:90px;height:20px"></span></td>
+                <td class="desk-only"><span class="skeleton" style="width:90px;height:14px"></span></td>
+                <td class="desk-only"><span class="skeleton" style="width:110px;height:14px"></span></td>
+                <td class="desk-only"><span class="skeleton" style="width:110px;height:14px"></span></td>
+                <td class="desk-only"><span class="skeleton" style="width:60px;height:14px"></span></td>
+                <td class="desk-only"><span class="skeleton" style="width:130px;height:14px"></span></td>
+                <td></td>
+              </tr>
+            }
+          } @else {
+            @for (r of pageRows(); track r.s.deviceId) {
+              <tr [class.picked]="selected().has(r.s.deviceId)">
+                <td>
+                  <span class="id-cell">
+                    @if (w.rw()) {
+                      <label class="check">
+                        <input type="checkbox" [attr.aria-label]="'Select ' + r.s.deviceId" [checked]="selected().has(r.s.deviceId)"
+                               (change)="toggle(r.s.deviceId, $any($event.target).checked)" />
+                      </label>
+                    }
+                    <a class="link mono" [routerLink]="['/devices', r.s.deviceId]">{{ r.s.deviceId }}</a>
+                  </span>
+                </td>
+                <td class="phone-only num">
+                  {{ r.type ?? 'Not in Inventory' }} · @if (r.s.lastActivity) { {{ r.s.lastActivity | rel }} } @else { never connected }
+                </td>
+                <td class="desk-only">@if (r.type) { {{ r.type }} } @else { <span class="dash" title="Not in Inventory">—</span> }</td>
+                <td class="keep"><span class="pill" [class]="regTone[r.s.registration]">{{ r.s.registration }}</span></td>
+                <td class="desk-only">{{ r.s.auth }}</td>
+                <td class="desk-only">{{ r.s.transport }}</td>
+                <td class="desk-only">@if (r.s.enrollmentGroup === 'individual') { Individual } @else { <span class="mono small">{{ r.s.enrollmentGroup }}</span> }</td>
+                <td class="desk-only num">@if (r.s.lastActivity) { {{ r.s.lastActivity | rel }} } @else { <span class="muted">Never</span> }</td>
+                <td class="desk-only">
+                  @if (r.customer; as c) {
+                    @if (c.link) { <a class="link plain" [routerLink]="c.link">{{ c.name }}</a> } @else { {{ c.name }} }
+                  } @else { <span class="dash" title="In stock">—</span> }
+                </td>
+                <td class="actions-cell row-menu">
+                  @if (w.rw()) { <app-menu [items]="rowMenu(r)" [label]="'Actions for ' + r.s.deviceId" /> }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="9" class="empty-row">
+                  <div class="empty">
+                    @if (store.iotStates().length) {
+                      No device identity matches these filters. <button class="btn sm" (click)="clearFilters()">Clear filters</button>
+                    } @else {
+                      No device is registered on the hub yet. @if (w.rw()) { <button class="btn sm" (click)="openRegister()">Register devices</button> }
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (!loading() && rows().length) {
+      <app-pager [total]="rows().length" [size]="size()" [(page)]="page" noun="devices" />
+    }
+  </section>
+
+  <div class="bulk-bar" [class.show]="w.rw() && selected().size > 0" role="toolbar" aria-label="Bulk actions" [attr.aria-hidden]="selected().size === 0">
+    <span class="picked-count num"><strong>{{ selected().size }}</strong> selected</span>
+    <div class="bulk-actions">
+      <button class="btn sm" [disabled]="!eligible().enable" (click)="enable()">
+        <app-icon name="play" />Enable @if (eligible().enable && eligible().enable < selected().size) { <span class="num">({{ eligible().enable }})</span> }
+      </button>
+      <button class="btn sm" [disabled]="!eligible().disable" (click)="disable()">
+        <app-icon name="power" />Disable @if (eligible().disable && eligible().disable < selected().size) { <span class="num">({{ eligible().disable }})</span> }
+      </button>
+      <button class="btn sm" (click)="reissue()"><app-icon name="key" />Re-issue credentials</button>
+    </div>
+    <button class="btn ghost icon sm" aria-label="Clear selection" (click)="clearSelection()"><app-icon name="x" /></button>
+  </div>
+</div>
+
+<!-- Disable enrollment group -->
+<app-dialog [(open)]="disOpen" [heading]="'Disable ' + (disTarget()?.id ?? '') + '?'" width="460px"
+            [subheading]="'New ' + (disTarget()?.type ?? '') + ' devices won’t be able to register.'">
+  @if (disTarget(); as g) {
+    <p class="num">
+      The {{ g.enrolled }} devices already on the hub keep working.
+      @if (g.waiting) { <strong>{{ g.waiting }}</strong> {{ g.waiting === 1 ? 'device is' : 'devices are' }} still awaiting first connection and will fail to register until you enable the group again. }
+    </p>
+  }
+  <ng-container slot="footer">
+    <button class="btn" (click)="disOpen.set(false)">Cancel</button>
+    <button class="btn danger" (click)="confirmDisable()"><app-icon name="power" />Disable group</button>
+  </ng-container>
+</app-dialog>
+
+<!-- Edit enrollment group -->
+<app-dialog [(open)]="groupOpen" variant="drawer" width="520px" [heading]="gDraft()?.id ?? ''"
+            [subheading]="(gDraft()?.type ?? '') + ' · changes apply to devices that register from now on'">
+  @if (gDraft(); as d) {
+    <div class="form">
+      <div class="field">
+        <span class="label">Attestation</span>
+        <div class="seg" role="radiogroup" aria-label="Attestation">
+          @for (a of ['Symmetric key', 'X.509 CA']; track a) {
+            <button type="button" role="radio" [attr.aria-checked]="d.attestation === a" [class.on]="d.attestation === a" (click)="patchG({ attestation: $any(a) })">{{ a }}</button>
+          }
+        </div>
+        <span class="hint">
+          @if (d.attestation === 'X.509 CA') { Devices prove identity with a certificate signed by the HyperNym CA. }
+          @else { Each device derives its key from the group key and its ID. }
+        </span>
+      </div>
+      <div class="field">
+        <label for="pv-alloc">Allocation policy</label>
+        <select id="pv-alloc" class="select" [value]="d.allocation" (change)="patchG({ allocation: $any($event.target).value })">
+          @for (a of allocations; track a) { <option [value]="a" [selected]="a === d.allocation">{{ a }}</option> }
+        </select>
+        <span class="hint">One hub today, so every policy lands on {{ store.hub().hubName }}.</span>
+      </div>
+      <div class="field">
+        <span class="label">Initial twin tags</span>
+        <div class="tag-rows">
+          @for (t of d.tags; track $index; let i = $index) {
+            <div class="tag-row">
+              <select class="select mono" [attr.aria-label]="'Tag ' + (i + 1)" [value]="t.key" (change)="setTag(i, { key: $any($event.target).value })">
+                @for (k of freeTagKeys(i); track k) { <option [value]="k" [selected]="k === t.key">{{ k }}</option> }
+              </select>
+              <input class="input mono" [attr.aria-label]="'Value for ' + t.key" [value]="t.value" (input)="setTag(i, { value: $any($event.target).value })"
+                     [class.invalid]="gTried() && !t.value.trim()" />
+              <button type="button" class="btn ghost icon sm" [attr.aria-label]="'Remove ' + t.key" (click)="removeTag(i)"><app-icon name="x" /></button>
+            </div>
+          }
+          @if (d.tags.length < tagKeys.length) {
+            <button type="button" class="btn sm add" (click)="addTag()"><app-icon name="plus" />Add tag</button>
+          }
+        </div>
+        @if (gTried() && gErrors()['tags']) { <span class="error">{{ gErrors()['tags'] }}</span> }
+        @if (gTried() && gErrors()['type']) { <span class="error">{{ gErrors()['type'] }}</span> }
+        <span class="hint">The portal adds customerId, package and country when the device is allocated. Configuration profiles target these tags.</span>
+      </div>
+    </div>
+  }
+  <ng-container slot="footer">
+    <button class="btn" (click)="groupOpen.set(false)">Cancel</button>
+    <button class="btn primary" (click)="saveGroup()">Save group</button>
+  </ng-container>
+</app-dialog>
+
+<!-- Register devices -->
+<app-dialog [(open)]="regOpen" heading="Register devices" width="720px"
+            subheading="Creates hub identities for devices that don’t have one. Paste IDs or drop a CSV with a device_id column.">
+  <div class="reg-input">
+    <label for="pv-paste" class="sr-only">Device IDs</label>
+    <textarea id="pv-paste" class="textarea mono" rows="5" spellcheck="false" placeholder="DEV-20001&#10;DEV-20002, DEV-20003"
+              [value]="regText()" (input)="regText.set($any($event.target).value); regFile.set(null)"></textarea>
+    <label class="drop" [class.over]="dragging()" (dragover)="$event.preventDefault(); dragging.set(true)" (dragleave)="dragging.set(false)" (drop)="onDrop($event)">
+      <input type="file" accept=".csv,.txt,text/csv,text/plain" class="sr-only" (change)="onPick($event)" />
+      <app-icon name="upload" [size]="18" />
+      <span><span class="link">Choose a CSV</span> or drop it here</span>
+      @if (regFile()) { <span class="muted small">{{ regFile() }}</span> }
+    </label>
+  </div>
+
+  @if (parsed().length) {
+    <div class="preview-head num">
+      <span><strong>{{ toRegister().length }}</strong> to register · {{ skipped() }} skipped</span>
+    </div>
+    <div class="table-wrap preview">
+      <table class="table">
+        <thead><tr><th class="num">Line</th><th>Device ID</th><th>Result</th></tr></thead>
+        <tbody>
+          @for (r of parsed(); track $index) {
+            <tr>
+              <td class="num muted">{{ r.line }}</td>
+              <td class="mono">{{ r.id }}</td>
+              <td class="wrap">
+                <span class="res" [attr.data-r]="r.result">
+                  @switch (r.result) {
+                    @case ('ready') { <app-icon name="check" [size]="14" /> }
+                    @case ('new') { <app-icon name="plus" [size]="14" /> }
+                    @case ('invalid') { <app-icon name="circle-x" [size]="14" /> }
+                    @default { <app-icon name="circle-dot" [size]="14" /> }
+                  }
+                  {{ r.note }}
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+  <ng-container slot="footer">
+    <button class="btn" (click)="regOpen.set(false)">Cancel</button>
+    <button class="btn primary" [disabled]="!toRegister().length" (click)="register()">
+      Register {{ toRegister().length || '' }} {{ toRegister().length === 1 ? 'device' : 'devices' }}
+    </button>
+  </ng-container>
+</app-dialog>

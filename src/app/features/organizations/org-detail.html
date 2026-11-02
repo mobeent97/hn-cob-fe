@@ -1,0 +1,414 @@
+<div class="page">
+  @if (org(); as o) {
+    <div class="title-row">
+      <div class="title-block">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="" (click)="$event.preventDefault(); back.emit()">Organizations</a><span aria-hidden="true">/</span><span class="crumb-current">{{ o.name }}</span>
+        </nav>
+        <div class="name-row">
+          <span class="sw lg" [style.background]="o.brandColour" aria-hidden="true"></span>
+          <h1>{{ o.name }}</h1>
+          <span class="pill">{{ o.kind }}</span>
+          <span class="pill" [class]="orgTone(o.status)">{{ o.status }}</span>
+        </div>
+        <p class="subline meta num">
+          <span>{{ o.legalName }}</span><span [title]="countryNames(o.countries)">{{ o.countries.length > 3 ? o.countries.length + ' countries' : countryNames(o.countries) }}</span><span>{{ o.segments.join(' · ') }}</span><span>Since {{ o.createdAt | date }}</span>
+        </p>
+      </div>
+      <div class="actions">
+        <button class="btn" (click)="viewAs.emit(o)"><app-icon name="building-2" />View as this organization</button>
+        @if (menu().length) { <app-menu [items]="menu()" [label]="'More actions for ' + o.name" /> }
+      </div>
+    </div>
+
+    @if (o.kind === 'Platform') {
+      <div class="notice info-notice"><app-icon name="info" />
+        <span>{{ o.name }} is the platform organization: it runs the portal for every partner. It has every feature, no limits, and can't be suspended.</span>
+      </div>
+    } @else if (o.status === 'Invited') {
+      <div class="notice info-notice"><app-icon name="send" />
+        <span class="grow">Invitation pending: {{ admin()?.name ?? o.contact.name }} ({{ admin()?.email ?? o.contact.email }}) hasn't signed in yet.</span>
+        @if (canWrite()) { <button class="btn sm" (click)="resend.emit(o)">Resend invitation</button> }
+      </div>
+    } @else if (o.status === 'Suspended') {
+      <div class="notice"><app-icon name="pause" />
+        <span class="grow">Suspended: {{ stats().users }} {{ stats().users === 1 ? 'user' : 'users' }} can't sign in. Customers and devices keep running.</span>
+        @if (canWrite()) { <button class="btn sm" (click)="status.emit({ kind: 'reactivate', org: o })">Reactivate</button> }
+      </div>
+    }
+
+    <app-tabs [tabs]="tabs()" [(value)]="tab" />
+
+    @switch (tab()) {
+      <!-- Profile ───────────────────────────────────────────── -->
+      @case ('profile') {
+        <section class="kpi-strip" aria-label="Usage">
+          <div class="kpi">
+            <span class="kpi-label">Customers</span>
+            @if (loading()) { <span class="skeleton" style="width:48px;height:30px;margin:3px 0"></span> }
+            @else { <span class="kpi-value"><app-num [value]="stats().customers" /></span> }
+            <span class="kpi-caption num">@if (o.limits.maxCustomers) { of {{ o.limits.maxCustomers }} allowed } @else { no limit }</span>
+          </div>
+          <div class="kpi">
+            <span class="kpi-label">Devices in service</span>
+            @if (loading()) { <span class="skeleton" style="width:48px;height:30px;margin:3px 0"></span> }
+            @else { <span class="kpi-value"><app-num [value]="stats().inService" /></span> }
+            <span class="kpi-caption num">of {{ stats().devices }} devices it holds</span>
+          </div>
+          <div class="kpi">
+            <span class="kpi-label">Users</span>
+            @if (loading()) { <span class="skeleton" style="width:40px;height:30px;margin:3px 0"></span> }
+            @else { <span class="kpi-value"><app-num [value]="stats().users" /></span> }
+            <span class="kpi-caption num">@if (o.limits.maxUsers) { of {{ o.limits.maxUsers }} allowed } @else { no limit }</span>
+          </div>
+          <div class="kpi">
+            <span class="kpi-label">Features</span>
+            @if (loading()) { <span class="skeleton" style="width:40px;height:30px;margin:3px 0"></span> }
+            @else { <span class="kpi-value"><app-num [value]="featureTotal().on" /></span> }
+            <span class="kpi-caption num">of {{ featureTotal().of }} it could have</span>
+          </div>
+        </section>
+        <div class="grid">
+          <section class="card span-8">
+            <div class="card-head">
+              <h2>Profile</h2>
+              @if (canWrite()) { <button class="btn sm" (click)="editProfile()"><app-icon name="pencil" />Edit</button> }
+            </div>
+            <div class="card-body">
+              @if (loading()) {
+                <div class="dl">
+                  @for (i of [1, 2, 3, 4, 5, 6]; track i) { <div><span class="skeleton" style="width:60px;height:10px"></span><br /><span class="skeleton" style="width:130px;height:14px"></span></div> }
+                </div>
+              } @else {
+                <dl class="dl">
+                  <div><dt>Name</dt><dd>{{ o.name }}</dd></div>
+                  <div><dt>Legal name</dt><dd>{{ o.legalName }}</dd></div>
+                  <div><dt>Kind</dt><dd>{{ o.kind === 'Platform' ? 'Platform (HyperNym)' : 'Partner' }}</dd></div>
+                  <div><dt>Countries</dt><dd>{{ countryNames(o.countries) }}</dd></div>
+                  <div><dt>Segments</dt><dd>{{ o.segments.includes('B2B') ? 'Businesses (B2B)' : '' }}{{ o.segments.length === 2 ? ' and ' : '' }}{{ o.segments.includes('B2C') ? 'Consumers (B2C)' : '' }}</dd></div>
+                  <div><dt>Created</dt><dd class="num">{{ o.createdAt | date }}</dd></div>
+                  <div><dt>Brand colour</dt><dd class="brand-dd"><span class="sw" [style.background]="o.brandColour"></span><span class="mono">{{ o.brandColour }}</span></dd></div>
+                </dl>
+              }
+            </div>
+          </section>
+          <section class="card span-4">
+            <div class="card-head"><div><h2>Contact</h2><p class="card-sub">Who HyperNym talks to</p></div></div>
+            <div class="card-body">
+              <dl class="dl one">
+                <div><dt>Name</dt><dd>{{ o.contact.name }}</dd></div>
+                <div><dt>Email</dt><dd><a class="link" [href]="'mailto:' + o.contact.email">{{ o.contact.email }}</a></dd></div>
+                <div><dt>Phone</dt><dd class="num">@if (o.contact.phone) { {{ o.contact.phone }} } @else { <span class="dash">—</span> }</dd></div>
+              </dl>
+            </div>
+          </section>
+        </div>
+      }
+
+      <!-- Features (entitlements) ───────────────────────────── -->
+      @case ('features') {
+        <div class="feat-head">
+          <p class="muted num">
+            @if (o.kind === 'Platform') {
+              HyperNym has every feature at read & write. Its entitlements can't be changed.
+            } @else {
+              {{ enabledCount() }} of {{ grantable }} features enabled. The most any role in {{ o.name }} can be given; a person's access is the lower of this and their roles.
+            }
+          </p>
+        </div>
+        @if (!editable() && o.kind !== 'Platform') {
+          <p class="ro-hint muted"><app-icon name="lock" [size]="14" />Read-only: you need read & write on Organizations to change entitlements.</p>
+        }
+
+        <div class="areas">
+          @for (a of areas; track a.area) {
+            <section class="area">
+              <h3>{{ a.area }}</h3>
+              <ul class="feat-list">
+                @for (f of a.features; track f.key) {
+                  @let locked = o.kind === 'Platform' || !!f.platformOnly || !editable();
+                  <li [class.staged]="isStaged(f.key)">
+                    <div class="f-text">
+                      <span class="f-name">{{ f.label }}
+                        @if (f.platformOnly && o.kind !== 'Platform') { <span class="pill">HyperNym only</span> }
+                      </span>
+                      <span class="f-desc muted">{{ f.description }}</span>
+                      @if (isStaged(f.key)) { <span class="impact num" [class.down]="impacts()[f.key].startsWith('Lowering') || impacts()[f.key].startsWith('Removing')">{{ impacts()[f.key] }}</span> }
+                    </div>
+                    <div class="seg" role="radiogroup" [attr.aria-label]="f.label + ' entitlement'" [class.locked]="locked">
+                      @for (l of levels; track $index) {
+                        <button type="button" role="radio" [attr.aria-checked]="level(f.key) === l" [class.on]="level(f.key) === l"
+                                [attr.data-level]="l ?? 'none'" [disabled]="locked" (click)="setLevel(f.key, l)">{{ levelLabel(l) }}</button>
+                      }
+                    </div>
+                  </li>
+                }
+              </ul>
+            </section>
+          }
+        </div>
+
+        @if (stagedCount()) {
+          <div class="save-bar" role="status">
+            <span class="num"><strong>{{ stagedCount() }}</strong> unsaved {{ stagedCount() === 1 ? 'change' : 'changes' }}@if (affectedTotal()) { · affects {{ affectedTotal() }} {{ affectedTotal() === 1 ? 'user' : 'users' }} }</span>
+            <div class="save-actions">
+              <button class="btn sm" (click)="discardFeatures()">Discard</button>
+              <button class="btn sm primary" (click)="saveFeatures()">Save entitlements</button>
+            </div>
+          </div>
+        }
+      }
+
+      <!-- Limits & usage ────────────────────────────────────── -->
+      @case ('limits') {
+        <div class="grid">
+          <section class="card span-6">
+            <div class="card-head"><div><h2>Customers</h2><p class="card-sub">Business customers {{ o.name }} can onboard</p></div></div>
+            <div class="card-body limit">
+              <div class="usage-line num">
+                <span class="big">{{ stats().customers }}</span>
+                <span class="muted">@if (limitDraft().maxCustomers) { of {{ limitDraft().maxCustomers }} } @else { · no limit }</span>
+              </div>
+              <span class="meter" [class.over]="limitDraft().maxCustomers && stats().customers >= limitDraft().maxCustomers!" aria-hidden="true">
+                <span [style.width.%]="limitDraft().maxCustomers ? pct(stats().customers, limitDraft().maxCustomers) : 0"></span>
+              </span>
+              @if (o.segments.includes('B2C')) { <p class="muted small num">Plus {{ stats().consumers }} consumers (B2C), which have no limit.</p> }
+              @if (editable()) {
+                <div class="field">
+                  <label for="lim-c">Maximum customers</label>
+                  <input id="lim-c" class="input num" inputmode="numeric" placeholder="No limit" [value]="maxCustomers()" (input)="maxCustomers.set($any($event.target).value)"
+                         [class.invalid]="limitErrors().customers" />
+                  @if (limitErrors().customers) { <span class="error">{{ limitErrors().customers }}</span> }
+                  @else { <span class="hint">Leave empty for no limit.</span> }
+                </div>
+                @if (limitDraft().maxCustomers && limitDraft().maxCustomers! < stats().customers) {
+                  <div class="notice"><app-icon name="alert" /><span>{{ o.name }} already has {{ stats().customers }} customers. They keep them all, but can't onboard another until they're under {{ limitDraft().maxCustomers }}.</span></div>
+                }
+              }
+            </div>
+          </section>
+          <section class="card span-6">
+            <div class="card-head"><div><h2>Users</h2><p class="card-sub">People who can sign in to {{ o.name }}</p></div></div>
+            <div class="card-body limit">
+              <div class="usage-line num">
+                <span class="big">{{ stats().users }}</span>
+                <span class="muted">@if (limitDraft().maxUsers) { of {{ limitDraft().maxUsers }} } @else { · no limit }</span>
+              </div>
+              <span class="meter" [class.over]="limitDraft().maxUsers && stats().users >= limitDraft().maxUsers!" aria-hidden="true">
+                <span [style.width.%]="limitDraft().maxUsers ? pct(stats().users, limitDraft().maxUsers) : 0"></span>
+              </span>
+              <p class="muted small num">{{ stats().activeUsers }} active, {{ stats().users - stats().activeUsers }} inactive.</p>
+              @if (editable()) {
+                <div class="field">
+                  <label for="lim-u">Maximum users</label>
+                  <input id="lim-u" class="input num" inputmode="numeric" placeholder="No limit" [value]="maxUsers()" (input)="maxUsers.set($any($event.target).value)"
+                         [class.invalid]="limitErrors().users" />
+                  @if (limitErrors().users) { <span class="error">{{ limitErrors().users }}</span> }
+                  @else { <span class="hint">Leave empty for no limit.</span> }
+                </div>
+                @if (limitDraft().maxUsers && limitDraft().maxUsers! < stats().users) {
+                  <div class="notice"><app-icon name="alert" /><span>{{ o.name }} already has {{ stats().users }} users. Nobody is removed, but they can't invite anyone until they're under {{ limitDraft().maxUsers }}.</span></div>
+                }
+              }
+            </div>
+          </section>
+        </div>
+        @if (o.kind === 'Platform') {
+          <p class="muted small">The platform organization has no limits.</p>
+        } @else if (editable() && limitsChanged()) {
+          <div class="save-bar" role="status">
+            <span>Unsaved limits</span>
+            <div class="save-actions">
+              <button class="btn sm" (click)="cancelLimits()">Discard</button>
+              <button class="btn sm primary" [disabled]="!limitsValid()" (click)="saveLimits()">Save limits</button>
+            </div>
+          </div>
+        }
+      }
+
+      <!-- People ────────────────────────────────────────────── -->
+      @case ('people') {
+        <div class="list">
+          <div class="toolbar">
+            <div class="left">
+              <span class="count num">{{ members().length }} {{ members().length === 1 ? 'person' : 'people' }}@if (o.limits.maxUsers) { of {{ o.limits.maxUsers }} allowed }</span>
+            </div>
+            <div class="right">
+              @if (o.kind === 'Platform') {
+                <button class="btn" (click)="openStaff()"><app-icon name="users" />Manage HyperNym staff</button>
+              } @else if (canWrite()) {
+                @if (atUserLimit()) { <span class="muted small">At its limit of {{ o.limits.maxUsers }} users. Raise it in Limits first.</span> }
+                <button class="btn primary" [disabled]="atUserLimit()" (click)="openInvite()"><app-icon name="mail" />Invite administrator</button>
+              }
+            </div>
+          </div>
+          @if (o.kind === 'Platform') {
+            <p class="su-note muted"><app-icon name="shield" [size]="14" />
+              <span>Superusers are created with <code class="mono">python manage.py createsuperuser</code> and can't be created or removed here.</span>
+            </p>
+          }
+          <div class="table-wrap">
+            <table class="table stack">
+              <thead><tr><th>Name</th><th>Email</th><th>Roles</th><th>Status</th><th class="num">Last sign-in</th></tr></thead>
+              <tbody>
+                @for (u of members(); track u.id) {
+                  <tr>
+                    <td><span class="primary-cell">{{ u.name }}</span><span class="sub mono desk-only">{{ u.username }}</span></td>
+                    <td class="phone-only">{{ u.email }} · {{ u.isSuperuser ? 'Superuser' : u.groups.join(', ') }}</td>
+                    <td class="desk-only"><a class="link" [href]="'mailto:' + u.email">{{ u.email }}</a></td>
+                    <td class="desk-only">
+                      @if (u.isSuperuser) { <span class="pill info">Superuser</span> }
+                      @else { {{ u.groups.join(', ') || '—' }} }
+                    </td>
+                    <td class="keep">
+                      @if (u.status === 'Active' && !u.lastLogin) { <span class="pill info">Invited</span> }
+                      @else { <span class="pill" [class]="u.status | tone">{{ u.status }}</span> }
+                    </td>
+                    <td class="num desk-only" [title]="u.lastLogin ? (u.lastLogin | datetime) : ''">
+                      @if (u.lastLogin) { {{ u.lastLogin | rel }} } @else { <span class="dash">—</span> }
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="5" class="empty-row">
+                    <div class="empty">No one at {{ o.name }} can sign in yet. Invite an administrator to get them started.
+                      @if (canWrite() && o.kind !== 'Platform') { <button class="btn sm" (click)="openInvite()">Invite administrator</button> }
+                    </div>
+                  </td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- Roles ─────────────────────────────────────────────── -->
+      @case ('roles') {
+        <div class="list">
+          <div class="toolbar">
+            <div class="left"><span class="count num">{{ roles().length }} {{ roles().length === 1 ? 'role' : 'roles' }} · capped by the entitlements above</span></div>
+            <div class="right"><button class="btn" (click)="openRoles()"><app-icon name="external" />Open in Roles</button></div>
+          </div>
+          <div class="table-wrap">
+            <table class="table stack">
+              <thead><tr><th>Role</th><th class="num">Members</th><th>Permissions</th><th>Status</th></tr></thead>
+              <tbody>
+                @for (r of roles(); track r.id) {
+                  <tr class="clickable" (click)="openRoles()">
+                    <td><span class="primary-cell">{{ r.name }}</span><span class="sub desk-only">{{ r.description }}</span></td>
+                    <td class="phone-only num">{{ r.members }} {{ r.members === 1 ? 'member' : 'members' }} · {{ r.rw }} read & write · {{ r.r }} read</td>
+                    <td class="num desk-only">{{ r.members }}</td>
+                    <td class="desk-only muted"><span class="num">{{ r.rw }} read & write · {{ r.r }} read</span></td>
+                    <td class="keep"><span class="pill" [class]="r.status | tone">{{ r.status }}</span></td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="4" class="empty-row"><div class="empty">No roles yet. Inviting an administrator adds the Organization admin role.</div></td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    }
+
+    <!-- Edit profile ──────────────────────────────────────── -->
+    <app-dialog [(open)]="editOpen" variant="drawer" width="560px" heading="Edit profile" [subheading]="o.name">
+      @let p = profile();
+      @let e = profileErrors();
+      <div class="form">
+        <div class="field">
+          <label for="p-name">Name<span class="req">*</span></label>
+          <input id="p-name" class="input" maxlength="60" [value]="p.name" (input)="setP('name', $any($event.target).value)" [class.invalid]="profileTried() && e.name" />
+          @if (profileTried() && e.name) { <span class="error">{{ e.name }}</span> }
+        </div>
+        <div class="field">
+          <label for="p-legal">Legal name<span class="req">*</span></label>
+          <input id="p-legal" class="input" maxlength="120" [value]="p.legalName" (input)="setP('legalName', $any($event.target).value)" [class.invalid]="profileTried() && e.legalName" />
+          @if (profileTried() && e.legalName) { <span class="error">{{ e.legalName }}</span> }
+        </div>
+        <fieldset class="field">
+          <legend class="label">Countries<span class="req">*</span></legend>
+          <div class="checks">
+            @for (c of store.countries; track c.code) {
+              <label class="check"><input type="checkbox" [checked]="p.countries.includes(c.code)" (change)="toggleIn('countries', c.code, $any($event.target).checked)" />{{ c.name }}</label>
+            }
+          </div>
+          @if (profileTried() && e.countries) { <span class="error">{{ e.countries }}</span> }
+        </fieldset>
+        <fieldset class="field">
+          <legend class="label">Segments<span class="req">*</span></legend>
+          <div class="checks">
+            <label class="check"><input type="checkbox" [checked]="p.segments.includes('B2B')" (change)="toggleIn('segments', 'B2B', $any($event.target).checked)" />Businesses (B2B)</label>
+            <label class="check"><input type="checkbox" [checked]="p.segments.includes('B2C')" (change)="toggleIn('segments', 'B2C', $any($event.target).checked)" />Consumers (B2C)</label>
+          </div>
+          @if (profileTried() && e.segments) { <span class="error">{{ e.segments }}</span> }
+          @else if (dropsConsumers()) { <span class="hint">Without B2C, the Consumers feature is turned off when you save.</span> }
+        </fieldset>
+        <div class="sep"></div>
+        <div class="field">
+          <label for="p-cname">Contact name<span class="req">*</span></label>
+          <input id="p-cname" class="input" maxlength="80" [value]="p.contactName" (input)="setP('contactName', $any($event.target).value)" [class.invalid]="profileTried() && e.contactName" />
+          @if (profileTried() && e.contactName) { <span class="error">{{ e.contactName }}</span> }
+        </div>
+        <div class="pair">
+          <div class="field">
+            <label for="p-cemail">Contact email<span class="req">*</span></label>
+            <input id="p-cemail" class="input" type="email" [value]="p.contactEmail" (input)="setP('contactEmail', $any($event.target).value)" [class.invalid]="profileTried() && e.contactEmail" />
+            @if (profileTried() && e.contactEmail) { <span class="error">{{ e.contactEmail }}</span> }
+          </div>
+          <div class="field">
+            <label for="p-cphone">Contact phone<span class="req">*</span></label>
+            <input id="p-cphone" class="input num" type="tel" [value]="p.contactPhone" (input)="setP('contactPhone', $any($event.target).value)" [class.invalid]="profileTried() && e.contactPhone" />
+            @if (profileTried() && e.contactPhone) { <span class="error">{{ e.contactPhone }}</span> }
+          </div>
+        </div>
+        <fieldset class="field">
+          <legend class="label">Brand colour</legend>
+          <div class="swatches" role="radiogroup" aria-label="Brand colour">
+            @for (sw of swatches; track sw) {
+              <button type="button" class="swatch" role="radio" [style.background]="sw" [attr.aria-checked]="p.brandColour === sw" [attr.aria-label]="sw" (click)="setP('brandColour', sw)">
+                @if (p.brandColour === sw) { <app-icon name="check" [size]="14" /> }
+              </button>
+            }
+            @if (!swatches.includes(p.brandColour)) {
+              <button type="button" class="swatch" role="radio" aria-checked="true" [style.background]="p.brandColour" [attr.aria-label]="p.brandColour"><app-icon name="check" [size]="14" /></button>
+            }
+          </div>
+          <span class="hint">Marks the organization in the switcher and lists.</span>
+        </fieldset>
+      </div>
+      <ng-container slot="footer">
+        <button class="btn" (click)="editOpen.set(false)">Cancel</button>
+        <button class="btn primary" (click)="saveProfile()">Save profile</button>
+      </ng-container>
+    </app-dialog>
+
+    <!-- Invite administrator ──────────────────────────────── -->
+    <app-dialog [(open)]="inviteOpen" heading="Invite administrator" [subheading]="'They can manage ' + o.name + '’s users, roles and customers.'" width="460px">
+      @let iv = invite();
+      @let ie = inviteErrors();
+      <div class="form">
+        <div class="field">
+          <label for="i-name">Full name<span class="req">*</span></label>
+          <input id="i-name" class="input" maxlength="80" [value]="iv.name" (input)="invite.set({ name: $any($event.target).value, email: iv.email })" [class.invalid]="inviteTried() && ie.name" />
+          @if (inviteTried() && ie.name) { <span class="error">{{ ie.name }}</span> }
+        </div>
+        <div class="field">
+          <label for="i-email">Work email<span class="req">*</span></label>
+          <input id="i-email" class="input" type="email" [value]="iv.email" (input)="invite.set({ name: iv.name, email: $any($event.target).value })" [class.invalid]="inviteTried() && ie.email" />
+          @if (inviteTried() && ie.email) { <span class="error">{{ ie.email }}</span> }
+          @else { <span class="hint">We email them a sign-in link, valid for 7 days.</span> }
+        </div>
+      </div>
+      <ng-container slot="footer">
+        <button class="btn" (click)="inviteOpen.set(false)">Cancel</button>
+        <button class="btn primary" (click)="sendInvite()"><app-icon name="send" />Send invitation</button>
+      </ng-container>
+    </app-dialog>
+  } @else {
+    <div class="title-row"><div class="title-block">
+      <nav class="breadcrumb" aria-label="Breadcrumb"><a href="" (click)="$event.preventDefault(); back.emit()">Organizations</a></nav>
+      <h1>Organization not found</h1>
+    </div></div>
+    <div class="empty">There's no organization with id {{ orgId() }}. It may have been removed. <button class="btn sm" (click)="back.emit()">All organizations</button></div>
+  }
+</div>

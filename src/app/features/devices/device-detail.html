@@ -1,0 +1,720 @@
+<div class="page">
+  @if (device(); as d) {
+    <div class="title-row">
+      <div class="title-block">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a routerLink="/inventory">Inventory</a><span aria-hidden="true">/</span><span class="mono crumb-current">{{ d.id }}</span>
+        </nav>
+        <div class="name-row">
+          <h1 class="mono">{{ d.id }}</h1>
+          <span class="pill" [class]="connPill().tone">
+            @if (connPill().tone === 'positive') { <span class="dot" aria-hidden="true"></span> }
+            {{ connPill().label }}
+          </span>
+          <span class="pill" [class]="d.status | tone">{{ label[d.status] }}</span>
+        </div>
+        <p class="subline meta">
+          <span>{{ type()?.name }}</span>
+          <span>{{ type()?.make }}</span>
+          <span>
+            @if (customer(); as c) { @if (canCustomers()) { <a class="link" [routerLink]="['/customers', c.id]">{{ c.company }}</a> } @else { {{ c.company }} } }
+            @else if (d.consumerId) { Consumer account }
+            @else { In stock }
+          </span>
+          @if (d.plate) { <span class="num">{{ d.plate }}</span> }
+          @if (hubView()) { @if (iot(); as s) { <span>{{ s.transport }}</span> } }
+        </p>
+        @if (readOnly()) { <app-ro-note noun="this device" /> }
+      </div>
+      <div class="actions">
+        @if (canCommand()) {
+        <button class="btn primary" (click)="openSend()" [disabled]="iot()?.registration === 'Disabled'"
+                [title]="iot()?.registration === 'Disabled' ? 'Enable the device in IoT Hub first' : ''">
+          <app-icon name="zap" />Send command
+        </button>
+        }
+        <app-menu [items]="menu()" [label]="'More actions for ' + d.id" />
+      </div>
+    </div>
+
+    <p class="finding" [class.neg]="sync() === 'Error' || iot()?.registration === 'Attestation failed'">
+      <app-icon [name]="sync() === 'Error' || iot()?.registration === 'Attestation failed' ? 'alert' : connected() ? 'wifi' : 'info'" [size]="15" />
+      <span>{{ finding() }}</span>
+    </p>
+
+    <app-tabs [tabs]="tabs()" [(value)]="tab" />
+
+    @switch (tab()) {
+      <!-- Overview ──────────────────────────────────────────── -->
+      @case ('overview') {
+        <section class="kpi-strip" aria-label="Device health">
+          <div class="kpi">
+            <span class="kpi-label">Connection</span>
+            @if (loading()) { <span class="skeleton" style="width:120px;height:30px;margin:3px 0"></span> }
+            @else { <span class="kpi-value text-value" [class.pos]="connected()">{{ connected() ? 'Connected' : iot()?.registration === 'Registered' ? 'Disconnected' : (iot()?.registration ?? 'No identity') }}</span> }
+            <span class="kpi-caption num">
+              @if (connected()) { since {{ iot()?.connectedSince | datetime }} }
+              @else if (iot()?.lastActivity) { last seen {{ iot()?.lastActivity | datetime }} }
+              @else { never connected }
+            </span>
+          </div>
+          <div class="kpi">
+            <span class="kpi-label">Last message</span>
+            @if (loading()) { <span class="skeleton" style="width:90px;height:30px;margin:3px 0"></span> }
+            @else if (iot()?.lastActivity) { <span class="kpi-value text-value">{{ iot()?.lastActivity | rel }}</span> }
+            @else { <span class="kpi-value dash">—</span> }
+            <span class="kpi-caption">device-to-cloud, any message</span>
+          </div>
+          <div class="kpi">
+            <span class="kpi-label">Messages today</span>
+            @if (loading()) { <span class="skeleton" style="width:60px;height:30px;margin:3px 0"></span> }
+            @else { <span class="kpi-value"><app-num [value]="iot()?.messagesToday ?? 0" /></span> }
+            <span class="kpi-caption">since 00:00{{ isDashcam() ? ', events only' : '' }}</span>
+          </div>
+          <div class="kpi">
+            <span class="kpi-label">Configuration</span>
+            @if (loading()) { <span class="skeleton" style="width:100px;height:30px;margin:3px 0"></span> }
+            @else { <span class="kpi-value text-value" [class]="'tone-' + syncTone()">{{ syncLabel() }}</span> }
+            @if (hubView()) {
+              <span class="kpi-caption num">desired v{{ twin()?.desired?.version ?? 0 }} · reported v{{ twin()?.reported?.version ?? 0 }}</span>
+            } @else {
+              <span class="kpi-caption">{{ syncLabel() === 'In sync' ? 'device runs what was sent' : syncLabel() === 'Not configured' ? 'nothing sent yet' : 'not yet confirmed by the device' }}</span>
+            }
+          </div>
+        </section>
+
+        <div class="grid">
+          <section class="card span-7">
+            @if (hubView()) {
+              <div class="card-head"><div><h2>IoT Hub identity</h2><p class="card-sub">How the device connects and authenticates</p></div></div>
+            } @else {
+              <div class="card-head"><div><h2>Connectivity</h2><p class="card-sub">Whether the device is online and running its configuration</p></div></div>
+            }
+            <div class="card-body">
+              @if (loading()) {
+                <div class="dl two">
+                  @for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) { <div><span class="skeleton" style="width:60px;height:10px"></span><br /><span class="skeleton" style="width:140px;height:14px"></span></div> }
+                </div>
+              } @else if (!hubView()) {
+                <dl class="dl two">
+                  <div>
+                    <dt>Connection</dt>
+                    <dd [class.neg]="iot()?.registration === 'Attestation failed'">{{ connPill().label }}</dd>
+                  </div>
+                  <div><dt>Last message</dt><dd class="num">@if (iot()?.lastActivity) { {{ iot()?.lastActivity | datetime }} } @else { <span class="dash">—</span> }</dd></div>
+                  <div>
+                    <dt>Configuration in sync</dt>
+                    <dd [class.neg]="sync() === 'Error'">
+                      @switch (syncLabel()) {
+                        @case ('In sync') { Yes }
+                        @case ('Not configured') { <span class="dash">—</span> }
+                        @case ('Error') { No · the device rejected it }
+                        @default { Not yet }
+                      }
+                    </dd>
+                  </div>
+                  <div><dt>Messages today</dt><dd class="num">{{ iot()?.messagesToday ?? 0 }}</dd></div>
+                  <div><dt>IMEI</dt><dd class="mono">{{ d.imei }}</dd></div>
+                  <div><dt>SIM ICCID</dt><dd class="mono">@if (d.simSn) { {{ d.simSn }} } @else { <span class="dash">—</span> }</dd></div>
+                  <div><dt>MSISDN</dt><dd class="mono">@if (d.msisdn) { {{ d.msisdn }} } @else { <span class="dash">—</span> }</dd></div>
+                  <div><dt>Received into stock</dt><dd class="num">{{ d.createdAt | date }}</dd></div>
+                </dl>
+              } @else if (iot(); as s) {
+                <dl class="dl two">
+                  <div><dt>IoT Hub</dt><dd class="mono">{{ s.hubName }}</dd></div>
+                  <div>
+                    <dt>Registration</dt>
+                    <dd [class.neg]="s.registration === 'Attestation failed'">{{ s.registration }}</dd>
+                  </div>
+                  <div><dt>Authentication</dt><dd>{{ s.auth }}</dd></div>
+                  <div><dt>Enrollment group</dt><dd><a class="link mono" routerLink="/provisioning">{{ s.enrollmentGroup }}</a></dd></div>
+                  <div><dt>Transport</dt><dd>{{ s.transport }}</dd></div>
+                  <div><dt>IMEI</dt><dd class="mono">{{ d.imei }}</dd></div>
+                  <div><dt>SIM ICCID</dt><dd class="mono">@if (d.simSn) { {{ d.simSn }} } @else { <span class="dash">—</span> }</dd></div>
+                  <div><dt>MSISDN</dt><dd class="mono">@if (d.msisdn) { {{ d.msisdn }} } @else { <span class="dash">—</span> }</dd></div>
+                  <div><dt>C2D queue</dt><dd class="num" [class.warn]="s.c2dQueued > 0">{{ s.c2dQueued }} {{ s.c2dQueued === 1 ? 'message' : 'messages' }} waiting</dd></div>
+                  <div><dt>Received into stock</dt><dd class="num">{{ d.createdAt | date }}</dd></div>
+                </dl>
+              } @else {
+                <div class="empty">No IoT Hub identity for this device yet. @if (hubWrite()) { <a class="btn sm" routerLink="/provisioning">Open provisioning</a> }</div>
+              }
+            </div>
+          </section>
+
+          <section class="card span-5">
+            <div class="card-head"><div><h2>Assignment</h2><p class="card-sub">{{ hubView() ? 'Who it belongs to, and the twin tags profiles target' : 'Who it belongs to' }}</p></div></div>
+            <div class="card-body">
+              @if (loading()) {
+                <div class="dl one">
+                  @for (i of [1, 2, 3, 4]; track i) { <div><span class="skeleton" style="width:60px;height:10px"></span><br /><span class="skeleton" style="width:160px;height:14px"></span></div> }
+                </div>
+              } @else {
+                <dl class="dl one">
+                  <div>
+                    <dt>Customer</dt>
+                    <dd>
+                      @if (customer(); as c) { @if (canCustomers()) { <a class="link" [routerLink]="['/customers', c.id]">{{ c.company }}</a> } @else { {{ c.company }} } }
+                      @else if (d.consumerId) { Consumer account }
+                      @else { <span class="muted">In stock</span> }
+                    </dd>
+                  </div>
+                  <div><dt>Package</dt><dd>@if (twin()?.tags?.package; as p) { {{ p }} } @else { <span class="dash">—</span> }</dd></div>
+                  <div><dt>Plate</dt><dd class="num">@if (d.plate) { {{ d.plate }} } @else { <span class="dash">—</span> }</dd></div>
+                  @if (hubView()) {
+                    <div>
+                      <dt>Twin tags</dt>
+                      <dd class="chips">
+                        @for (t of tags(); track t) { <span class="chip mono">{{ t }}</span> }
+                      </dd>
+                    </div>
+                  }
+                </dl>
+              }
+            </div>
+          </section>
+
+          <section class="card span-12">
+            <div class="card-head">
+              <div><h2>Recent commands</h2><p class="card-sub">{{ hubView() ? 'Direct methods and C2D messages sent to this device' : 'Commands sent to this device' }}</p></div>
+              @if (commands().length > 4) { <button class="btn sm ghost" (click)="tab.set('commands')">View all {{ commands().length }}<app-icon name="arrow-right" /></button> }
+            </div>
+            <div class="card-body">
+              @if (recent().length) {
+                <ul class="mini-list">
+                  @for (c of recent(); track c.id) {
+                    <li>
+                      <span class="mini-main"><span class="strong">{{ commandLabel(c) }}</span><span class="mono muted">{{ c.method }}</span></span>
+                      <span class="pill" [class]="commandTone(c.status)">{{ c.status }}</span>
+                      <span class="muted mini-meta num" [title]="c.sentAt | datetime">{{ c.sentBy }} · {{ c.sentAt | rel }}</span>
+                    </li>
+                  }
+                </ul>
+              } @else {
+                <div class="empty">No commands sent to this device yet. @if (canCommand()) { <button class="btn sm" (click)="openSend()" [disabled]="iot()?.registration === 'Disabled'">Send command</button> }</div>
+              }
+            </div>
+          </section>
+        </div>
+      }
+
+      <!-- Configuration ─────────────────────────────────────── -->
+      @case ('configuration') {
+        @if (twin(); as t) {
+          @if (!configRows().length) {
+            <div class="empty">
+              @if (hubView()) {
+                No configuration profile targets this device, so IoT Hub sends it nothing. Profiles target devices by package and device type.
+                <a class="btn sm" routerLink="/device-config">Open profiles</a>
+              } @else {
+                No configuration has been set for this device yet. HyperNym sets it by package and device type.
+              }
+            </div>
+          } @else {
+            @if (!hubView()) {
+              <div class="config-head">
+                <div class="versions">
+                  <div class="ver">
+                    <span class="muted">In sync</span>
+                    <span class="strong" [class]="'tone-' + syncTone()">
+                      @switch (syncLabel()) { @case ('In sync') { Yes } @case ('Error') { No } @default { Not yet } }
+                    </span>
+                  </div>
+                  <div class="ver">
+                    <span class="muted">Sent</span>
+                    <span class="muted num">{{ t.desired.updatedAt | datetime }}</span>
+                  </div>
+                  <div class="ver">
+                    <span class="muted">Confirmed by the device</span>
+                    @if (t.reported.updatedAt) { <span class="muted num">{{ t.reported.updatedAt | datetime }}</span> } @else { <span class="dash">—</span> }
+                  </div>
+                </div>
+              </div>
+            } @else {
+            <div class="config-head">
+              <div class="versions">
+                <div class="ver">
+                  <span class="muted">Desired</span>
+                  <span class="num strong">v{{ t.desired.version }}</span>
+                  <span class="muted num">{{ t.desired.updatedAt | datetime }}</span>
+                </div>
+                <app-icon name="arrow-right" class="ver-arrow" />
+                <div class="ver">
+                  <span class="muted">Reported</span>
+                  @if (t.reported.updatedAt) {
+                    <span class="num strong">v{{ t.reported.version }}</span>
+                    <span class="muted num">{{ t.reported.updatedAt | datetime }}</span>
+                  } @else { <span class="dash">—</span><span class="muted">never reported</span> }
+                </div>
+                <div class="ver profile">
+                  <span class="muted">Profile</span>
+                  @if (profile(); as p) { <a class="link strong" routerLink="/device-config">{{ p.name }}</a><span class="muted num">priority {{ p.priority }}</span> }
+                  @else { <span class="muted">Set for this device</span> }
+                </div>
+              </div>
+              <div class="config-actions">
+                @if (!editing()) {
+                  <button class="btn" (click)="rawOpen.set(!rawOpen())" [attr.aria-pressed]="rawOpen()"><app-icon name="command" />{{ rawOpen() ? 'Hide' : 'Raw' }} JSON</button>
+                  @if (hubWrite()) { <button class="btn" (click)="startEdit()" [disabled]="iot()?.registration === 'Disabled'"><app-icon name="pencil" />Override for this device</button> }
+                } @else {
+                  <button class="btn" (click)="editing.set(false)">Cancel</button>
+                  <button class="btn primary" (click)="saveConfig()">Save {{ changed().length || '' }} {{ changed().length === 1 ? 'change' : 'changes' }}</button>
+                }
+              </div>
+            </div>
+            <p class="note muted">IoT Hub applies the highest-priority profile that targets this device. A value overridden here stays until that profile changes.</p>
+            }
+
+            @if (neverConnected()) {
+              <div class="empty first-run">
+                <span><strong>Waiting for first connection</strong> — the device gets its configuration when it first connects{{ hubView() ? ' through DPS' : '' }}. Below is what it will receive.</span>
+              </div>
+            } @else if (configError(); as err) {
+              <div class="inline-error error-box"><app-icon name="circle-x" /><span>The device rejected desired v{{ t.desired.version }}: <span class="mono">{{ err }}</span></span></div>
+            }
+            @if (editing() && !connected() && !neverConnected()) {
+              <div class="notice"><app-icon name="info" /><span>The device is offline (last seen {{ iot()?.lastActivity | rel }}). IoT Hub keeps the change and applies it when the device reconnects.</span></div>
+            }
+
+            <div class="table-wrap">
+              <table class="table stack config-table">
+                <thead><tr><th>Setting</th><th>{{ hubView() ? 'Desired' : 'Sent' }}</th><th>{{ hubView() ? 'Reported' : 'On the device' }}</th><th>Status</th></tr></thead>
+                <tbody>
+                  @if (loading()) {
+                    @for (i of [1, 2, 3, 4, 5]; track i) {
+                      <tr>
+                        <td><span class="skeleton" style="width:180px;height:14px"></span></td>
+                        <td class="desk-only"><span class="skeleton" style="width:90px;height:14px"></span></td>
+                        <td class="desk-only"><span class="skeleton" style="width:90px;height:14px"></span></td>
+                        <td class="keep"><span class="skeleton" style="width:64px;height:20px"></span></td>
+                      </tr>
+                    }
+                  } @else {
+                    @for (r of configRows(); track r.key) {
+                      <tr>
+                        <td>
+                          <span class="primary-cell">{{ r.meta.label }}</span>
+                          @if (hubView()) { <span class="sub mono">{{ r.key }}</span> }
+                        </td>
+                        @if (editing()) {
+                          <td class="edit-cell">
+                            @switch (r.meta.kind) {
+                              @case ('number') {
+                                <div class="num-input">
+                                  <input class="input num" type="number" [attr.min]="r.meta.min" [attr.max]="r.meta.max" [attr.aria-label]="r.meta.label"
+                                         [value]="draft()[r.key]" (input)="setDraft(r.key, num($any($event.target).value))"
+                                         [class.invalid]="tried() && draftErrors()[r.key]" />
+                                  @if (r.meta.unit) { <span class="muted">{{ r.meta.unit }}</span> }
+                                </div>
+                              }
+                              @case ('select') {
+                                <select class="select" [attr.aria-label]="r.meta.label" [value]="draft()[r.key]" (change)="setDraft(r.key, $any($event.target).value)">
+                                  @for (o of r.meta.options ?? []; track o) { <option [value]="o">{{ fmtTwin(r.key, o) }}</option> }
+                                </select>
+                              }
+                              @case ('toggle') {
+                                <label class="toggle">
+                                  <input type="checkbox" [attr.aria-label]="r.meta.label" [checked]="draft()[r.key]" (change)="setDraft(r.key, $any($event.target).checked)" />
+                                  <span>{{ draft()[r.key] ? 'On' : 'Off' }}</span>
+                                </label>
+                              }
+                              @default {
+                                <input class="input" [attr.aria-label]="r.meta.label" [value]="draft()[r.key]" (input)="setDraft(r.key, $any($event.target).value)"
+                                       [class.invalid]="tried() && draftErrors()[r.key]" />
+                              }
+                            }
+                            @if (tried() && draftErrors()[r.key]) { <span class="error">{{ draftErrors()[r.key] }}</span> }
+                            @else if (r.meta.kind === 'number' && r.meta.min !== undefined) { <span class="hint num">{{ r.meta.min }}–{{ r.meta.max }}</span> }
+                          </td>
+                        } @else {
+                          <td class="phone-only">
+                            {{ fmtTwin(r.key, r.desired) }} desired · {{ r.reported === undefined ? 'not reported' : fmtTwin(r.key, r.reported) + ' reported' }}
+                            @if (r.status === 'Error' && configError()) { <span class="err-text">· {{ configError() }}</span> }
+                          </td>
+                          <td class="desk-only">
+                            <span class="val">{{ fmtTwin(r.key, r.desired) }}</span>
+                            @if (r.override && hubView()) { <span class="sub">Override for this device</span> }
+                          </td>
+                        }
+                        <td class="desk-only" [class.differs]="r.status === 'Pending' || r.status === 'Error'">
+                          @for (v of [fmtTwin(r.key, r.reported)]; track v) {
+                            <span class="val" [class.swap]="changedKeys().has(r.key)" [class.dash]="r.reported === undefined">{{ v }}</span>
+                          }
+                          @if (r.status === 'Error' && configError()) { <span class="sub err-text">{{ configError() }}</span> }
+                        </td>
+                        <td class="keep status-cell">
+                          @for (st of [r.status]; track st) {
+                            <span [class.swap]="changedKeys().has(r.key)">
+                              @switch (st) {
+                                @case ('In sync') { <span class="in-sync"><app-icon name="check" [size]="15" />In sync</span> }
+                                @case ('Pending') { <span class="pill warning">Pending</span> }
+                                @case ('Error') { <span class="pill negative" [title]="configError() ?? ''">Error</span> }
+                                @default { <span class="pill info">Waiting</span> }
+                              }
+                            </span>
+                          }
+                        </td>
+                      </tr>
+                    }
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            @if (rawOpen() && hubView()) {
+              <section class="card raw">
+                <div class="card-head">
+                  <div><h2>Device twin</h2><p class="card-sub mono">etag {{ t.etag }}</p></div>
+                  <button class="btn sm" (click)="copy(rawJson(), 'Twin JSON')"><app-icon name="copy" />Copy</button>
+                </div>
+                <div class="card-body"><pre class="code mono">{{ rawJson() }}</pre></div>
+              </section>
+            }
+          }
+        } @else {
+          @if (hubView()) {
+            <div class="empty">No device twin: this device has no IoT Hub identity yet. @if (hubWrite()) { <a class="btn sm" routerLink="/provisioning">Open provisioning</a> }</div>
+          } @else {
+            <div class="empty">No configuration yet: the device isn't set up to connect.</div>
+          }
+        }
+      }
+
+      <!-- Commands ──────────────────────────────────────────── -->
+      @case ('commands') {
+        <div class="list">
+          <div class="toolbar">
+            <div class="left"><span class="count num">{{ commands().length }} {{ commands().length === 1 ? 'command' : 'commands' }} in the last 14 days</span></div>
+            @if (canCommand()) { <div class="right"><button class="btn" (click)="openSend()" [disabled]="iot()?.registration === 'Disabled'"><app-icon name="zap" />Send command</button></div> }
+          </div>
+          <div class="table-wrap">
+            <table class="table stack">
+              <thead>
+                <tr><th>Command</th><th>Kind</th><th>Payload</th><th>Status</th><th>Response</th><th class="num">Latency</th><th>Sent by</th><th class="num">Sent</th></tr>
+              </thead>
+              <tbody>
+                @if (loading()) {
+                  @for (i of [1, 2, 3]; track i) {
+                    <tr>
+                      <td><span class="skeleton" style="width:100px;height:14px"></span></td>
+                      <td class="desk-only"><span class="skeleton" style="width:90px;height:14px"></span></td>
+                      <td class="desk-only"><span class="skeleton" style="width:80px;height:14px"></span></td>
+                      <td class="keep"><span class="skeleton" style="width:70px;height:20px"></span></td>
+                      <td class="desk-only"><span class="skeleton" style="width:160px;height:14px"></span></td>
+                      <td class="desk-only"><span class="skeleton" style="width:50px;height:14px"></span></td>
+                      <td class="desk-only"><span class="skeleton" style="width:90px;height:14px"></span></td>
+                      <td class="desk-only"><span class="skeleton" style="width:60px;height:14px"></span></td>
+                    </tr>
+                  }
+                } @else {
+                  @for (c of commands(); track c.id) {
+                    <tr>
+                      <td><span class="primary-cell">{{ commandLabel(c) }}</span><span class="sub mono">{{ c.method }}</span></td>
+                      <td class="phone-only">{{ c.kind }} · {{ c.sentBy }} · {{ c.sentAt | rel }}@if (c.latencyMs != null) { · {{ c.latencyMs.toLocaleString('en-GB') }} ms }</td>
+                      <td class="desk-only">{{ c.kind }}</td>
+                      <td class="desk-only">@if (compactPayload(c.payload) !== '—') { <span class="mono payload">{{ compactPayload(c.payload) }}</span> } @else { <span class="dash">—</span> }</td>
+                      <td class="keep"><span class="pill" [class]="commandTone(c.status)">{{ c.status }}</span></td>
+                      <td class="desk-only response" [title]="c.response ?? ''">
+                        @if (c.response) { <span class="mono">{{ c.response }}</span> } @else { <span class="dash">—</span> }
+                      </td>
+                      <td class="num desk-only">@if (c.latencyMs != null) { {{ c.latencyMs.toLocaleString('en-GB') }} ms } @else { <span class="dash">—</span> }</td>
+                      <td class="desk-only">{{ c.sentBy }}</td>
+                      <td class="num desk-only" [title]="c.sentAt | datetime">{{ c.sentAt | rel }}</td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="8" class="empty-row">
+                        <div class="empty">No commands sent to this device in the last 14 days. @if (canCommand()) { <button class="btn sm" (click)="openSend()" [disabled]="iot()?.registration === 'Disabled'">Send command</button> }</div>
+                      </td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- Telemetry ─────────────────────────────────────────── -->
+      @case ('telemetry') {
+        @if (neverConnected()) {
+          <div class="empty first-run">
+            <span><strong>Waiting for first connection</strong> — the device gets its configuration when it first connects{{ hubView() ? ' through DPS' : '' }}, and its readings appear here after its first message.</span>
+            @if (hubWrite()) { <a class="btn sm" routerLink="/provisioning">Open provisioning</a> }
+          </div>
+        } @else {
+          <section class="card">
+            <div class="card-head">
+              <div>
+                <h2>Latest readings</h2>
+                <p class="card-sub num">Reported {{ twin()?.reported?.updatedAt ?? iot()?.lastActivity | rel }} · {{ iot()?.lastActivity | datetime }}
+                  @if (!connected()) { · <span class="warn-text">device offline, values may be stale</span> }
+                </p>
+              </div>
+            </div>
+            <div class="card-body">
+              @if (loading()) {
+                <div class="figs">
+                  @for (i of [1, 2, 3, 4, 5, 6]; track i) { <div class="fig"><span class="skeleton" style="width:70px;height:10px"></span><span class="skeleton" style="width:80px;height:24px"></span></div> }
+                </div>
+              } @else {
+                <div class="figs">
+                  @if (isDashcam()) {
+                    <div class="fig">
+                      <span class="fig-label">SD card</span>
+                      <span class="fig-value" [class.tone-negative]="reported()['storage'] !== 'OK'">{{ reported()['storage'] ?? '—' }}</span>
+                    </div>
+                    <div class="fig">
+                      <span class="fig-label">Camera channels</span>
+                      <span class="fig-value num">{{ reported()['cameraChannels'] ?? '—' }}</span>
+                    </div>
+                  } @else {
+                    <div class="fig">
+                      <span class="fig-label">External voltage</span>
+                      <span class="fig-value num">@if (extV() != null) { {{ extV()!.toFixed(2) }}<span class="unit">V</span> } @else { <span class="dash">—</span> }</span>
+                    </div>
+                    <div class="fig">
+                      <span class="fig-label">Backup battery</span>
+                      <span class="fig-value num">@if (reported()['batteryVoltage'] != null) { {{ reported()['batteryVoltage'] }}<span class="unit">V</span> } @else { <span class="dash">—</span> }</span>
+                    </div>
+                    <div class="fig">
+                      <span class="fig-label">GSM signal</span>
+                      <span class="fig-value num">
+                        @if (signalBars() != null) {
+                          <span class="bars" [attr.aria-label]="signalBars() + ' of 5 bars'" [class.low]="signalBars()! <= 2">
+                            @for (b of bars; track b) { <i [class.on]="b <= signalBars()!" [style.height.px]="4 + b * 3"></i> }
+                          </span>
+                          {{ signalBars() }}<span class="unit">of 5</span>
+                        } @else { <span class="dash">—</span> }
+                      </span>
+                    </div>
+                    <div class="fig">
+                      <span class="fig-label">GNSS fix</span>
+                      <span class="fig-value">{{ reported()['gnssFix'] ? 'Fixed' : 'No fix' }}</span>
+                    </div>
+                    <div class="fig">
+                      <span class="fig-label">Ignition</span>
+                      <span class="fig-value">{{ (vehicle()?.ignition ?? reported()['ignition']) ? 'On' : 'Off' }}</span>
+                    </div>
+                  }
+                  <div class="fig">
+                    <span class="fig-label">Speed</span>
+                    <span class="fig-value num">@if (vehicle(); as v) { {{ v.speedKmh }}<span class="unit">km/h</span> } @else { <span class="dash">—</span> }</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </section>
+
+          <div class="grid">
+            @if (!isDashcam()) {
+              <section class="card span-8">
+                <div class="card-head">
+                  <div>
+                    <h2>External voltage, last 24 h</h2>
+                    <p class="card-sub num">
+                      Hourly, to the last message · sample data
+                      @if (voltRange(); as r) { · {{ r.min.toFixed(1) }}–{{ r.max.toFixed(1) }} V }
+                    </p>
+                  </div>
+                </div>
+                <div class="card-body">
+                  @if (loading()) { <span class="skeleton" style="width:100%;height:200px"></span> }
+                  @else if (voltage().length) { <app-line-chart [data]="voltage()" [height]="200" label="External voltage over the last 24 hours, in volts" /> }
+                  @else { <div class="empty">The device hasn't reported a voltage yet.</div> }
+                </div>
+              </section>
+            }
+            <section class="card" [class.span-4]="!isDashcam()" [class.span-12]="isDashcam()">
+              <div class="card-head"><div><h2>Position</h2><p class="card-sub">From live tracking</p></div></div>
+              <div class="card-body">
+                @if (vehicle(); as v) {
+                  <dl class="dl one">
+                    <div><dt>Latitude, longitude</dt><dd class="mono">{{ v.lat.toFixed(5) }}, {{ v.lng.toFixed(5) }}</dd></div>
+                    <div><dt>State</dt><dd><span class="pill" [class]="v.state | tone">{{ v.state }}</span></dd></div>
+                    <div><dt>Updated</dt><dd class="num" [title]="v.updatedAt | datetime">{{ v.updatedAt | rel }}</dd></div>
+                  </dl>
+                  @if (canTracking()) { <a class="btn sm track-link" routerLink="/tracking"><app-icon name="pin" />Open in live tracking</a> }
+                } @else {
+                  <div class="empty">No position: this device isn't linked to a vehicle in live tracking.</div>
+                }
+              </div>
+            </section>
+          </div>
+        }
+      }
+
+      <!-- History ───────────────────────────────────────────── -->
+      @case ('history') {
+        <div class="list">
+          <div class="toolbar">
+            <div class="left segmented" role="group" aria-label="Filter by kind">
+              @for (k of historyKinds; track k.id) {
+                <button class="btn sm" [class.on]="historyKind() === k.id" [attr.aria-pressed]="historyKind() === k.id" (click)="historyKind.set(k.id)">
+                  {{ k.label }} <span class="num muted">{{ historyCounts()[k.id] }}</span>
+                </button>
+              }
+            </div>
+          </div>
+          @if (historyRows().length) {
+            <ol class="timeline">
+              @for (e of historyRows(); track $index) {
+                <li [class.neg]="e.tone === 'neg'" [class.pos]="e.tone === 'pos'" [class.warn]="e.tone === 'warn'">
+                  <span class="t-icon"><app-icon [name]="e.icon" [size]="14" /></span>
+                  <div class="t-text">
+                    <span class="t-title">{{ e.title }}</span>
+                    @if (e.body) { <span class="muted">{{ e.body }}</span> }
+                  </div>
+                  <div class="t-meta num">
+                    <span [title]="e.at | datetime">{{ e.at | datetime }}</span>
+                    @if (e.by) { <span class="muted">{{ e.by }}</span> }
+                  </div>
+                </li>
+              }
+            </ol>
+          } @else {
+            <div class="empty">Nothing of this kind for {{ d.id }} yet. <button class="btn sm" (click)="historyKind.set('all')">Show all</button></div>
+          }
+        </div>
+      }
+    }
+
+    <!-- Send command ─────────────────────────────────────── -->
+    <app-dialog [(open)]="sendOpen" heading="Send command" [subheading]="d.id + (d.plate ? ' · ' + d.plate : '') + (hubView() ? ' · via IoT Hub' : '')" width="520px">
+      <div class="form">
+        @if (!sent()) {
+          <fieldset class="cmd-list">
+            <legend class="sr-only">Command</legend>
+            @for (c of defs(); track c.id) {
+              <label class="cmd" [class.on]="cmdId() === c.id">
+                <input type="radio" name="cmd" [value]="c.id" [checked]="cmdId() === c.id" (change)="pickCmd(c.id)" />
+                <span class="cmd-text">
+                  <span class="strong">{{ c.label }}</span>
+                  <span class="muted">{{ c.hint }}</span>
+                </span>
+                <span class="mono muted cmd-method">{{ c.method }}{{ c.id === 'immobilise' ? ' 1/1' : c.id === 'restore' ? ' 1/0' : '' }}</span>
+              </label>
+            }
+          </fieldset>
+
+          @if (def().param) {
+            <div class="pair">
+              <div class="field">
+                <label for="p-id">Parameter ID</label>
+                <input id="p-id" class="input mono" inputmode="numeric" placeholder="10050" [value]="paramId()" (input)="paramId.set($any($event.target).value)"
+                       [class.invalid]="sendTried() && paramErrors().id" />
+                @if (sendTried() && paramErrors().id) { <span class="error">{{ paramErrors().id }}</span> }
+                @else { <span class="hint">From the Teltonika configurator</span> }
+              </div>
+              <div class="field">
+                <label for="p-val">Value</label>
+                <input id="p-val" class="input mono" placeholder="30" [value]="paramValue()" (input)="paramValue.set($any($event.target).value)"
+                       [class.invalid]="sendTried() && paramErrors().value" />
+                @if (sendTried() && paramErrors().value) { <span class="error">{{ paramErrors().value }}</span> }
+              </div>
+            </div>
+          }
+
+          @if (def().critical) {
+            <div class="notice"><app-icon name="alert" /><span>The engine won't start again until someone sends Restore ignition. Check the vehicle is parked.</span></div>
+            <div class="field">
+              <label for="c-typed">Type {{ d.plate ? 'the plate' : 'the device ID' }} <span class="mono">{{ confirmWord() }}</span> to confirm</label>
+              <input id="c-typed" class="input mono" autocomplete="off" spellcheck="false" [value]="typed()" (input)="typed.set($any($event.target).value)"
+                     [class.invalid]="sendTried() && !typedOk()" />
+              @if (sendTried() && !typedOk()) { <span class="error">That doesn't match {{ confirmWord() }}.</span> }
+            </div>
+          }
+
+          @if (!connected() && def().kind === 'Direct method') {
+            <div class="notice"><app-icon name="wifi-off" /><span>
+              @if (iot()?.lastActivity) { The device is offline (last seen {{ iot()?.lastActivity | rel }}). }
+              @else { The device has never connected. }
+              Direct methods need a live connection, so this will likely time out after 30 s.
+            </span></div>
+          }
+
+          <div class="tray preview">
+            <span class="muted">{{ def().kind === 'Direct method' ? 'Direct method request' : 'Cloud-to-device message' }}</span>
+            <code class="mono">{{ preview() }}</code>
+          </div>
+        } @else {
+          @let c = sent()!;
+          <div class="tray preview">
+            <span class="muted">{{ c.kind }} · {{ commandLabel(c) }}</span>
+            <code class="mono">{{ c.method }}@if (compactPayload(c.payload) !== '—') { {{ ' ' + compactPayload(c.payload) }} }</code>
+          </div>
+          <div class="status-line" [attr.data-phase]="c.status" role="status" aria-live="polite">
+            <span class="status-icon">
+              @switch (c.status) {
+                @case ('Pending') { <span class="spinner" aria-hidden="true"></span> }
+                @case ('Succeeded') {
+                  <span class="t-success-check" data-state="in" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+                      <circle cx="12" cy="12" r="10" fill="var(--positive)" />
+                      <path d="M7.5 12.5l3 3 6-6.5" stroke="var(--on-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </span>
+                }
+                @case ('Queued') { <app-icon name="clock" [size]="20" class="ic-info" /> }
+                @default { <app-icon name="alert" [size]="20" class="ic-warn" /> }
+              }
+            </span>
+            <span class="status-text">
+              @switch (c.status) {
+                @case ('Pending') { <strong>Sending…</strong><span class="muted">{{ c.kind === 'Direct method' ? 'Waiting for the device to answer' : 'Handing the message to IoT Hub' }}</span> }
+                @case ('Succeeded') { <strong>Succeeded</strong><span class="muted"><span class="mono">{{ c.response }}</span> · {{ c.latencyMs?.toLocaleString('en-GB') }} ms</span> }
+                @case ('Queued') { <strong>Queued</strong><span class="muted">IoT Hub delivers it when the device reconnects. It expires in 48 h.</span> }
+                @case ('Timed out') { <strong>Timed out</strong><span class="muted">The device didn't answer within 30 s. It's offline, so a direct method can't reach it.</span> }
+                @default { <strong>{{ c.status }}</strong><span class="muted">{{ c.response }}</span> }
+              }
+            </span>
+          </div>
+          @if (c.status === 'Timed out') {
+            <div class="queue-offer">
+              <span class="muted">A C2D message waits in the device's queue for up to 48 h and runs when it reconnects.</span>
+              <button class="btn" (click)="queueInstead(c)"><app-icon name="send" />Queue as C2D message instead</button>
+            </div>
+          }
+        }
+      </div>
+      <ng-container slot="footer">
+        @if (sent(); as c) {
+          <button class="btn" (click)="resetSend()" [disabled]="c.status === 'Pending'">Send another</button>
+          <button class="btn primary" (click)="sendOpen.set(false)">Done</button>
+        } @else {
+          <button class="btn" (click)="sendOpen.set(false)">Cancel</button>
+          <button class="btn" [class.primary]="!def().critical" [class.danger]="def().critical" (click)="send()">
+            {{ def().critical ? 'Immobilise ' + confirmWord() : def().kind === 'C2D message' ? 'Send as C2D message' : 'Send ' + def().label.toLowerCase() }}
+          </button>
+        }
+      </ng-container>
+    </app-dialog>
+
+    <!-- Enable / disable in IoT Hub -->
+    <app-dialog [(open)]="regOpen" [heading]="iot()?.registration === 'Disabled' ? 'Enable ' + d.id + ' in IoT Hub?' : 'Disable ' + d.id + ' in IoT Hub?'" width="440px">
+      <p class="confirm-body">
+        @if (iot()?.registration === 'Disabled') {
+          The device can connect and authenticate again. Configuration and queued messages resume on its next connection.
+        } @else {
+          IoT Hub closes its connection and refuses new ones. It stops sending positions and can't receive commands. The identity, twin and history are kept.
+        }
+      </p>
+      <ng-container slot="footer">
+        <button class="btn" (click)="regOpen.set(false)">Keep as is</button>
+        <button class="btn" [class.primary]="iot()?.registration === 'Disabled'" [class.danger]="iot()?.registration !== 'Disabled'" (click)="toggleRegistration()">
+          {{ iot()?.registration === 'Disabled' ? 'Enable' : 'Disable' }}
+        </button>
+      </ng-container>
+    </app-dialog>
+  } @else {
+    <div class="title-row">
+      <div class="title-block">
+        <nav class="breadcrumb" aria-label="Breadcrumb"><a routerLink="/inventory">Inventory</a><span aria-hidden="true">/</span><span>Not found</span></nav>
+        <h1>Device not found</h1>
+      </div>
+    </div>
+    <div class="empty">
+      There's no device with the ID “{{ id() }}”. It may have been removed from stock, or the link is out of date.
+      <a class="btn sm" routerLink="/inventory">Back to inventory</a>
+    </div>
+  }
+</div>

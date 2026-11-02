@@ -1,0 +1,373 @@
+<div class="page">
+  <div class="title-row">
+    <div class="title-block">
+      <h1>Configuration profiles</h1>
+      <p class="subline num">
+        @if (loading()) { <span class="skeleton" style="width:420px;height:12px"></span> } @else { {{ subline() }} }
+      </p>
+      @if (!w.rw() && !loading()) { <app-ro-note noun="configuration profiles" /> }
+    </div>
+    <div class="actions">
+      @if (w.rw()) { <button class="btn primary" (click)="add()"><app-icon name="plus" />New profile</button> }
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="table stack profiles">
+      <thead>
+        <tr>
+          <th>Profile</th>
+          <th>Target condition</th>
+          <th class="num">Priority</th>
+          <th class="num" title="Devices whose winning profile is this one">Targeted</th>
+          <th class="num">Pending</th>
+          <th class="num">Error</th>
+          <th>Rollout</th>
+          <th>Status</th>
+          <th class="num">Updated</th>
+          <th><span class="sr-only">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+            <tr>
+              <td><span class="skeleton" style="width:150px;height:14px"></span><span class="sub"><span class="skeleton" style="width:220px;height:10px"></span></span></td>
+              <td class="desk-only"><span class="skeleton" style="width:240px;height:12px"></span></td>
+              <td class="desk-only num"><span class="skeleton" style="width:20px;height:14px"></span></td>
+              <td class="desk-only num"><span class="skeleton" style="width:28px;height:14px"></span></td>
+              <td class="desk-only num"><span class="skeleton" style="width:20px;height:14px"></span></td>
+              <td class="desk-only num"><span class="skeleton" style="width:16px;height:14px"></span></td>
+              <td class="desk-only"><span class="skeleton" style="width:120px;height:6px"></span></td>
+              <td class="keep"><span class="skeleton" style="width:54px;height:20px"></span></td>
+              <td class="desk-only num"><span class="skeleton" style="width:50px;height:14px"></span></td>
+              <td></td>
+            </tr>
+          }
+        } @else {
+          @for (p of sorted(); track p.id) {
+            @let s = stat(p.id);
+            <tr [class.clickable]="w.rw()" [class.inactive]="p.status !== 'Active'" (click)="w.rw() && edit(p)">
+              <td class="wrap name-cell">
+                <span class="primary-cell">{{ p.name }}</span>
+                <span class="sub">{{ p.description }}</span>
+              </td>
+              <td class="phone-only num">
+                Priority {{ p.priority }} ·
+                @if (p.status === 'Active') { @if (s.targeted) { {{ s.applied }} of {{ s.targeted }} in sync @if (s.error) { · {{ s.error }} {{ s.error === 1 ? 'error' : 'errors' }} } } @else { wins no device } }
+                @else { would get {{ s.wouldWin }} }
+              </td>
+              <td class="desk-only wrap cond-cell"><code class="mono cond">{{ p.targetCondition }}</code></td>
+              <td class="desk-only num">{{ p.priority }}</td>
+              @if (p.status === 'Active') {
+                <td class="desk-only num">
+                  <app-num [value]="s.targeted" />
+                  @if (s.overridden) { <span class="sub" [title]="overriddenTitle(p)">{{ s.overridden }} overridden</span> }
+                </td>
+                <td class="desk-only num"><app-num [value]="s.pending" /></td>
+                <td class="desk-only num" [class.neg]="s.error" [title]="errorTitle(p)"><app-num [value]="s.error" /></td>
+                <td class="desk-only">
+                  @if (s.targeted) {
+                    <div class="rollout">
+                      <div class="meter" role="meter" [attr.aria-valuenow]="s.applied" aria-valuemin="0" [attr.aria-valuemax]="s.targeted"
+                           [attr.aria-label]="p.name + ' rollout'"><span [style.width.%]="pct(p)"></span></div>
+                      <span class="num muted">{{ s.applied }} of {{ s.targeted }}</span>
+                    </div>
+                  } @else {
+                    <span class="muted small" [title]="overriddenTitle(p)">@if (s.overridden) { Wins no device } @else { Matches no device }</span>
+                  }
+                </td>
+              } @else {
+                <td class="desk-only num"><span class="dash" title="Not applied while {{ p.status | lowercase }}">—</span>
+                  <span class="sub" title="Devices it would win if activated now">would get {{ s.wouldWin }}</span></td>
+                <td class="desk-only num"><span class="dash">—</span></td>
+                <td class="desk-only num"><span class="dash">—</span></td>
+                <td class="desk-only"><span class="muted small">Not rolling out</span></td>
+              }
+              <td class="keep"><span class="pill" [class]="statusTone[p.status]">{{ p.status }}</span></td>
+              <td class="desk-only num">{{ p.updatedAt | rel }}<span class="sub">{{ p.createdBy }}</span></td>
+              <td class="actions-cell row-menu" (click)="$event.stopPropagation()">
+                @if (w.rw()) { <app-menu [items]="menu(p)" [label]="'Actions for ' + p.name" /> }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="10" class="empty-row">
+                <div class="empty">No profiles yet. Devices keep whatever settings they shipped with. @if (w.rw()) { <button class="btn sm" (click)="add()">New profile</button> }</div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (!loading()) {
+    <section class="coverage" aria-label="Coverage">
+      <div class="cov-block">
+        <h2>Coverage</h2>
+        <p class="num">
+          <strong>{{ withIdentity() - noProfile().length }}</strong> of {{ withIdentity() }} devices with a hub identity get a profile.
+          @if (noProfile().length) {
+            @if (noProfileReasons().length === 1) {
+              The other <strong>{{ noProfile().length }}</strong> {{ noProfileReasons()[0][0] }}.
+            } @else {
+              The other <strong>{{ noProfile().length }}</strong> have none:
+              @for (r of noProfileReasons(); track r[0]; let last = $last) { {{ r[1] }} {{ r[0] }}{{ last ? '.' : ';' }} }
+            }
+            <button class="btn ghost sm" (click)="gapOpen.set(true)">View devices<app-icon name="arrow-right" /></button>
+          }
+        </p>
+        @if (!totalsAgree()) {
+          <p class="inline-error"><app-icon name="circle-x" />Counts don’t add up to the fleet. Check for a device counted twice.</p>
+        }
+      </div>
+      <div class="cov-block">
+        <h2>How priority works</h2>
+        <p>
+          A device gets exactly one profile: the highest-priority active one whose condition matches it. Settings never merge,
+          so a narrow profile with a higher priority must carry every setting the device needs. Equal priorities go to the newest profile.
+          @if (example(); as ex) {
+            Today <strong>{{ ex.winner.name }}</strong> ({{ ex.winner.priority }}) wins {{ ex.n }} devices that
+            <strong>{{ ex.loser.name }}</strong> ({{ ex.loser.priority }}) also matches.
+          }
+        </p>
+      </div>
+    </section>
+  }
+</div>
+
+<!-- Editor -->
+<app-dialog [(open)]="open" variant="drawer" width="680px"
+            [heading]="original() ? draft().name || 'Edit profile' : 'New profile'"
+            [subheading]="original() ? 'IoT Hub configuration ' + original()!.id + ' · ' + original()!.status : 'An IoT Hub automatic device configuration.'">
+  @let d = draft();
+  <div class="form">
+    <div class="pair">
+      <div class="field">
+        <label for="cp-name">Name<span class="req">*</span></label>
+        <input id="cp-name" class="input" maxlength="80" [value]="d.name" (input)="setName($any($event.target).value)"
+               [class.invalid]="tried() && errors().name" />
+        @if (tried() && errors().name) { <span class="error">{{ errors().name }}</span> }
+      </div>
+      <div class="field">
+        <label for="cp-id">ID<span class="req">*</span></label>
+        <input id="cp-id" class="input mono" maxlength="64" [value]="d.id" [readOnly]="!!original()" (input)="setId($any($event.target).value)"
+               [class.invalid]="tried() && errors().id" />
+        @if (tried() && errors().id) { <span class="error">{{ errors().id }}</span> }
+        @else if (original()) { <span class="hint">Fixed: IoT Hub can’t rename a configuration.</span> }
+        @else { <span class="hint">Kebab-case. Can’t be changed later.</span> }
+      </div>
+    </div>
+    <div class="pair">
+      <div class="field">
+        <label for="cp-desc">Description</label>
+        <input id="cp-desc" class="input" maxlength="160" [value]="d.description" (input)="patch({ description: $any($event.target).value })" />
+      </div>
+      <div class="field prio">
+        <label for="cp-prio">Priority<span class="req">*</span></label>
+        <input id="cp-prio" class="input num" type="number" min="1" max="100" step="1" [value]="d.priority"
+               (input)="patch({ priority: +$any($event.target).value })" [class.invalid]="tried() && errors().priority" />
+        @if (tried() && errors().priority) { <span class="error">{{ errors().priority }}</span> }
+        @else { <span class="hint">1–100. Higher wins.</span> }
+      </div>
+    </div>
+    @if (samePriority().length) {
+      <p class="hint-line"><app-icon name="info" [size]="14" />Same priority as
+        @for (p of samePriority(); track p.id; let last = $last) { {{ p.name }}{{ last ? '' : ', ' }} }:
+        where both match, the newer profile wins.</p>
+    }
+
+    <!-- Target condition -->
+    <div class="section">
+      <div class="section-head">
+        <h3>Target devices</h3>
+        <button type="button" class="btn ghost sm" (click)="toggleAdvanced()" [attr.aria-pressed]="d.advanced"
+                [disabled]="d.advanced && !!conditionError() && !!d.raw.trim()">
+          <app-icon name="sliders" />{{ d.advanced ? 'Use builder' : 'Advanced' }}
+        </button>
+      </div>
+      @if (!d.advanced) {
+        <div class="clauses">
+          @for (r of d.rows; track $index; let i = $index) {
+            <div class="clause">
+              <span class="join muted">{{ i === 0 ? 'Where' : 'and' }}</span>
+              <select class="select" [attr.aria-label]="'Tag, row ' + (i + 1)" [value]="r.tag" (change)="setTag(i, $any($event.target).value)">
+                @for (t of tagKeys; track t.key) { <option [value]="t.key" [selected]="t.key === r.tag">{{ t.label }}</option> }
+              </select>
+              <select class="select op" [attr.aria-label]="'Operator, row ' + (i + 1)" [value]="r.op" (change)="setOp(i, $any($event.target).value)">
+                @for (o of ops; track o.op) { <option [value]="o.op" [selected]="o.op === r.op">{{ o.label }}</option> }
+              </select>
+              @if (r.op === 'in') {
+                <div class="multi" [class.invalid]="tried() && !r.values.length">
+                  @for (v of r.values; track v) {
+                    <span class="chip">{{ valueLabel(r.tag, v) }}<button type="button" [attr.aria-label]="'Remove ' + v" (click)="removeValue(i, v)"><app-icon name="x" [size]="12" /></button></span>
+                  }
+                  <select #addSel class="select add-val" [attr.aria-label]="'Add value, row ' + (i + 1)" (change)="addValue(i, addSel.value, addSel)">
+                    <option value="">{{ r.values.length ? 'Add…' : 'Choose values…' }}</option>
+                    @for (o of tagValues().get(r.tag); track o.value) {
+                      @if (!r.values.includes(o.value)) { <option [value]="o.value">{{ o.label }}</option> }
+                    }
+                  </select>
+                </div>
+              } @else {
+                <select class="select" [attr.aria-label]="'Value, row ' + (i + 1)" [value]="r.values[0] ?? ''" (change)="setValue(i, $any($event.target).value)"
+                        [class.invalid]="tried() && !r.values.length">
+                  <option value="" disabled>Choose…</option>
+                  @for (o of tagValues().get(r.tag); track o.value) { <option [value]="o.value" [selected]="o.value === r.values[0]">{{ o.label }}</option> }
+                </select>
+              }
+              <button type="button" class="btn ghost icon sm" [attr.aria-label]="'Remove row ' + (i + 1)" (click)="removeRow(i)"><app-icon name="x" /></button>
+            </div>
+          }
+          <button type="button" class="btn sm add-row" (click)="addRow()"><app-icon name="plus" />Add condition</button>
+        </div>
+        <code class="mono generated" aria-live="polite">{{ condition() }}</code>
+      } @else {
+        <div class="field">
+          <label for="cp-raw" class="sr-only">Target condition</label>
+          <textarea id="cp-raw" class="textarea mono" rows="3" spellcheck="false" [value]="d.raw" (input)="patch({ raw: $any($event.target).value })"
+                    [class.invalid]="!!conditionError()"></textarea>
+          @if (conditionError()) { <span class="error">{{ conditionError() }}</span> }
+          @else { <span class="hint">IoT Hub syntax on twin tags: <span class="mono">tags.x='v'</span>, <span class="mono">tags.x != 'v'</span>, <span class="mono">tags.x IN ['a','b']</span>, joined by AND.</span> }
+        </div>
+      }
+      @if (!d.advanced && tried() && errors().condition) { <span class="error">{{ errors().condition }}</span> }
+
+      @if (preview(); as pv) {
+        <div class="preview num" aria-live="polite">
+          <p>
+            @if (pv.everyDevice) { Targets every device: }
+            Matches <strong>{{ pv.matches }}</strong> {{ pv.matches === 1 ? 'device' : 'devices' }}
+            @if (pv.matches) {
+              · <strong>{{ pv.wins }}</strong> would get this profile
+              @for (c of pv.claimedBy; track c.p.id; let first = $first) {
+                {{ first ? ',' : ' and' }} {{ c.n }} {{ first ? (c.n === 1 ? 'is' : 'are') + ' claimed by' : 'by' }} <strong>{{ c.p.name }}</strong> (priority {{ c.p.priority }})
+              }
+            }
+          </p>
+          @if (pv.takesFrom.length) {
+            <p class="muted">Takes over
+              @for (c of pv.takesFrom; track c.p.id; let last = $last) { {{ c.n }} from {{ c.p.name }} ({{ c.p.priority }}){{ last ? '.' : ', ' }} }
+              Those devices lose every setting of their current profile that isn’t repeated here.
+            </p>
+          }
+          @if (pv.types.length) {
+            <p class="muted">By type: @for (t of pv.types; track t[0]; let last = $last) { {{ t[0] }} {{ t[1] }}{{ last ? '' : ' · ' }} }</p>
+          }
+          @if (pv.misfit.length) {
+            <div class="notice"><app-icon name="alert" />
+              <span>@for (m of pv.misfit; track m[0]; let last = $last) { {{ m[1] }} {{ m[0] }}{{ last ? '' : ', ' }} }
+              would get settings they can’t use. Narrow the condition with Device type.</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Desired settings -->
+    <div class="section">
+      <div class="section-head">
+        <h3>Desired settings</h3>
+        <span class="muted small num">{{ d.settings.length }} of {{ settingsMeta.length }}</span>
+      </div>
+      <div class="settings">
+        @for (s of d.settings; track s.key; let i = $index) {
+          @let m = meta.get(s.key);
+          <div class="setting" [class.invalid]="tried() && settingErr(s)">
+            <select class="select" [attr.aria-label]="'Setting ' + (i + 1)" [value]="s.key" (change)="setSettingKey(i, $any($event.target).value)">
+              @for (k of freeKeys(i); track k.key) { <option [value]="k.key" [selected]="k.key === s.key">{{ k.label }}</option> }
+            </select>
+            <div class="val">
+              @switch (m?.kind) {
+                @case ('number') {
+                  <span class="input-unit">
+                    <input class="input num" type="number" [min]="m!.min" [max]="m!.max" step="1" [value]="s.value"
+                           [attr.aria-label]="m!.label" (input)="setSettingValue(i, $any($event.target).value)"
+                           [class.invalid]="tried() && settingErr(s)" />
+                    <span class="unit">{{ m!.unit }}</span>
+                  </span>
+                }
+                @case ('boolean') {
+                  <label class="toggle"><input type="checkbox" [checked]="s.value === true" (change)="setSettingValue(i, $any($event.target).checked)" />{{ s.value ? 'On' : 'Off' }}</label>
+                }
+                @case ('enum') {
+                  <select class="select" [attr.aria-label]="m!.label" [value]="s.value" (change)="setSettingValue(i, $any($event.target).value)">
+                    @for (o of m!.options; track o) { <option [value]="o" [selected]="o === s.value">{{ o }}</option> }
+                  </select>
+                }
+                @default {
+                  <input class="input mono" [attr.list]="s.key === 'firmware' ? 'cp-fw' : null" [value]="s.value" [attr.aria-label]="m?.label ?? s.key"
+                         (input)="setSettingValue(i, $any($event.target).value)" [class.invalid]="tried() && settingErr(s)" />
+                }
+              }
+              @if (tried() && settingErr(s)) { <span class="error">{{ settingErr(s) }}</span> }
+              @else if (m?.kind === 'number') { <span class="hint num">{{ m!.min }}–{{ m!.max }} {{ m!.unit }}</span> }
+            </div>
+            <span class="mono key muted desk-only">{{ s.key }}</span>
+            <button type="button" class="btn ghost icon sm" [attr.aria-label]="'Remove ' + (m?.label ?? s.key)" (click)="removeSetting(i)"><app-icon name="x" /></button>
+          </div>
+        } @empty {
+          <div class="empty">No settings. A profile needs at least one.</div>
+        }
+        <datalist id="cp-fw">@for (f of firmwareOptions(); track f) { <option [value]="f"></option> }</datalist>
+        @if (d.settings.length < settingsMeta.length) {
+          <button type="button" class="btn sm add-row" (click)="addSetting()"><app-icon name="plus" />Add setting</button>
+        }
+        @if (tried() && errors().settings) { <span class="error">{{ errors().settings }}</span> }
+      </div>
+    </div>
+  </div>
+  <ng-container slot="footer">
+    @if (tried() && hasErrors()) { <span class="footer-note error">Fix the highlighted fields.</span> }
+    <button class="btn" (click)="open.set(false)">Cancel</button>
+    <button class="btn" (click)="save('Draft')">Save as draft</button>
+    <button class="btn primary" (click)="save('Active')">{{ original()?.status === 'Active' ? 'Save and roll out' : 'Save and activate' }}</button>
+  </ng-container>
+</app-dialog>
+
+<!-- Delete -->
+<app-dialog [(open)]="delOpen" [heading]="'Delete ' + (delTarget()?.name ?? '') + '?'" subheading="This removes the configuration from IoT Hub." width="460px">
+  @if (delImpact(); as im) {
+    @if (im.total) {
+      <p class="num">
+        It manages {{ im.total }} {{ im.total === 1 ? 'device' : 'devices' }}.
+        @for (n of im.next; track n[0]) { {{ n[1] }} fall back to <strong>{{ n[0] }}</strong>. }
+        @if (im.orphaned) { {{ im.orphaned }} keep their current settings with no profile managing them. }
+      </p>
+    } @else {
+      <p>It doesn’t win any device right now, so no device changes.</p>
+    }
+  } @else {
+    <p>It’s {{ delTarget()?.status | lowercase }}, so no device has it.</p>
+  }
+  <ng-container slot="footer">
+    <button class="btn" (click)="delOpen.set(false)">Cancel</button>
+    <button class="btn danger" (click)="confirmDelete()"><app-icon name="trash" />Delete profile</button>
+  </ng-container>
+</app-dialog>
+
+<!-- Devices without a profile -->
+<app-dialog [(open)]="gapOpen" variant="drawer" width="560px" heading="Devices with no profile"
+            [subheading]="noProfile().length + ' devices keep whatever settings they have now'">
+  <p class="muted gap-why num">
+    @for (r of noProfileReasons(); track r[0]; let last = $last) { {{ r[1] }} {{ r[0] }}{{ last ? '' : ' · ' }} }
+  </p>
+  <div class="table-wrap">
+    <table class="table stack">
+      <thead><tr><th>Device ID</th><th>Type</th><th>Package tag</th><th>Why</th></tr></thead>
+      <tbody>
+        @for (n of noProfile(); track n.t.id) {
+          <tr>
+            <td><a class="link mono" [routerLink]="['/devices', n.t.id]" (click)="gapOpen.set(false)">{{ n.t.id }}</a></td>
+            <td class="hide-sm">@if (typeOf().get(n.t.id); as ty) { {{ ty }} } @else { <span class="dash">—</span> }</td>
+            <td class="hide-sm">@if (n.t.tags?.package) { {{ n.t.tags!.package }} } @else { <span class="dash">—</span> }</td>
+            <td class="wrap muted">{{ n.why }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="4" class="empty-row"><div class="empty">Every device with a hub identity gets a profile.</div></td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</app-dialog>

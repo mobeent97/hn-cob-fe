@@ -1,0 +1,218 @@
+@use './admin';
+
+.actions-cell {
+  width: 40px;
+  text-align: right;
+}
+.empty-row {
+  padding: 16px 0 !important;
+  height: auto !important;
+}
+
+// Permission summary: one hue, three steps (read & write, read, none) at true ratio.
+.perm-sum {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.perm-bar {
+  display: flex;
+  width: 120px;
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  gap: 2px;
+  flex: none;
+  i {
+    display: block;
+    flex-basis: 0;
+    min-width: 0;
+  }
+  .rw {
+    background: var(--accent);
+  }
+  .r {
+    background: var(--chart-3);
+  }
+  .n {
+    background: var(--active);
+  }
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.pair {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+}
+.status-toggle {
+  height: var(--control-h);
+}
+.small {
+  font-size: var(--fs-small);
+}
+.matrix-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 6px;
+  border-top: 1px solid var(--rule);
+  margin-top: 4px;
+  padding-top: 18px;
+}
+.set-all {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.perms {
+  .area-row th {
+    text-align: left;
+    padding: 18px 0 6px;
+    font-size: var(--fs-small);
+    font-weight: 600;
+    color: var(--text);
+    border-top: 0;
+    height: auto;
+  }
+  tbody:first-of-type .area-row th {
+    padding-top: 4px;
+  }
+  th[scope='row'] {
+    font-size: var(--fs-body);
+    color: var(--text);
+    font-weight: 500;
+    padding: 8px 12px 8px 0;
+    border-top: 1px solid var(--rule);
+    vertical-align: middle;
+    text-align: left;
+  }
+  td {
+    height: 52px;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .f-label {
+    display: block;
+  }
+  .f-desc {
+    display: block;
+    color: var(--muted);
+    font-size: var(--fs-small);
+    font-weight: 400;
+    line-height: 16px;
+  }
+  .f-cap {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: var(--fs-small);
+    font-weight: 400;
+  }
+  .seg button.on[data-level='RW'] {
+    color: var(--accent-strong);
+  }
+  .seg button:disabled {
+    color: var(--faint);
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+.footer-note {
+  margin-right: auto;
+  align-self: center;
+}
+
+@media (max-width: 640px) {
+  .perms tr:not(.area-row) {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 8px 0;
+    border-top: 1px solid var(--rule);
+    gap: 6px;
+    th,
+    td {
+      border: 0;
+      height: auto;
+      text-align: left;
+      padding: 0;
+    }
+  }
+}
+
+.roles {
+  .group-row th {
+    text-align: left;
+    padding: 22px 0 8px;
+    font-size: var(--fs-small);
+    font-weight: 600;
+    color: var(--text);
+    border-top: 0;
+    height: auto;
+  }
+  tbody:first-of-type .group-row th {
+    padding-top: 10px;
+  }
+  .group-sub {
+    font-weight: 400;
+    margin-left: 6px;
+  }
+}
+.tag {
+  margin-left: 6px;
+}
+.ro-hint {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.page > .ro-hint {
+  margin-top: -8px;
+}
+.reach {
+  font-weight: 500;
+  color: var(--text);
+}
+.losers {
+  strong {
+    font-weight: 600;
+  }
+  ul {
+    margin: 4px 0 0;
+    padding: 0 0 0 16px;
+  }
+  li {
+    line-height: 20px;
+  }
+  .who {
+    font-weight: 500;
+  }
+}
+@media (max-width: 640px) {
+  .roles .group-row {
+    display: block !important;
+    padding: 0 !important;
+    border-top: 0 !important;
+    th {
+      display: block;
+      white-space: normal;
+    }
+  }
+  .roles .group-sub {
+    display: block;
+    margin: 2px 0 0;
+  }
+}

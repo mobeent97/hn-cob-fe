@@ -1,0 +1,98 @@
+<div class="page">
+  <div class="title-row">
+    <div class="title-block">
+      <h1>Reports</h1>
+      <p class="subline num">
+        {{ reportCount }} reports, each figure live from today’s data ·
+        {{ activeCount() }} {{ activeCount() === 1 ? 'goes' : 'go' }} out by email@if (firstRun(); as f) {, the next is {{ f.def?.name }} on {{ date(f.next!) }}}
+      </p>
+      @if (!w.rw()) { <app-ro-note noun="reports and their schedules" /> }
+    </div>
+  </div>
+
+  @for (g of groups(); track g.area) {
+    <section class="card area" [attr.aria-labelledby]="'area-' + $index">
+      <div class="card-head"><h2 [id]="'area-' + $index">{{ g.area }}</h2></div>
+      <ul class="report-list">
+        @for (r of g.reports; track r.def.id) {
+          <li>
+            <a class="report-row" [routerLink]="['/reports', r.def.id]">
+              <span class="what">
+                <span class="name">{{ r.def.name }}</span>
+                <span class="q">{{ r.def.question }}</span>
+              </span>
+              <span class="figure">
+                @if (loading()) {
+                  <span class="skeleton" style="width:150px;height:16px"></span>
+                  <span class="skeleton" style="width:190px;height:12px;margin-top:4px"></span>
+                } @else {
+                  <span class="headline num">{{ r.headline }}</span>
+                  <span class="sub num">{{ r.sub }}</span>
+                }
+              </span>
+              <span class="open">Open<app-icon name="arrow-right" [size]="14" /></span>
+            </a>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <h2>Scheduled reports</h2>
+        <p class="card-sub">Emailed as CSV and PDF at {{ runHour }}:00 Gulf time. @if (w.rw()) { Open a report and choose Schedule to add one. }</p>
+      </div>
+    </div>
+    <div class="card-body">
+      @if (schedules().length) {
+        <div class="table-wrap">
+          <table class="table stack">
+            <thead>
+              <tr>
+                <th>Report</th>
+                <th>Frequency</th>
+                <th>Recipients</th>
+                <th class="num">Next run</th>
+                <th><span class="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (x of schedules(); track x.s.id) {
+                <tr>
+                  <td>
+                    <a class="primary-cell name-link" [routerLink]="['/reports', x.s.reportId]">{{ x.def?.name ?? x.s.reportId }}</a>
+                    <span class="sub">{{ scope(x.s) }}</span>
+                  </td>
+                  <td class="phone-only">{{ cadence(x.s) }} · {{ x.s.recipients.length }} {{ x.s.recipients.length === 1 ? 'recipient' : 'recipients' }}</td>
+                  <td class="desk-only">{{ cadence(x.s) }}</td>
+                  <td class="desk-only recipients">
+                    {{ x.s.recipients[0] }}
+                    @if (x.s.recipients.length > 1) {
+                      <span class="sub" [title]="x.s.recipients.slice(1).join(', ')">and {{ x.s.recipients.length - 1 }} more</span>
+                    }
+                  </td>
+                  <td class="num keep">
+                    @if (x.next) {
+                      {{ date(x.next) }}<span class="sub">{{ runHour }}:00</span>
+                    } @else {
+                      <span class="pill">Paused</span>
+                    }
+                  </td>
+                  <td class="actions-cell row-menu" (click)="$event.stopPropagation()">
+                    @if (w.rw()) { <app-menu [items]="menu(x.s)" [label]="'Actions for the ' + (x.def?.name ?? '') + ' schedule'" /> }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="empty">No reports are scheduled. @if (w.rw()) { Open a report and choose Schedule to email it on a cadence. }</div>
+      }
+    </div>
+  </section>
+</div>
+
+<app-schedule-dialog [(open)]="editOpen" [existing]="editing()" />

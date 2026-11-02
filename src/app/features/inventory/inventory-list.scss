@@ -1,0 +1,314 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.pkg {
+  width: auto;
+}
+
+.id-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  .check {
+    padding: 4px;
+    margin: -4px;
+  }
+}
+
+tr.picked {
+  background: var(--accent-weak) !important;
+}
+
+.owner .link {
+  font-weight: 400;
+}
+
+.actions-cell {
+  width: 40px;
+  text-align: right;
+}
+
+.empty-row {
+  padding: 16px 0 !important;
+  height: auto !important;
+}
+
+// ── Bulk action bar: rises from the bottom edge of the sheet (transitions.dev panel reveal) ──
+.bulk-bar {
+  position: fixed;
+  z-index: 40;
+  bottom: 24px;
+  left: calc(var(--sidebar-w) + (100vw - var(--sidebar-w)) / 2);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 8px 8px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-float);
+  max-width: calc(100vw - 32px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, 16px);
+  transition:
+    opacity var(--duration-quick) var(--ease-out),
+    transform var(--duration-quick) var(--ease-out),
+    visibility 0s linear var(--duration-quick);
+
+  &.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translate(-50%, 0);
+    transition:
+      opacity var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out),
+      visibility 0s;
+  }
+  .picked-count {
+    white-space: nowrap;
+    color: var(--muted);
+    strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+  }
+  .bulk-actions {
+    display: flex;
+    gap: 6px;
+  }
+}
+
+// Room for the bar so it never covers the pager.
+.page:has(.bulk-bar.show) {
+  padding-bottom: 88px;
+}
+
+@media (max-width: 1024px) {
+  .bulk-bar {
+    left: 50%;
+  }
+}
+
+// ── Drawer ──
+.drawer-dl {
+  grid-template-columns: 1fr 1fr;
+  margin-bottom: 28px;
+}
+
+.section-h {
+  font-size: var(--fs-section);
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    position: relative;
+    display: grid;
+    grid-template-columns: 16px 1fr;
+    gap: 12px;
+    padding-bottom: 20px;
+
+    // the rail between markers
+    &:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 7px;
+      top: 14px;
+      bottom: -2px;
+      width: 1px;
+      background: var(--border);
+    }
+  }
+  .marker {
+    width: 9px;
+    height: 9px;
+    margin: 6px 0 0 3px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1.5px solid var(--control);
+  }
+  li.now .marker {
+    background: var(--text);
+    border-color: var(--text);
+  }
+  .ev-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+    font-size: var(--fs-small);
+  }
+  p {
+    line-height: 20px;
+  }
+  .by {
+    font-size: var(--fs-small);
+  }
+}
+
+// ── Forms ──
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 20px;
+  .full {
+    grid-column: 1 / -1;
+  }
+}
+
+.stack-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// ── Bulk upload ──
+.drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 28px 16px;
+  border: 1px dashed var(--control);
+  border-radius: var(--radius-card);
+  color: var(--text);
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-quick) ease,
+    background-color var(--duration-quick) ease;
+
+  app-icon {
+    color: var(--muted);
+  }
+  &:hover,
+  &.over {
+    border-color: var(--accent);
+    background: var(--accent-weak);
+  }
+  &:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-weak);
+  }
+  .small {
+    font-size: var(--fs-small);
+  }
+}
+
+.drop-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0 0 -10px;
+  font-size: var(--fs-small);
+}
+
+.file-error {
+  margin-top: 12px;
+}
+
+.preview-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 16px 0 8px;
+  min-height: 28px;
+  .neg {
+    color: var(--negative);
+  }
+}
+
+.preview {
+  max-height: 300px;
+  overflow: auto;
+  border-top: 1px solid var(--rule);
+
+  .table {
+    font-size: 13px;
+  }
+  .table th {
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    padding-top: 8px;
+  }
+  .table td {
+    height: 40px;
+  }
+  .table td {
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+  .check-cell {
+    width: 40%;
+  }
+  .err-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--negative);
+    font-size: var(--fs-small);
+    line-height: 16px;
+  }
+  .ok {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--positive);
+    font-size: var(--fs-small);
+  }
+}
+
+@media (max-width: 640px) {
+  .toolbar .left .pkg {
+    width: 100%;
+  }
+  .two-col {
+    grid-template-columns: 1fr;
+  }
+  .drawer-dl .sim {
+    grid-column: 1 / -1;
+  }
+  .bulk-bar {
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    transform: translateY(16px);
+    flex-wrap: wrap;
+    &.show {
+      transform: none;
+    }
+    .bulk-actions {
+      order: 3;
+      width: 100%;
+      flex-wrap: wrap;
+    }
+    .picked-count {
+      flex: 1;
+    }
+  }
+  .table.stack .id-cell {
+    gap: 12px;
+  }
+  .table.stack td.phone-only {
+    padding-left: 28px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .title-row .actions {
+    flex-wrap: wrap;
+  }
+}

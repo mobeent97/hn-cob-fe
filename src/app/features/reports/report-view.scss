@@ -1,0 +1,295 @@
+.filters {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: -8px;
+
+  .left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .select {
+    width: auto;
+    height: 34px;
+  }
+  .fresh {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+    font-size: var(--fs-small);
+  }
+}
+
+.finding {
+  font-size: var(--fs-section);
+  font-weight: 500;
+  line-height: 24px;
+  color: var(--text);
+  margin-bottom: -8px;
+}
+
+.kpi-value {
+  .unit {
+    font-size: var(--fs-body);
+    color: var(--muted);
+    margin-left: 2px;
+  }
+  .unit.pre {
+    margin: 0 4px 0 0;
+  }
+  .dash {
+    color: var(--faint);
+  }
+}
+.kpi-caption .delta {
+  font-weight: 500;
+  &.good {
+    color: var(--positive);
+  }
+  &.bad {
+    color: var(--negative);
+  }
+  &.flat {
+    color: var(--muted);
+  }
+}
+
+.card-head {
+  flex-wrap: wrap;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: var(--fs-small);
+
+  .sw {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    background: var(--chart-1);
+    & + * {
+      margin-right: 10px;
+    }
+    &.part {
+      opacity: 0.35;
+      margin-left: 10px;
+    }
+    &.line {
+      height: 0;
+      width: 16px;
+      border-radius: 0;
+      background: none;
+      border-top: 2px solid var(--chart-1);
+    }
+    &.dashed {
+      border-top: 1.5px dashed var(--chart-3);
+      margin-left: 10px;
+    }
+  }
+}
+
+// Sorted horizontal bars (funnel sections, failure rates)
+.bar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  li {
+    display: grid;
+    grid-template-columns: minmax(150px, 220px) 1fr 64px 72px;
+    align-items: center;
+    gap: 12px;
+  }
+  .name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .track {
+    height: 10px;
+    background: var(--active);
+    border-radius: 2px;
+    overflow: hidden;
+    span {
+      display: block;
+      height: 100%;
+      background: var(--chart-1);
+      transition: width var(--duration-medium) var(--ease-out);
+    }
+  }
+  .val {
+    text-align: right;
+    font-weight: 500;
+  }
+  .aside {
+    text-align: right;
+    color: var(--muted);
+    font-size: var(--fs-small);
+  }
+}
+
+.ring-wrap {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+
+  .table-wrap {
+    flex: 1;
+  }
+  .legend-table td {
+    height: 40px;
+  }
+  .sw {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    margin-right: 8px;
+  }
+}
+
+.tabs-head {
+  padding: 8px var(--card-pad) 0;
+}
+
+.breakdown {
+  tfoot td {
+    border-top: 1px solid var(--border);
+    font-weight: 600;
+    color: var(--text);
+  }
+  .name-link:hover {
+    color: var(--accent);
+  }
+  td.dash {
+    color: var(--faint);
+  }
+}
+
+.footnote {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  color: var(--muted);
+  font-size: var(--fs-small);
+  line-height: 18px;
+  max-width: 820px;
+  app-icon {
+    margin-top: 2px;
+  }
+}
+
+.print-only {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .filters .left {
+    width: 100%;
+    .select {
+      flex: 1 1 140px;
+    }
+  }
+  .title-row .actions {
+    flex-wrap: wrap;
+  }
+  .bar-list li {
+    grid-template-columns: 1fr 56px;
+    row-gap: 4px;
+    .name {
+      grid-column: 1 / -1;
+      grid-row: 1;
+    }
+    .track {
+      grid-column: 1;
+    }
+    .aside {
+      display: none;
+    }
+  }
+  .ring-wrap {
+    flex-direction: column;
+    align-items: stretch;
+    app-ring {
+      align-self: center;
+    }
+    // Price and share drop out; the MRR column carries the share's magnitude.
+    .legend-table th:nth-child(3),
+    .legend-table td:nth-child(3),
+    .legend-table th:nth-child(5),
+    .legend-table td:nth-child(5) {
+      display: none;
+    }
+  }
+  .breakdown tfoot {
+    tr {
+      border-top: 1px solid var(--border);
+    }
+    td {
+      border-top: 0;
+    }
+    td.phone-only {
+      font-weight: 400;
+    }
+  }
+}
+
+// ── Print / PDF: the report alone, no app chrome ──────────────
+// Global selectors are guarded by :has(.rv-page), so they only apply while a report is open.
+@media print {
+  :host {
+    display: block;
+  }
+  .no-print,
+  .tabs-head {
+    display: none !important;
+  }
+  .print-only {
+    display: block;
+  }
+  .scope {
+    color: var(--muted);
+  }
+  .card,
+  .kpi-strip {
+    break-inside: avoid;
+  }
+  :host ::ng-deep app-dialog {
+    display: none;
+  }
+}
+@media print {
+  ::ng-deep body:has(.rv-page) {
+    .sidebar,
+    .topbar,
+    .scrim,
+    app-toaster {
+      display: none !important;
+    }
+    .frame {
+      display: block !important;
+      height: auto !important;
+      padding: 0 !important;
+      background: none !important;
+    }
+    .sheet {
+      border: 0 !important;
+      overflow: visible !important;
+      border-radius: 0 !important;
+    }
+    .rv-page {
+      padding: 0 !important;
+    }
+  }
+}

@@ -1,0 +1,134 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+// ── Feature matrix ───────────────────────────────────────────
+.matrix {
+  th.pkg-col,
+  td.cell {
+    text-align: center;
+    width: 160px;
+  }
+  .pkg-name {
+    display: block;
+    color: var(--text);
+    font-size: var(--fs-body);
+    font-weight: 600;
+  }
+  .pkg-price {
+    display: block;
+    font-weight: 400;
+  }
+  .group-row th {
+    text-align: left;
+    padding: 20px 0 8px;
+    font-size: var(--fs-small);
+    font-weight: 600;
+    color: var(--text);
+    border-top: 1px solid var(--rule);
+  }
+  tbody:first-of-type .group-row th {
+    padding-top: 8px;
+  }
+  td {
+    height: 40px;
+  }
+  td.cell .check {
+    justify-content: center;
+    padding: 8px;
+  }
+  // A staged cell carries a quiet marker until it is saved or discarded.
+  td.cell.changed {
+    background: var(--accent-weak);
+  }
+  tfoot td {
+    height: 44px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+  }
+}
+
+.save-bar {
+  position: sticky;
+  bottom: 16px;
+  z-index: 5;
+  align-self: center;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 8px 8px 8px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-float);
+  transition:
+    opacity var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  .save-actions {
+    display: flex;
+    gap: 8px;
+  }
+}
+
+// ── Packages table ───────────────────────────────────────────
+.desc {
+  max-width: 420px;
+  color: var(--muted);
+}
+.actions-cell {
+  width: 40px;
+  text-align: right;
+}
+.empty-row {
+  padding: 16px 0 !important;
+  height: auto !important;
+}
+
+// ── Dialog ───────────────────────────────────────────────────
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.input-group .prefix {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid var(--control);
+  border-right: 0;
+  border-radius: var(--radius-control) 0 0 var(--radius-control);
+  background: var(--raised);
+  color: var(--muted);
+}
+
+@media (max-width: 640px) {
+  .matrix-wrap {
+    margin-right: -16px;
+  }
+  .matrix {
+    th.pkg-col,
+    td.cell {
+      width: 104px;
+      min-width: 104px;
+    }
+    .feature-col {
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      background: var(--surface);
+      min-width: 140px;
+      white-space: normal;
+    }
+  }
+  .save-bar {
+    align-self: stretch;
+    gap: 12px;
+    justify-content: space-between;
+  }
+}

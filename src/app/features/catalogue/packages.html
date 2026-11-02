@@ -1,0 +1,173 @@
+<div class="page">
+  <div class="title-row">
+    <div class="title-block">
+      <h1>Packages</h1>
+      <p class="subline num">
+        {{ store.packages().length }} packages over {{ featureCount() }} features ·
+        {{ totalCustomers() }} customers on a package
+      </p>
+      @if (!w.rw()) { <app-ro-note noun="packages and the feature matrix" /> }
+    </div>
+    @if (w.rw()) {
+      <div class="actions">
+        <button class="btn primary" (click)="add()"><app-icon name="plus" />New package</button>
+      </div>
+    }
+  </div>
+
+  <div class="list">
+    <app-tabs [tabs]="tabs()" [(value)]="view" />
+
+    @if (view() === 'matrix') {
+      <div class="table-wrap matrix-wrap">
+        <table class="table matrix">
+          <thead>
+            <tr>
+              <th class="feature-col">Feature</th>
+              @for (p of store.packages(); track p.id) {
+                <th class="pkg-col">
+                  <span class="pkg-name">{{ p.name }}</span>
+                  <span class="pkg-price num">{{ fmtMoney(p.monthlyPrice) }} / device / mo</span>
+                </th>
+              }
+            </tr>
+          </thead>
+          @if (loading()) {
+            <tbody>
+              @for (i of [1, 2, 3, 4, 5, 6, 7]; track i) {
+                <tr>
+                  <td><span class="skeleton" style="width:150px;height:14px"></span></td>
+                  @for (p of store.packages(); track p.id) {
+                    <td class="cell"><span class="skeleton" style="width:16px;height:16px"></span></td>
+                  }
+                </tr>
+              }
+            </tbody>
+          } @else {
+            @for (g of store.featureGroups(); track g.id) {
+              <tbody>
+                <tr class="group-row">
+                  <th scope="rowgroup" [attr.colspan]="store.packages().length + 1">{{ g.name }}</th>
+                </tr>
+                @for (f of g.features; track f.id) {
+                  <tr>
+                    <td class="feature-col">{{ f.name }}</td>
+                    @for (p of store.packages(); track p.id) {
+                      <td class="cell" [class.changed]="changed(f.id, p.name)">
+                        <label class="check">
+                          <input type="checkbox" [checked]="has(f.id, p.name)" [disabled]="!w.rw()"
+                                 (change)="toggle(f.id, p.name, $any($event.target).checked)"
+                                 [attr.aria-label]="f.name + ' in ' + p.name" />
+                        </label>
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            } @empty {
+              <tbody>
+                <tr><td [attr.colspan]="store.packages().length + 1" class="empty-row"><div class="empty">No features are defined yet. Add modules to a use case first.</div></td></tr>
+              </tbody>
+            }
+            <tfoot>
+              <tr>
+                <td class="feature-col muted">Features included</td>
+                @for (p of store.packages(); track p.id) {
+                  <td class="cell num">{{ perPackage()[p.name] }} <span class="muted">of {{ featureCount() }}</span></td>
+                }
+              </tr>
+            </tfoot>
+          }
+        </table>
+      </div>
+
+      @if (changes() && w.rw()) {
+        <div class="save-bar" role="status">
+          <span><strong class="num">{{ changes() }}</strong> unsaved {{ changes() === 1 ? 'change' : 'changes' }} to the matrix</span>
+          <div class="save-actions">
+            <button class="btn sm" (click)="discard()">Discard</button>
+            <button class="btn sm primary" (click)="saveMatrix()">Save changes</button>
+          </div>
+        </div>
+      }
+    } @else {
+      <div class="table-wrap">
+        <table class="table stack">
+          <thead>
+            <tr>
+              <th>Package</th>
+              <th>Description</th>
+              <th class="num">Monthly price</th>
+              <th class="num">Customers</th>
+              <th class="num">Devices in service</th>
+              <th><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (loading()) {
+              @for (i of [1, 2, 3, 4]; track i) {
+                <tr>
+                  <td><span class="skeleton" style="width:90px;height:14px"></span></td>
+                  <td><span class="skeleton" style="width:260px;height:14px"></span></td>
+                  <td class="num"><span class="skeleton" style="width:60px;height:14px"></span></td>
+                  <td class="num"><span class="skeleton" style="width:24px;height:14px"></span></td>
+                  <td class="num"><span class="skeleton" style="width:32px;height:14px"></span></td>
+                  <td></td>
+                </tr>
+              }
+            } @else {
+              @for (p of rows(); track p.id) {
+                <tr>
+                  <td><span class="primary-cell">{{ p.name }}</span></td>
+                  <td class="phone-only num">{{ fmtMoney(p.monthlyPrice) }} / mo · {{ p.customers }} {{ p.customers === 1 ? 'customer' : 'customers' }} · {{ p.devices }} in service</td>
+                  <td class="wrap desc desk-only">
+                    @if (p.description) { {{ p.description }} } @else { <span class="dash">—</span> }
+                  </td>
+                  <td class="num desk-only">{{ fmtMoney(p.monthlyPrice) }}<span class="sub">per device / month</span></td>
+                  <td class="num desk-only">{{ p.customers }}</td>
+                  <td class="num desk-only">{{ p.devices }}</td>
+                  <td class="actions-cell row-menu" (click)="$event.stopPropagation()">
+                    @if (w.rw()) { <app-menu [items]="menu(p)" [label]="'Actions for ' + p.name" /> }
+                  </td>
+                </tr>
+              } @empty {
+                <tr><td colspan="6" class="empty-row"><div class="empty">No packages yet. @if (w.rw()) { <button class="btn sm" (click)="add()">New package</button> }</div></td></tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>
+
+<app-dialog [(open)]="dialogOpen" [heading]="draft().id ? 'Edit package' : 'New package'"
+            subheading="Customers are billed this price for every device in service." width="480px">
+  <div class="form">
+    <div class="field">
+      <label for="pkg-name">Package name<span class="req">*</span></label>
+      <input id="pkg-name" class="input" maxlength="60" [value]="draft().name" (input)="set('name', $any($event.target).value)"
+             [class.invalid]="tried() && errors().name" />
+      @if (tried() && errors().name) { <span class="error">{{ errors().name }}</span> }
+    </div>
+    <div class="field">
+      <label for="pkg-desc">Description</label>
+      <textarea id="pkg-desc" class="textarea" rows="3" [value]="draft().description" (input)="set('description', $any($event.target).value)"></textarea>
+      <span class="hint">Shown to the onboarding team when they pick a package.</span>
+    </div>
+    <div class="field">
+      <label for="pkg-price">Monthly price per device<span class="req">*</span></label>
+      <div class="input-group">
+        <span class="prefix">AED</span>
+        <input id="pkg-price" class="input num" type="number" min="1" step="1" inputmode="decimal"
+               [value]="draft().monthlyPrice ?? ''" (input)="set('monthlyPrice', $any($event.target).value === '' ? null : +$any($event.target).value)"
+               [class.invalid]="tried() && errors().monthlyPrice" />
+      </div>
+      @if (tried() && errors().monthlyPrice) { <span class="error">{{ errors().monthlyPrice }}</span> }
+    </div>
+  </div>
+  <ng-container slot="footer">
+    <button class="btn" (click)="dialogOpen.set(false)">Cancel</button>
+    <button class="btn primary" (click)="savePackage()">{{ draft().id ? 'Save package' : 'Add package' }}</button>
+  </ng-container>
+</app-dialog>

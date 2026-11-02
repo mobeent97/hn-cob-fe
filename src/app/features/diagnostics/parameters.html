@@ -1,0 +1,180 @@
+<div class="page">
+  <div class="title-row">
+    <div class="title-block">
+      <h1>Diagnostic parameters</h1>
+      <p class="subline num">{{ store.params().length }} parameters readable across {{ store.deviceTypes().length }} device types</p>
+      @if (!w.rw()) { <app-ro-note noun="diagnostic parameters and can test them on a device" /> }
+    </div>
+    <div class="actions">
+      <button class="btn" (click)="openTest()" [disabled]="!soldDevices().length"><app-icon name="activity" />Test on a device</button>
+      @if (w.rw()) { <button class="btn primary" (click)="add()"><app-icon name="plus" />New parameter</button> }
+    </div>
+  </div>
+
+  <div class="list">
+    <div class="toolbar">
+      <div class="left">
+        <label class="search">
+          <app-icon name="search" />
+          <input class="input" type="search" placeholder="Parameter or response key" aria-label="Search parameters"
+                 [value]="q()" (input)="q.set($any($event.target).value)" />
+        </label>
+      </div>
+      <div class="right">
+        <span class="count num">{{ rows().length }} {{ rows().length === 1 ? 'parameter' : 'parameters' }}</span>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table stack">
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Response key</th>
+            <th>Device types</th>
+            <th><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+              <tr>
+                <td><span class="skeleton" style="width:130px;height:14px"></span></td>
+                <td><span class="skeleton" style="width:60px;height:14px"></span></td>
+                <td><span class="skeleton" style="width:240px;height:14px"></span></td>
+                <td></td>
+              </tr>
+            }
+          } @else {
+            @for (p of rows(); track p.id) {
+              <tr [class.clickable]="w.rw()" (click)="w.rw() && edit(p)">
+                <td><span class="primary-cell">{{ p.parameter }}</span></td>
+                <td class="phone-only"><span class="mono">{{ p.responseKey }}</span> · {{ typesLabel(p.types) }}</td>
+                <td class="desk-only"><span class="mono">{{ p.responseKey }}</span></td>
+                <td class="desk-only" [title]="p.types.join(', ')">
+                  {{ typesLabel(p.types) }}
+                </td>
+                <td class="actions-cell row-menu" (click)="$event.stopPropagation()">
+                  @if (w.rw()) { <app-menu [items]="menu(p)" [label]="'Actions for ' + p.parameter" /> }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4" class="empty-row">
+                  <div class="empty">
+                    @if (q()) { No parameter matches “{{ q() }}”. <button class="btn sm" (click)="q.set('')">Clear search</button> }
+                    @else { No parameters yet. Support can't read device values until one is defined. @if (w.rw()) { <button class="btn sm" (click)="add()">New parameter</button> } }
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<app-dialog [(open)]="open" [heading]="draft().id ? 'Edit parameter' : 'New parameter'"
+            subheading="Map a readable name to the key in the device's telemetry payload." width="520px">
+  <div class="form">
+    <div class="field">
+      <label for="p-name">Parameter name<span class="req">*</span></label>
+      <input id="p-name" class="input" maxlength="60" placeholder="e.g. External voltage" [value]="draft().parameter"
+             (input)="set('parameter', $any($event.target).value)" [class.invalid]="tried() && errors().parameter" />
+      @if (tried() && errors().parameter) { <span class="error">{{ errors().parameter }}</span> }
+    </div>
+    <div class="field">
+      <label for="p-key">Response key<span class="req">*</span></label>
+      <input id="p-key" class="input mono" maxlength="40" placeholder="io_66" autocomplete="off" spellcheck="false"
+             [value]="draft().responseKey" (input)="set('responseKey', $any($event.target).value.trim())"
+             [class.invalid]="tried() && errors().responseKey" />
+      @if (tried() && errors().responseKey) { <span class="error">{{ errors().responseKey }}</span> }
+      @else { <span class="hint">Teltonika devices report AVL IDs as <span class="mono">io_&lt;id&gt;</span>.</span> }
+    </div>
+    <fieldset class="field">
+      <legend class="label">Device types<span class="req">*</span></legend>
+      <div class="checks">
+        @for (t of store.deviceTypes(); track t.id) {
+          <label class="check">
+            <input type="checkbox" [checked]="draft().typeIds.includes(t.id)" (change)="toggleType(t.id, $any($event.target).checked)" />
+            {{ t.name }} <span class="muted">{{ t.make }}</span>
+          </label>
+        }
+      </div>
+      @if (tried() && errors().typeIds) { <span class="error">{{ errors().typeIds }}</span> }
+    </fieldset>
+  </div>
+  <ng-container slot="footer">
+    <button class="btn" (click)="open.set(false)">Cancel</button>
+    <button class="btn primary" (click)="save()">{{ draft().id ? 'Save parameter' : 'Add parameter' }}</button>
+  </ng-container>
+</app-dialog>
+
+<app-dialog [(open)]="testOpen" variant="drawer" heading="Test on a device"
+            subheading="Reads every parameter defined for the device's type." width="480px">
+  <div class="test">
+    <div class="field">
+      <label for="t-find">Device in service</label>
+      <label class="search wide">
+        <app-icon name="search" />
+        <input id="t-find" class="input" type="search" placeholder="Device ID, IMEI or plate" [value]="deviceQ()" (input)="deviceQ.set($any($event.target).value)" />
+      </label>
+      <select class="select" aria-label="Device" [value]="deviceId() ?? ''" (change)="pick($any($event.target).value)">
+        @if (!deviceOptions().length) { <option value="">No device matches</option> }
+        @if (device() && !deviceOptions().includes(device()!)) {
+          <option [value]="device()!.id">{{ device()!.id }} · {{ device()!.plate }}</option>
+        }
+        @for (d of deviceOptions(); track d.id) {
+          <option [value]="d.id">{{ d.id }} · {{ d.plate ?? 'no plate' }} · {{ store.deviceType(d.typeId).name }}</option>
+        }
+      </select>
+      <span class="hint num">{{ soldDevices().length }} devices in service · showing {{ deviceOptions().length }}</span>
+    </div>
+
+    @if (device(); as d) {
+      <div class="tray device">
+        <div>
+          <span class="mono strong">{{ d.id }}</span>
+          <span class="muted">{{ store.deviceType(d.typeId).name }} · {{ customerName(d.customerId) }}</span>
+        </div>
+        <span class="mono muted">{{ d.plate }}</span>
+      </div>
+
+      <div class="readings-head">
+        <span class="muted" aria-live="polite">
+          @if (reading()) { Reading from the device… } @else { Read {{ freshness() }} }
+        </span>
+        <button class="btn sm" (click)="read()" [disabled]="reading()">
+          <span class="spin" [class.on]="reading()"><app-icon name="refresh" [size]="14" /></span>Refresh
+        </button>
+      </div>
+
+      <table class="table readings" [class.stale]="reading()">
+        <tbody>
+          @for (r of readings(); track r.param.id) {
+            <tr>
+              <td>{{ r.param.parameter }}<span class="sub mono">{{ r.param.responseKey }}</span></td>
+              <td class="num value" [class]="r.tone ?? ''">
+                @if (r.bars !== undefined) {
+                  <span class="bars" [attr.aria-label]="r.value + ' bars'">
+                    @for (b of [1, 2, 3, 4, 5]; track b) { <i [class.on]="b <= r.bars!" [style.height.px]="4 + b * 2"></i> }
+                  </span>
+                }
+                @if (r.value === null) { <span class="dash" title="The device didn't report this key">—</span> }
+                @else { {{ r.value }}@if (r.unit) {<span class="unit">{{ r.unit }}</span>} }
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="2" class="empty-row"><div class="empty">No parameter is defined for {{ store.deviceType(d.typeId).name }}.</div></td></tr>
+          }
+        </tbody>
+      </table>
+    } @else {
+      <div class="empty">Choose a device to read its values.</div>
+    }
+  </div>
+  <ng-container slot="footer">
+    <button class="btn" (click)="testOpen.set(false)">Close</button>
+  </ng-container>
+</app-dialog>

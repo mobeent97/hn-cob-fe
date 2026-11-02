@@ -1,0 +1,154 @@
+// Shared by Settings and My profile.
+// Two-column settings rows (taste app-screens §8.2): label column beside a tinted panel,
+// rows split by a full-width rule with 32px above and below.
+.settings {
+  display: flex;
+  flex-direction: column;
+}
+.row {
+  display: grid;
+  grid-template-columns: minmax(220px, 360px) minmax(0, 720px);
+  gap: 24px 48px;
+  padding: 32px 0;
+  border-top: 1px solid var(--border);
+  &:first-child {
+    padding-top: 8px;
+    border-top: 0;
+  }
+}
+.label-col {
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  h2 {
+    font-weight: 500;
+  }
+  .desc {
+    color: var(--muted);
+  }
+}
+.rules {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--muted);
+  li {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    &::before {
+      content: '';
+      flex: none;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--faint);
+      transform: translateY(-2px);
+    }
+  }
+}
+.summary {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.panel {
+  background: var(--raised);
+  border-radius: var(--radius-sheet);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  &.three {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .narrow {
+    max-width: 180px;
+  }
+}
+.input-group .input {
+  border-top-left-radius: var(--radius-control) !important;
+  border-bottom-left-radius: var(--radius-control) !important;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  min-width: 0;
+}
+.suffix {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid var(--control);
+  border-left: 0;
+  border-radius: 0 var(--radius-control) var(--radius-control) 0;
+  background: var(--active);
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.preview {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.switch-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .switch-title {
+    font-weight: 500;
+  }
+  .switch-desc {
+    color: var(--muted);
+  }
+  .toggle {
+    margin-top: 1px;
+  }
+}
+
+.panel-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (max-width: 1100px) {
+  .row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .label-col {
+    padding-top: 0;
+  }
+}
+@media (max-width: 640px) {
+  .fields.three {
+    grid-template-columns: 1fr;
+  }
+  .fields .narrow {
+    max-width: none;
+  }
+  .row {
+    padding: 24px 0;
+  }
+}

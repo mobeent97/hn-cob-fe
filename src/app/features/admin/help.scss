@@ -1,0 +1,154 @@
+.faq-col {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.search.wide {
+  width: 100%;
+  max-width: 520px;
+}
+.topic {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  h2 {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    .muted {
+      font-size: var(--fs-small);
+      font-weight: 400;
+    }
+  }
+}
+.sk-item {
+  padding: 14px 0;
+  border-top: 1px solid var(--rule);
+}
+.acc-list {
+  border-bottom: 1px solid var(--rule);
+}
+
+// Accordion (transitions.dev accordion: grid-rows 0fr → 1fr, chevron flips with scaleY).
+.acc {
+  border-top: 1px solid var(--rule);
+  h3 {
+    margin: 0;
+    font: inherit;
+  }
+}
+.acc-head {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  font-weight: 500;
+  color: var(--text);
+  &:hover .chev {
+    color: var(--text);
+  }
+}
+.chev {
+  display: inline-flex;
+  flex: none;
+  color: var(--muted);
+  transition:
+    transform 250ms cubic-bezier(0.22, 1, 0.36, 1),
+    color var(--duration-quick) ease;
+  path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+.acc[data-open='true'] .chev {
+  transform: scaleY(-1);
+}
+.acc-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 250ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.acc[data-open='true'] .acc-panel {
+  grid-template-rows: 1fr;
+}
+.acc-inner {
+  overflow: hidden;
+  min-height: 0;
+  opacity: 0;
+  filter: blur(2px);
+  transition:
+    opacity 250ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 250ms cubic-bezier(0.22, 1, 0.36, 1);
+  color: var(--muted);
+  line-height: 22px;
+  max-width: 680px;
+  p + p {
+    margin-top: 8px;
+  }
+  .link {
+    display: inline-block;
+    margin-top: 8px;
+  }
+  > :last-child {
+    margin-bottom: 16px;
+  }
+}
+.acc[data-open='true'] .acc-inner {
+  opacity: 1;
+  filter: blur(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .acc-panel,
+  .acc-inner,
+  .chev {
+    transition: none !important;
+  }
+}
+
+// ── Support card ──
+.support {
+  position: sticky;
+  top: 16px;
+}
+.contact {
+  margin: 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  dt {
+    color: var(--muted);
+    font-size: var(--fs-small);
+  }
+  dd {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+}
+.tip {
+  font-size: 13px;
+  ul {
+    margin: 6px 0 0;
+    padding-left: 18px;
+    color: var(--muted);
+    li + li {
+      margin-top: 2px;
+    }
+  }
+}
+
+@media (max-width: 1100px) {
+  .support {
+    position: static;
+  }
+}

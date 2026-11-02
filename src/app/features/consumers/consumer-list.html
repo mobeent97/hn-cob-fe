@@ -1,0 +1,239 @@
+<div class="page">
+  <div class="title-row">
+    <div class="title-block">
+      <h1>Consumers</h1>
+      <p class="subline num">
+        @if (withoutDevice()) { {{ withoutDevice() }} active {{ withoutDevice() === 1 ? 'consumer has' : 'consumers have' }} no device yet · {{ stock().length }} Plug & Go in stock }
+        @else { Every active consumer has a device · {{ stock().length }} Plug & Go in stock }
+      </p>
+      @if (access.ro()) { <app-ro-note noun="consumers" /> }
+    </div>
+    <div class="actions">
+      <button class="btn" (click)="export()" [disabled]="!rows().length"><app-icon name="download" />Export CSV</button>
+      @if (access.rw()) { <button class="btn primary" (click)="openForm()"><app-icon name="plus" />New consumer</button> }
+    </div>
+  </div>
+
+  <section class="kpi-strip" aria-label="Key figures">
+    <div class="kpi">
+      <span class="kpi-label">Consumers</span>
+      @if (loading()) { <span class="skeleton" style="width:40px;height:30px;margin:3px 0"></span> }
+      @else { <span class="kpi-value"><app-num [value]="total()" /></span> }
+      <span class="kpi-caption num">{{ total() - active() }} inactive</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-label">Active</span>
+      @if (loading()) { <span class="skeleton" style="width:40px;height:30px;margin:3px 0"></span> }
+      @else { <span class="kpi-value"><app-num [value]="active()" /></span> }
+      <span class="kpi-caption num">{{ total() ? ((active() / total()) * 100).toFixed(0) : 0 }}% of consumers</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-label">Devices in service</span>
+      @if (loading()) { <span class="skeleton" style="width:40px;height:30px;margin:3px 0"></span> }
+      @else { <span class="kpi-value"><app-num [value]="inService()" /></span> }
+      <span class="kpi-caption">Plug & Go, plugged in and reporting</span>
+    </div>
+  </section>
+
+  <div class="list">
+    <div class="toolbar">
+      <div class="left">
+        <label class="search">
+          <app-icon name="search" />
+          <input class="input" type="search" placeholder="Name, email, phone or Q-ID" aria-label="Search consumers"
+                 [value]="q()" (input)="q.set($any($event.target).value)" />
+        </label>
+        <label class="sr-only" for="c-status">Status</label>
+        <select id="c-status" class="select auto" [value]="status()" (change)="status.set($any($event.target).value)">
+          <option value="all">All statuses</option>
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+        @if (orgs.showOrg()) { <app-org-filter [(value)]="orgId" /> }
+      </div>
+      <div class="right">
+        <span class="count num">{{ rows().length }} {{ rows().length === 1 ? 'consumer' : 'consumers' }}</span>
+        <label class="sr-only" for="c-sort">Sort</label>
+        <select id="c-sort" class="select auto" [value]="sort()" (change)="sort.set($any($event.target).value)">
+          <option value="recent">Newest first</option>
+          <option value="name">Name A–Z</option>
+          <option value="devices">Most devices</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table stack">
+        <thead>
+          <tr>
+            <th>Name</th>
+            @if (orgs.showOrg()) { <th class="desk-only">Organization</th> }
+            <th>Phone</th>
+            <th>Q-ID</th>
+            <th class="num">Devices</th>
+            <th>Status</th>
+            <th class="num">Created</th>
+            <th><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+              <tr>
+                <td><span class="skeleton" style="width:140px;height:14px"></span><span class="sub"><span class="skeleton" style="width:170px;height:10px"></span></span></td>
+                @if (orgs.showOrg()) { <td class="desk-only"><span class="skeleton" style="width:100px;height:14px"></span></td> }
+                <td class="desk-only"><span class="skeleton" style="width:110px;height:14px"></span></td>
+                <td class="desk-only"><span class="skeleton" style="width:130px;height:14px"></span></td>
+                <td class="num desk-only"><span class="skeleton" style="width:16px;height:14px"></span></td>
+                <td class="keep"><span class="skeleton" style="width:54px;height:20px"></span></td>
+                <td class="num desk-only"><span class="skeleton" style="width:80px;height:14px"></span></td>
+                <td class="desk-only"></td>
+              </tr>
+            }
+          } @else {
+            @for (c of pageRows(); track c.id) {
+              <tr class="clickable" (click)="openDrawer(c)">
+                <td>
+                  <span class="primary-cell">{{ c.name }}</span>
+                  <span class="sub desk-only">{{ c.email }}</span>
+                </td>
+                @if (orgs.showOrg()) { <td class="desk-only"><app-org-tag [id]="c.orgId" /></td> }
+                <td class="phone-only num">{{ c.phone }} · {{ c.devices }} {{ c.devices === 1 ? 'device' : 'devices' }}</td>
+                <td class="desk-only"><span class="num">{{ c.phone }}</span></td>
+                <td class="desk-only"><span class="mono">{{ c.qid }}</span></td>
+                <td class="num desk-only">@if (c.devices) { {{ c.devices }} } @else { <span class="dash">0</span> }</td>
+                <td class="keep"><span class="pill" [class]="c.status | tone">{{ c.status }}</span></td>
+                <td class="num desk-only">{{ c.createdAt | date }}</td>
+                <td class="actions-cell row-menu" (click)="$event.stopPropagation()">
+                  <app-menu [items]="menu(c)" [label]="'Actions for ' + c.name" />
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td [attr.colspan]="orgs.showOrg() ? 8 : 7" class="empty-row">
+                  @if (q() || status() !== 'all' || orgId() != null) {
+                    <div class="empty">No consumer matches these filters. <button class="btn sm" (click)="q.set(''); status.set('all'); orgId.set(null)">Clear filters</button></div>
+                  } @else {
+                    <div class="empty">No consumers yet. @if (access.rw()) { <button class="btn sm" (click)="openForm()">New consumer</button> }</div>
+                  }
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (!loading() && rows().length) {
+      <app-pager [total]="rows().length" [size]="size()" [(page)]="page" noun="consumers" />
+    }
+  </div>
+</div>
+
+<!-- New / edit consumer -->
+<app-dialog [(open)]="formOpen" [heading]="editing() ? 'Edit consumer' : 'New consumer'"
+            [subheading]="editing() ? editing()!.name : 'They sign in to the app with this email and phone.'" width="520px">
+  <form id="consumer-form" class="c-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <div class="field">
+      <label for="c-first">First name<span class="req">*</span></label>
+      <input id="c-first" class="input" formControlName="firstName" autocomplete="given-name" [class.invalid]="err(form.controls.firstName, 'x')" />
+      @if (err(form.controls.firstName, 'a first name'); as e) { <span class="error">{{ e }}</span> }
+    </div>
+    <div class="field">
+      <label for="c-last">Last name<span class="req">*</span></label>
+      <input id="c-last" class="input" formControlName="lastName" autocomplete="family-name" [class.invalid]="err(form.controls.lastName, 'x')" />
+      @if (err(form.controls.lastName, 'a last name'); as e) { <span class="error">{{ e }}</span> }
+    </div>
+    <div class="field full">
+      <label for="c-email">Email<span class="req">*</span></label>
+      <input id="c-email" class="input" type="email" formControlName="email" autocomplete="email" [class.invalid]="err(form.controls.email, 'x')" />
+      @if (err(form.controls.email, 'an email', 'Enter an email like name@mail.com.'); as e) { <span class="error">{{ e }}</span> }
+    </div>
+    <div class="field">
+      <label for="c-phone">Phone<span class="req">*</span></label>
+      <div class="input-group">
+        <select class="select" formControlName="dial" aria-label="Dial code">
+          @for (c of store.countries; track c.code) { <option [value]="c.dial">{{ c.dial }}</option> }
+        </select>
+        <input id="c-phone" class="input num" formControlName="phone" inputmode="tel" autocomplete="tel-national" [class.invalid]="err(form.controls.phone, 'x')" />
+      </div>
+      @if (err(form.controls.phone, 'a phone number', 'Use 7 to 15 digits, without the dial code.'); as e) { <span class="error">{{ e }}</span> }
+    </div>
+    <div class="field">
+      <label for="c-qid">Q-ID or passport<span class="req">*</span></label>
+      <input id="c-qid" class="input mono" formControlName="qid" [class.invalid]="err(form.controls.qid, 'x')" />
+      @if (err(form.controls.qid, 'a Q-ID or passport number', 'Use 6 to 20 letters, digits or dashes.'); as e) { <span class="error">{{ e }}</span> }
+    </div>
+  </form>
+  <ng-container slot="footer">
+    <button class="btn" type="button" (click)="formOpen.set(false)">Cancel</button>
+    <button class="btn primary" type="submit" form="consumer-form">{{ editing() ? 'Save changes' : 'Add consumer' }}</button>
+  </ng-container>
+</app-dialog>
+
+<!-- A consumer's devices -->
+<app-dialog [(open)]="drawerOpen" variant="drawer" [heading]="selected()?.name ?? ''" [subheading]="selected()?.email ?? ''" width="480px">
+  @if (selected(); as c) {
+    <div class="drawer-body">
+      <dl class="dl two">
+        <div><dt>Status</dt><dd><span class="pill" [class]="c.status | tone">{{ c.status }}</span></dd></div>
+        <div><dt>Phone</dt><dd class="num">{{ c.phone }}</dd></div>
+        <div><dt>Q-ID or passport</dt><dd class="mono">{{ c.qid }}</dd></div>
+        <div><dt>Consumer since</dt><dd class="num">{{ c.createdAt | date }}</dd></div>
+      </dl>
+
+      <section class="d-section">
+        <div class="d-head">
+          <h3>Devices <span class="muted num">{{ selectedDevices().length }}</span></h3>
+        </div>
+        @if (selectedDevices().length) {
+          <ul class="dev-list">
+            @for (d of selectedDevices(); track d.id) {
+              <li>
+                <div class="dev-main">
+                  <span class="mono">{{ d.id }}</span>
+                  <span class="muted">{{ typeName(d) }} · last seen {{ d.lastSeen ? (d.lastSeen | rel) : 'never' }}</span>
+                </div>
+                <span class="pill" [class]="d.status | tone">{{ d.status === 'Sold' ? 'In service' : d.status }}</span>
+                @if (d.status === 'Allocated') {
+                  @if (access.rw()) { <button class="btn ghost sm" (click)="deallocate(d)">Return to stock</button> }
+                }
+              </li>
+            }
+          </ul>
+        } @else {
+          <div class="empty">{{ c.name }} has no device yet.</div>
+        }
+      </section>
+
+      @if (access.rw()) {
+      <section class="d-section tray">
+        <h3>Allocate a Plug & Go device</h3>
+        @if (c.status !== 'Active') {
+          <p class="muted small">Activate {{ c.name }} before allocating a device.</p>
+        } @else if (pickStock().length) {
+          <div class="alloc">
+            <label class="sr-only" for="pick">Device</label>
+            <select id="pick" class="select" [value]="pick()" (change)="pick.set($any($event.target).value)">
+              <option value="">Next in stock ({{ pickStock()[0].id }})</option>
+              @for (d of pickStock(); track d.id) { <option [value]="d.id">{{ d.id }} · IMEI {{ d.imei }}</option> }
+            </select>
+            <button class="btn primary" (click)="allocate()"><app-icon name="plus" />Allocate device</button>
+          </div>
+          <p class="muted small num">{{ pickStock().length }} FMC003 {{ pickStock().length === 1 ? 'tracker' : 'trackers' }} available in stock</p>
+        } @else {
+          <p class="muted small">No Plug & Go devices in stock. Receive stock in Inventory first.</p>
+        }
+      </section>
+      }
+    </div>
+  }
+  <ng-container slot="footer">
+    @if (selected(); as c) {
+      @if (access.rw()) {
+      <button class="btn" (click)="drawerOpen.set(false); openForm(c)"><app-icon name="pencil" />Edit</button>
+      }
+    }
+    <button class="btn" (click)="drawerOpen.set(false)">Close</button>
+  </ng-container>
+</app-dialog>

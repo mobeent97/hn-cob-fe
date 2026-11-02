@@ -1,0 +1,158 @@
+<div class="page">
+  <div class="title-row">
+    <div class="title-block">
+      <h1>QR codes</h1>
+      <p class="subline num">{{ subline() }}</p>
+    </div>
+    <div class="actions">
+      @if (selected().size) {
+        <button class="btn" (click)="clear()"><app-icon name="x" />Clear selection</button>
+      }
+      <button class="btn primary" [disabled]="!selected().size || !ready()" (click)="print()">
+        <app-icon name="qr" />Print {{ selected().size || '' }} {{ selected().size === 1 ? 'label' : 'labels' }}
+      </button>
+    </div>
+  </div>
+
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <h2>Devices</h2>
+        <p class="card-sub">Selection is kept while you search, filter and page.</p>
+      </div>
+    </div>
+    <div class="card-body picker">
+      <div class="toolbar">
+        <div class="left">
+          <label class="search">
+            <app-icon name="search" />
+            <input class="input" type="search" placeholder="Device ID or IMEI" aria-label="Search devices"
+                   [value]="q()" (input)="q.set($any($event.target).value)" />
+          </label>
+          <label class="sr-only" for="qr-type">Device type</label>
+          <select id="qr-type" class="select auto" [value]="typeId()" (change)="typeId.set($any($event.target).value === 'all' ? 'all' : +$any($event.target).value)">
+            <option value="all">All types</option>
+            @for (t of store.deviceTypes(); track t.id) { <option [value]="t.id">{{ t.name }}</option> }
+          </select>
+          <label class="sr-only" for="qr-status">Status</label>
+          <select id="qr-status" class="select auto" [value]="status()" (change)="status.set($any($event.target).value)">
+            <option value="all">All statuses</option>
+            @for (s of statuses; track s) { <option [value]="s">{{ label[s] }}</option> }
+          </select>
+        </div>
+        <div class="right">
+          <span class="count num">{{ rows().length }} {{ rows().length === 1 ? 'device' : 'devices' }}</span>
+          @if (rows().length) {
+            @if (allMatchingSelected()) {
+              <button class="btn sm" (click)="setMany(ids(rows()), false)">Unselect all {{ rows().length }}</button>
+            } @else {
+              <button class="btn sm" (click)="setMany(ids(rows()), true)">Select all {{ rows().length }}</button>
+            }
+          }
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table stack">
+          <thead>
+            <tr>
+              <th>
+                <span class="id-cell">
+                  <label class="check">
+                    <input type="checkbox" aria-label="Select all devices on this page" [checked]="pageAll()" [indeterminate]="pageSome()"
+                           [disabled]="loading() || !pageRows().length" (change)="setMany(ids(pageRows()), $any($event.target).checked)" />
+                  </label>
+                  Device ID
+                </span>
+              </th>
+              <th>Type</th>
+              <th>Status</th>
+              <th class="num">Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (loading()) {
+              @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+                <tr>
+                  <td><span class="id-cell"><span class="skeleton" style="width:16px;height:16px"></span><span><span class="skeleton" style="width:90px;height:14px"></span><span class="sub"><span class="skeleton" style="width:120px;height:10px"></span></span></span></span></td>
+                  <td class="desk-only"><span class="skeleton" style="width:110px;height:14px"></span></td>
+                  <td class="keep"><span class="skeleton" style="width:64px;height:20px"></span></td>
+                  <td class="desk-only"><span class="skeleton" style="width:80px;height:14px"></span></td>
+                </tr>
+              }
+            } @else {
+              @for (d of pageRows(); track d.id) {
+                <tr class="clickable" [class.picked]="selected().has(d.id)" (click)="toggle(d.id, !selected().has(d.id))">
+                  <td>
+                    <span class="id-cell">
+                      <label class="check" (click)="$event.stopPropagation()">
+                        <input type="checkbox" [attr.aria-label]="'Select ' + d.id" [checked]="selected().has(d.id)"
+                               (change)="toggle(d.id, $any($event.target).checked)" />
+                      </label>
+                      <span>
+                        <span class="primary-cell mono">{{ d.id }}</span>
+                        <span class="sub mono desk-only">{{ d.imei }}</span>
+                      </span>
+                    </span>
+                  </td>
+                  <td class="phone-only">{{ d.type.name }} · {{ d.createdAt | date }}</td>
+                  <td class="desk-only">{{ d.type.name }}<span class="sub">{{ d.type.category }}</span></td>
+                  <td class="keep"><span class="pill" [class]="d.status | tone">{{ label[d.status] }}</span></td>
+                  <td class="desk-only num">{{ d.createdAt | date }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="4" class="empty-row">
+                    <div class="empty">
+                      @if (q()) { No device matches “{{ q() }}” with these filters. } @else { No devices with these filters. }
+                      <button class="btn sm" (click)="resetFilters()">Clear filters</button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (!loading() && rows().length) {
+        <app-pager [total]="rows().length" [size]="size" [(page)]="page" noun="devices" />
+      }
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <h2>Label sheet</h2>
+        <p class="card-sub">A4, 3 × 7 labels (Avery L7160 or equivalent). Print at 100% scale.</p>
+      </div>
+    </div>
+    <div class="card-body">
+      @if (!selected().size) {
+        <div class="empty">Select devices above to preview their labels here.</div>
+      } @else {
+        <div class="tray sheets" #sheet>
+          @for (s of sheets(); track $index; let i = $index) {
+            <div class="paper" [attr.aria-label]="'Sheet ' + (i + 1) + ' of ' + sheets().length">
+              <div class="paper-inner">
+                @for (l of s; track l.id) {
+                  <div class="label">
+                    @if (l.src) { <img class="qr" [src]="l.src" [alt]="'QR code for ' + l.id" /> }
+                    @else { <span class="qr qr-wait"></span> }
+                    <div class="label-text">
+                      <span class="l-id mono">{{ l.id }}</span>
+                      <span class="l-imei mono">IMEI {{ l.imei }}</span>
+                      <span class="l-type">{{ l.type }}</span>
+                    </div>
+                  </div>
+                }
+                @for (b of blanks(s.length); track b) { <div class="label blank"></div> }
+              </div>
+            </div>
+            @if (sheets().length > 1) { <p class="sheet-no num">Sheet {{ i + 1 }} of {{ sheets().length }}</p> }
+          }
+        </div>
+      }
+    </div>
+  </section>
+</div>

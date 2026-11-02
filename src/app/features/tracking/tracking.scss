@@ -1,0 +1,405 @@
+// Unencapsulated so Leaflet's own DOM (tiles, popups, controls) can be styled; every rule is
+// scoped under app-tracking.
+
+app-tracking {
+  display: flex;
+  flex-direction: column;
+  // The sheet's inner height: viewport minus the top bar, the bottom inset and the sheet border.
+  height: calc(100dvh - var(--topbar-h) - var(--sheet-inset) - 2px);
+  min-height: 480px;
+
+  @media (max-width: 1024px) {
+    height: calc(100dvh - var(--topbar-h) - 1px);
+  }
+
+  .trk-title {
+    padding: 16px var(--pad) 14px;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+  }
+
+  .trk-fresh {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+    font-size: 13px;
+
+    .dot {
+      color: var(--positive);
+    }
+    &.paused .dot {
+      color: var(--chart-3);
+    }
+  }
+
+  .trk-body {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 340px minmax(0, 1fr);
+  }
+
+  // ── Panel ──
+  .trk-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+    padding: 16px 0 0;
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .trk-counts {
+    padding: 0 16px;
+    grid-auto-flow: row;
+    grid-template-columns: 1fr 1fr;
+
+    .cc-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+  }
+
+  .trk-list-toggle {
+    display: none;
+  }
+
+  .trk-list-area {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .trk-filters {
+    padding: 0 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .search {
+      width: 100%;
+    }
+  }
+
+  .trk-list {
+    list-style: none;
+    margin: 0;
+    padding: 0 8px 8px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    border-top: 1px solid var(--rule);
+  }
+
+  .trk-row {
+    display: grid;
+    grid-template-columns: 6px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 10px;
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition: background-color var(--duration-quick) ease;
+
+    &:hover {
+      background: var(--raised);
+    }
+    &.selected {
+      background: var(--accent-weak);
+    }
+    &.skeleton-row {
+      cursor: default;
+    }
+    &:focus-visible {
+      outline-offset: -2px;
+    }
+  }
+
+  .trk-main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+
+    strong {
+      font-weight: 500;
+    }
+  }
+
+  .sub {
+    color: var(--muted);
+    font-size: var(--fs-small);
+    line-height: 16px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .trk-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+    white-space: nowrap;
+
+    .stale {
+      color: var(--warning);
+    }
+  }
+
+  .trk-empty {
+    padding: 12px 8px;
+  }
+
+  // ── Map ──
+  .trk-map-wrap {
+    position: relative;
+    isolation: isolate; // Leaflet's z-indexes (up to 1000) stay inside the map
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .trk-map {
+    position: absolute;
+    inset: 0;
+    background: var(--raised);
+    font: inherit;
+  }
+
+  // Colour stays on the data: the base map is pulled toward grey (and inverted in dark).
+  .leaflet-tile-pane {
+    filter: var(--map-tiles);
+  }
+
+  .leaflet-container {
+    background: var(--raised);
+  }
+
+  .leaflet-container a {
+    color: var(--accent);
+  }
+
+  .leaflet-bar {
+    border: 1px solid var(--control);
+    box-shadow: none;
+    border-radius: var(--radius-control);
+    overflow: hidden;
+
+    a {
+      color: var(--text);
+      background: var(--surface);
+      border-bottom-color: var(--border);
+      width: 30px;
+      height: 30px;
+      line-height: 30px;
+
+      &:hover,
+      &:focus {
+        background: var(--raised);
+        color: var(--text);
+      }
+      &.leaflet-disabled {
+        background: var(--surface);
+        color: var(--faint);
+      }
+    }
+  }
+
+  .leaflet-control-attribution {
+    font-size: 11px;
+    color: var(--muted);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+  }
+
+  .trk-popup {
+    .leaflet-popup-content-wrapper,
+    .leaflet-popup-tip {
+      background: var(--surface);
+      color: var(--text);
+    }
+    .leaflet-popup-content-wrapper {
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-float);
+      border: 1px solid var(--border);
+      padding: 0;
+    }
+    .leaflet-popup-content {
+      margin: 12px 14px;
+      font-family: var(--font);
+      font-size: 13px;
+      line-height: 18px;
+      min-width: 200px;
+    }
+    .leaflet-popup-tip {
+      box-shadow: none;
+    }
+    a.leaflet-popup-close-button {
+      color: var(--muted);
+      top: 4px;
+      right: 4px;
+    }
+  }
+
+  .trk-pop-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-right: 16px;
+
+    strong {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .pill {
+      margin-left: auto;
+    }
+  }
+
+  .trk-pop-sub {
+    color: var(--muted);
+    margin: 2px 0 10px !important;
+  }
+
+  .trk-pop dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 16px;
+    margin: 0;
+    padding-top: 10px;
+    border-top: 1px solid var(--rule);
+
+    dt {
+      color: var(--muted);
+    }
+    dd {
+      margin: 0;
+      text-align: right;
+    }
+  }
+
+  .trk-tip {
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 2px 6px;
+    border-radius: var(--radius-chip);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: none;
+
+    &.leaflet-tooltip-top::before {
+      border-top-color: var(--surface);
+    }
+  }
+
+  .trk-tile-error {
+    position: absolute;
+    left: 16px;
+    top: 16px;
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: calc(100% - 80px);
+    padding: 8px 8px 8px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-float);
+    font-size: 13px;
+
+    app-icon {
+      color: var(--warning);
+    }
+  }
+
+  // ── Tablet: narrower panel ──
+  @media (max-width: 1024px) {
+    .trk-body {
+      grid-template-columns: 300px minmax(0, 1fr);
+    }
+  }
+
+  // ── Phone: the map fills the screen, the panel is a bottom sheet ──
+  @media (max-width: 640px) {
+    .trk-title {
+      padding: 12px 16px;
+      gap: 8px;
+
+      h1 {
+        font-size: 20px;
+      }
+      .subline {
+        font-size: 13px;
+      }
+    }
+
+    .trk-body {
+      display: block;
+      position: relative;
+    }
+
+    .trk-map-wrap {
+      position: absolute;
+      inset: 0;
+    }
+
+    .trk-panel {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 600; // above Leaflet's panes and controls
+      max-height: 78%;
+      padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
+      gap: 10px;
+      border: 1px solid var(--border);
+      border-bottom: 0;
+      border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+      box-shadow: var(--shadow-float);
+      transition: max-height var(--duration-medium) var(--ease-drawer);
+    }
+
+    .trk-counts {
+      padding: 0 12px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+
+      .count-card {
+        padding: 6px 8px;
+      }
+      .cc-label {
+        font-size: 12px;
+      }
+    }
+
+    .trk-list-toggle {
+      display: inline-flex;
+      align-self: stretch;
+      margin: 0 12px;
+      justify-content: flex-start;
+    }
+
+    .trk-list-area {
+      display: none;
+    }
+    .list-open .trk-list-area {
+      display: flex;
+      height: 46dvh;
+    }
+
+    .trk-filters {
+      padding: 0 12px;
+    }
+
+    .leaflet-bottom {
+      bottom: 156px; // keep the attribution above the collapsed sheet
+    }
+  }
+}

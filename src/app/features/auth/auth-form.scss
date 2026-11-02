@@ -1,0 +1,249 @@
+// Shared by the three signed-out screens. Layout only; controls come from the global components.
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+
+  h1 {
+    font-size: var(--fs-kpi);
+    line-height: 34px;
+  }
+  p {
+    color: var(--muted);
+  }
+  strong {
+    color: var(--text);
+    font-weight: 500;
+    overflow-wrap: anywhere;
+  }
+}
+
+.row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn.block {
+  width: 100%;
+  height: 40px;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-weight: 500;
+  align-self: center;
+  &:hover {
+    color: var(--text);
+  }
+}
+
+// Password with a show/hide button inside the field
+.pw {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .input {
+    padding-right: 40px;
+  }
+  .reveal {
+    position: absolute;
+    right: 3px;
+    width: 30px;
+    height: 28px;
+    border: 0;
+    border-radius: var(--radius-chip);
+    background: transparent;
+    color: var(--muted);
+    display: grid;
+    place-items: center;
+    &:hover {
+      color: var(--text);
+      background: var(--raised);
+    }
+  }
+}
+
+// ── Text swap soft (transitions.dev 34): both labels share one cell and cross-blur ──
+.t-text-soft {
+  display: inline-grid;
+  justify-items: center;
+
+  > span {
+    grid-area: 1 / 1;
+    white-space: pre;
+    transition:
+      filter 200ms ease-in-out,
+      opacity 200ms ease-in-out;
+  }
+  .t-text-soft-new {
+    opacity: 0;
+    filter: blur(var(--blur-small));
+  }
+  &.is-swapping {
+    .t-text-soft-old {
+      opacity: 0;
+      filter: blur(var(--blur-small));
+    }
+    .t-text-soft-new {
+      opacity: 1;
+      filter: blur(0);
+    }
+  }
+}
+
+// ── Error state shake (transitions.dev 12) ──
+.t-shake {
+  will-change: transform;
+}
+.t-shake.is-shaking {
+  animation: t-input-shake 280ms linear;
+}
+@keyframes t-input-shake {
+  0% {
+    transform: translateX(0);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  28.57% {
+    transform: translateX(6px);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  57.14% {
+    transform: translateX(-6px);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  78.57% {
+    transform: translateX(4px);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+// The inline error reveals in place under the form and fades back once the user edits.
+.form-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius-card);
+  background: var(--negative-bg);
+  color: var(--negative-ink);
+  font-size: 13px;
+  line-height: 18px;
+  animation: err-in var(--duration-fast) var(--ease-out);
+
+  app-icon {
+    color: var(--negative);
+    margin-top: 1px;
+  }
+}
+@keyframes err-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+// ── Steps panel (right side of forgot / reset) ──
+.steps-aside {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  h2 {
+    font-size: var(--fs-section);
+  }
+  ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  li {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 2px 12px;
+    padding: 12px;
+    border-radius: var(--radius-card);
+    color: var(--muted);
+    transition:
+      background-color var(--duration-fast) ease,
+      color var(--duration-fast) ease;
+
+    .n {
+      grid-row: span 2;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 1px solid var(--control);
+      display: grid;
+      place-items: center;
+      font-size: var(--fs-small);
+      font-weight: 600;
+      background: var(--surface);
+    }
+    strong {
+      font-weight: 500;
+    }
+    small {
+      font-size: 13px;
+    }
+    &.current {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: inset 0 0 0 1px var(--border);
+      .n {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: var(--on-primary);
+      }
+      small {
+        color: var(--muted);
+      }
+    }
+    &.done .n {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+  }
+  .note {
+    color: var(--muted);
+    font-size: 13px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-shake {
+    animation: none !important;
+    transform: none !important;
+  }
+  .t-text-soft > span {
+    transition: none !important;
+  }
+}
+
+// While busy the button keeps its colour; only the label swaps.
+.btn.primary[aria-busy='true']:disabled {
+  opacity: 1;
+  cursor: progress;
+}

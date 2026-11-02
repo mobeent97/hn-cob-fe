@@ -1,0 +1,293 @@
+<div class="page">
+  @if (customer(); as c) {
+    <div class="title-row">
+      <div class="title-block">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a routerLink="/customers">Customers</a><span aria-hidden="true">/</span><span class="crumb-current">{{ c.company }}</span>
+        </nav>
+        <div class="name-row">
+          <h1>{{ c.company }}</h1>
+          <span class="pill" [class]="statusPill().tone">{{ statusPill().label }}</span>
+        </div>
+        <p class="subline meta num">
+          @if (showOwner()) { <span><app-org-tag [id]="c.orgId" /></span> }
+          <span>{{ c.package }}</span><span>{{ c.customerType }}</span><span>{{ c.zone }}, {{ country()?.name }}</span><span>Customer since {{ c.createdAt | date }}</span>
+        </p>
+        @if (access.ro()) { <app-ro-note noun="this customer" /> }
+      </div>
+      @if (access.rw()) {
+        <div class="actions">
+          @if (c.stepsDone < 9) {
+            <button class="btn primary" (click)="edit()"><app-icon name="arrow-right" />Continue onboarding</button>
+          } @else {
+            <button class="btn" (click)="edit()"><app-icon name="pencil" />Edit</button>
+          }
+          <app-menu [items]="menu()" [label]="'More actions for ' + c.company" />
+        </div>
+      }
+    </div>
+
+    <app-tabs [tabs]="tabs()" [(value)]="tab" />
+
+    @switch (tab()) {
+      <!-- Overview ──────────────────────────────────────────── -->
+      @case ('overview') {
+        @if (c.stepsDone < 9 && c.status === 'Active') {
+          <section class="card progress-card" aria-label="Onboarding progress">
+            <div class="card-body progress-body">
+              <div class="progress-text">
+                <h2 class="num">{{ c.stepsDone }} of 9 sections complete</h2>
+                <p class="muted">Next: {{ steps[c.stepsDone] }}. The customer can't sign in until onboarding is finished.</p>
+              </div>
+              <ol class="seg-meter" aria-hidden="true">
+                @for (s of steps; track s; let i = $index) { <li [class.on]="i < c.stepsDone" [class.next]="i === c.stepsDone" [title]="s"></li> }
+              </ol>
+              @if (access.rw()) { <button class="btn primary" (click)="edit()">Continue<app-icon name="arrow-right" /></button> }
+            </div>
+          </section>
+        }
+
+        <section class="kpi-strip" aria-label="Devices">
+          <div class="kpi">
+            <span class="kpi-label">In service</span>
+            @if (loading()) { <span class="skeleton" style="width:48px;height:30px;margin:3px 0"></span> }
+            @else { <span class="kpi-value"><app-num [value]="counts().Sold" /></span> }
+            <span class="kpi-caption num">@if (c.stepsDone < 7 && !devices().length) { hardware not assigned yet } @else { of {{ devices().length }} assigned devices }</span>
+          </div>
+          <div class="kpi">
+            <span class="kpi-label">Allocated</span>
+            @if (loading()) { <span class="skeleton" style="width:40px;height:30px;margin:3px 0"></span> }
+            @else { <span class="kpi-value"><app-num [value]="counts().Allocated" /></span> }
+            <span class="kpi-caption">waiting for installation</span>
+          </div>
+          <div class="kpi">
+            <span class="kpi-label">Faulty</span>
+            @if (loading()) { <span class="skeleton" style="width:32px;height:30px;margin:3px 0"></span> }
+            @else { <span class="kpi-value" [class.neg]="counts().Faulty > 0"><app-num [value]="counts().Faulty" /></span> }
+            <span class="kpi-caption">held for RMA</span>
+          </div>
+          <div class="kpi">
+            <span class="kpi-label">Monthly subscription</span>
+            @if (loading()) { <span class="skeleton" style="width:96px;height:30px;margin:3px 0"></span> }
+            @else { <span class="kpi-value"><span class="unit-lead">AED</span> <app-num [value]="monthly()" /></span> }
+            <span class="kpi-caption num">{{ fmtMoney(price(), 'AED') }} × devices in service</span>
+          </div>
+        </section>
+
+        <div class="grid">
+          <section class="card span-8">
+            <div class="card-head"><h2>General details</h2></div>
+            <div class="card-body">
+              @if (loading()) {
+                <div class="dl">
+                  @for (i of [1, 2, 3, 4, 5, 6, 7, 8, 9]; track i) { <div><span class="skeleton" style="width:60px;height:10px"></span><br /><span class="skeleton" style="width:120px;height:14px"></span></div> }
+                </div>
+              } @else {
+                <dl class="dl">
+                  <div><dt>Group name</dt><dd>{{ c.group }}</dd></div>
+                  <div><dt>Industry</dt><dd>{{ c.industry }}</dd></div>
+                  <div><dt>CR number</dt><dd class="mono">{{ c.crNumber }}</dd></div>
+                  <div><dt>Email</dt><dd><a class="link" [href]="'mailto:' + c.email">{{ c.email }}</a></dd></div>
+                  <div><dt>Phone</dt><dd class="num">{{ c.phone }}</dd></div>
+                  <div><dt>Website</dt><dd><a class="link" [href]="c.website" target="_blank" rel="noopener">{{ c.website.replace('https://', '') }}</a></dd></div>
+                  <div><dt>Country</dt><dd>{{ country()?.name }}</dd></div>
+                  <div><dt>Zone</dt><dd>{{ c.zone }}</dd></div>
+                  <div><dt>Currency</dt><dd>{{ country()?.currency }}</dd></div>
+                  <div><dt>Use case</dt><dd>{{ c.useCase }}</dd></div>
+                  <div><dt>Super admin</dt><dd>{{ c.superAdminEmail }}</dd></div>
+                  <div>
+                    <dt>Contract expiry</dt>
+                    <dd class="num" [class.warn]="expiryNote(c) && expiryNote(c) !== 'expired'" [class.neg]="expiryNote(c) === 'expired'">
+                      {{ c.contractExpiry | date }} @if (expiryNote(c)) { <span class="dd-sub">{{ expiryNote(c) }}</span> }
+                    </dd>
+                  </div>
+                </dl>
+              }
+            </div>
+          </section>
+
+          <section class="card span-4">
+            <div class="card-head">
+              <div>
+                <h2>Contact person</h2>
+                <p class="card-sub">Single point of contact</p>
+              </div>
+            </div>
+            <div class="card-body">
+              @if (loading()) {
+                <div class="dl one">
+                  @for (i of [1, 2, 3, 4]; track i) { <div><span class="skeleton" style="width:60px;height:10px"></span><br /><span class="skeleton" style="width:160px;height:14px"></span></div> }
+                </div>
+              } @else {
+                <dl class="dl one">
+                  <div><dt>Name</dt><dd>{{ c.contact.firstName }} {{ c.contact.lastName }}</dd></div>
+                  <div><dt>Q-ID or passport</dt><dd class="mono">{{ c.contact.qid }}</dd></div>
+                  <div><dt>Email</dt><dd><a class="link" [href]="'mailto:' + c.contact.email">{{ c.contact.email }}</a></dd></div>
+                  <div><dt>Phone</dt><dd class="num">{{ c.contact.phone }}</dd></div>
+                  <div><dt>User groups</dt><dd>@if (c.userGroups.length) { {{ c.userGroups.join(', ') }} } @else { <span class="dash">—</span> }</dd></div>
+                  <div>
+                    <dt>Brand colour</dt>
+                    <dd class="brand-dd"><span class="sw" [style.background]="c.brandColour"></span><span class="mono">{{ c.brandColour }}</span></dd>
+                  </div>
+                </dl>
+              }
+            </div>
+          </section>
+        </div>
+      }
+
+      <!-- Devices ───────────────────────────────────────────── -->
+      @case ('devices') {
+        <div class="list">
+          <div class="toolbar">
+            <div class="left">
+              <label class="search">
+                <app-icon name="search" />
+                <input class="input" type="search" placeholder="Device ID, IMEI, plate or type" aria-label="Search devices"
+                       [value]="q()" (input)="q.set($any($event.target).value)" />
+              </label>
+            </div>
+            <div class="right"><span class="count num">{{ deviceRows().length }} {{ deviceRows().length === 1 ? 'device' : 'devices' }}</span></div>
+          </div>
+          <div class="table-wrap">
+            <table class="table stack">
+              <thead>
+                <tr><th>Device</th><th>Type</th><th>Plate</th><th>Status</th><th class="num">Last seen</th></tr>
+              </thead>
+              <tbody>
+                @if (loading()) {
+                  @for (i of [1, 2, 3, 4, 5]; track i) {
+                    <tr>
+                      <td><span class="skeleton" style="width:90px;height:14px"></span></td>
+                      <td class="desk-only"><span class="skeleton" style="width:110px;height:14px"></span></td>
+                      <td class="desk-only"><span class="skeleton" style="width:90px;height:14px"></span></td>
+                      <td class="keep"><span class="skeleton" style="width:60px;height:20px"></span></td>
+                      <td class="num desk-only"><span class="skeleton" style="width:60px;height:14px"></span></td>
+                    </tr>
+                  }
+                } @else {
+                  @for (d of pageRows(); track d.id) {
+                    <tr>
+                      <td><span class="mono primary-cell">{{ d.id }}</span><span class="sub mono desk-only">{{ d.imei }}</span></td>
+                      <td class="phone-only">{{ typeOf(d).name }} · {{ d.plate ?? 'no plate' }} · {{ d.lastSeen ? (d.lastSeen | rel) : 'never seen' }}</td>
+                      <td class="desk-only">{{ typeOf(d).name }}<span class="sub">{{ typeOf(d).make }} · {{ typeOf(d).category }}</span></td>
+                      <td class="desk-only">@if (d.plate) { {{ d.plate }} } @else { <span class="dash">—</span> }</td>
+                      <td class="keep"><span class="pill" [class]="d.status | tone">{{ d.status === 'Sold' ? 'In service' : d.status }}</span></td>
+                      <td class="num desk-only" [title]="d.lastSeen ? (d.lastSeen | datetime) : ''">
+                        @if (d.lastSeen) { {{ d.lastSeen | rel }} } @else { <span class="dash">—</span> }
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="5" class="empty-row">
+                        @if (q()) {
+                          <div class="empty">No device matches “{{ q() }}”. <button class="btn sm" (click)="q.set('')">Clear search</button></div>
+                        } @else if (c.stepsDone < 7) {
+                          <div class="empty">Hardware isn't assigned yet: it's section 7 of onboarding. @if (access.rw()) { <button class="btn sm" (click)="edit()">Continue onboarding</button> }</div>
+                        } @else {
+                          <div class="empty">No devices are assigned to {{ c.company }}. @if (accessSvc.can('Inventory', 'RW')) { <a class="btn sm" routerLink="/inventory">Open inventory</a> }</div>
+                        }
+                      </td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (!loading() && deviceRows().length) {
+            <app-pager [total]="deviceRows().length" [size]="size()" [(page)]="page" noun="devices" />
+          }
+        </div>
+      }
+
+      <!-- Documents ─────────────────────────────────────────── -->
+      @case ('documents') {
+        @if (c.documents.length) {
+          <div class="table-wrap">
+            <table class="table stack">
+              <thead><tr><th>File</th><th>Kind</th><th class="num">Size</th><th class="num">Uploaded</th></tr></thead>
+              <tbody>
+                @for (d of c.documents; track d.name) {
+                  <tr>
+                    <td><span class="file-name primary-cell"><app-icon name="file" />{{ d.name }}</span></td>
+                    <td class="phone-only">{{ d.kind }} · {{ fmtSize(d.sizeKb) }} · {{ d.uploadedAt | date }}</td>
+                    <td class="desk-only">{{ d.kind }}</td>
+                    <td class="num desk-only">{{ fmtSize(d.sizeKb) }}</td>
+                    <td class="num desk-only">{{ d.uploadedAt | date }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <div class="empty">No documents uploaded yet. @if (access.rw()) { <button class="btn sm" (click)="edit(2)">Upload documents</button> }</div>
+        }
+      }
+
+      <!-- Admins ────────────────────────────────────────────── -->
+      @case ('admins') {
+        @if (c.admins.length) {
+          <div class="table-wrap">
+            <table class="table stack">
+              <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th></tr></thead>
+              <tbody>
+                @for (a of c.admins; track a.email; let first = $first) {
+                  <tr>
+                    <td><span class="primary-cell">{{ a.name }}</span></td>
+                    <td class="phone-only">{{ a.email }} · {{ a.phone }}</td>
+                    <td class="desk-only"><a class="link" [href]="'mailto:' + a.email">{{ a.email }}</a></td>
+                    <td class="desk-only"><span class="num">{{ a.phone }}</span></td>
+                    <td class="keep">@if (first) { <span class="pill info">Super admin</span> } @else { <span class="pill">Admin</span> }</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <div class="empty">No admins yet: they're added in section 6 of onboarding. @if (access.rw()) { <button class="btn sm" (click)="edit(6)">Add admins</button> }</div>
+        }
+      }
+
+      <!-- Activity ──────────────────────────────────────────── -->
+      @case ('activity') {
+        <ol class="timeline">
+          @for (e of activity(); track $index) {
+            <li [class.neg]="e.tone === 'neg'" [class.pos]="e.tone === 'pos'">
+              <span class="t-icon"><app-icon [name]="e.icon" [size]="14" /></span>
+              <div class="t-text">
+                <span class="t-title">{{ e.title }}</span>
+                @if (e.body) { <span class="muted">{{ e.body }}</span> }
+              </div>
+              <div class="t-meta num">
+                <span [title]="e.at | datetime">{{ e.at | date }}</span>
+                @if (e.by) { <span class="muted">{{ e.by }}</span> }
+              </div>
+            </li>
+          }
+        </ol>
+      }
+    }
+  } @else {
+    <div class="title-row">
+      <div class="title-block">
+        <nav class="breadcrumb" aria-label="Breadcrumb"><a routerLink="/customers">Customers</a><span aria-hidden="true">/</span><span>Not found</span></nav>
+        <h1>Customer not found</h1>
+      </div>
+    </div>
+    <div class="empty">
+      There's no customer with the ID “{{ id() }}”. It may have been deleted, or the link is out of date.
+      <a class="btn sm" routerLink="/customers">Back to customers</a>
+    </div>
+  }
+</div>
+
+<app-dialog [(open)]="confirmOpen" [heading]="confirmCopy().title" width="440px">
+  <p class="confirm-body">{{ confirmCopy().body }}</p>
+  <ng-container slot="footer">
+    <button class="btn" (click)="confirmOpen.set(false)">Keep as is</button>
+    <button class="btn" [class.primary]="confirm()?.kind === 'activate' || confirm()?.kind === 'cancel-delete'"
+            [class.danger]="confirm()?.kind === 'deactivate' || confirm()?.kind === 'delete'" (click)="runConfirm()">
+      {{ confirmCopy().action }}
+    </button>
+  </ng-container>
+</app-dialog>

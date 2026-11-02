@@ -1,0 +1,97 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.select.auto {
+  width: auto;
+}
+
+.actions-cell {
+  width: 40px;
+  text-align: right;
+}
+
+.empty-row {
+  padding: 16px 0 !important;
+  height: auto !important;
+}
+
+// ── Consumer form ────────────────────────────────────────────
+.c-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  .full {
+    grid-column: 1 / -1;
+  }
+}
+
+// ── Drawer ───────────────────────────────────────────────────
+.drawer-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.dl.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.d-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  h3 .muted {
+    font-weight: 400;
+    margin-left: 4px;
+  }
+}
+.dev-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-top: 1px solid var(--rule);
+    &:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+  }
+  .dev-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    .muted {
+      font-size: var(--fs-small);
+    }
+  }
+}
+.alloc {
+  display: flex;
+  gap: 8px;
+  .select {
+    flex: 1;
+    min-width: 0;
+  }
+}
+.small {
+  font-size: var(--fs-small);
+}
+
+@media (max-width: 640px) {
+  .c-form {
+    grid-template-columns: 1fr;
+  }
+  .alloc {
+    flex-direction: column;
+  }
+  .actions-cell {
+    width: auto;
+  }
+}

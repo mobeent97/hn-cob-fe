@@ -1,0 +1,149 @@
+// Design tokens — "framed sheet" app style (taste skill), tinted from the HyperNym blue.
+// Colour lives on data, status and the one primary action; the chrome stays grey.
+// Every downstream style reads these custom properties only.
+
+:root {
+  // Ground and surfaces
+  --frame: #f2f5f7; // the L-shaped chrome (sidebar + top bar), a blue-grey step of the brand hue
+  --surface: #ffffff; // the sheet and cards
+  --raised: #f6f8f9; // trays, hovered rows, read-only fields
+  --active: #e7ecef; // active nav pill, pressed states
+  --border: #e4e8eb; // card and sheet edges (~1.2:1 on white)
+  --rule: #eef1f3; // row rules inside tables
+  --control: #cbd1d6; // input and outlined-button borders
+
+  // Text (every tier >= 4.5:1 on white and on --frame)
+  --text: #121417;
+  --muted: #565b61;
+  --faint: #676c72;
+
+  // Brand and data
+  --accent: #0a6f96; // HyperNym blue, darkened to 5.6:1 on white
+  --accent-strong: #075673;
+  --accent-weak: #e5f1f6;
+  --primary: #15181b; // near-black filled button
+  --primary-hover: #2a2f34;
+  --on-primary: #ffffff; // text and icons on a --primary fill
+  --on-accent: #ffffff; // text and icons on an --accent / status fill
+  --overlay: rgb(18 20 23 / 32%); // dialog and nav scrims
+  --hover-tint: rgb(0 0 0 / 3.5%);
+  --map-tiles: grayscale(0.75) contrast(0.95) brightness(1.03);
+  --chart-1: var(--accent);
+  --chart-2: #a86f0c; // amber, the one contrasting series
+  --chart-3: #8a96a0; // neutral for "the rest"
+  --chart-4: #c9d1d7;
+  --grid: #e6e9ec;
+
+  // Status (pale tint + dark ink of the same hue)
+  --positive: #1e7b4f;
+  --positive-bg: #dcf5e6;
+  --positive-ink: #0b3a22;
+  --negative: #c4242a;
+  --negative-bg: #fdecea;
+  --negative-ink: #831c1e;
+  --warning: #92400e;
+  --warning-bg: #fff6e0;
+  --warning-ink: #7a3a0c;
+  --warning-line: #f5d58a;
+  --neutral-bg: #edf0f2;
+  --neutral-ink: #353a3f;
+  --info-bg: var(--accent-weak);
+  --info-ink: var(--accent-strong);
+
+  // Shape (tight radius family, decided once)
+  --radius-sheet: 16px;
+  --radius-card: 8px;
+  --radius-control: 6px;
+  --radius-chip: 4px;
+
+  // Space (4px base)
+  --sheet-inset: 8px;
+  --pad: 24px;
+  --gap: 16px;
+  --card-pad: 20px;
+  --sidebar-w: 236px;
+  --topbar-h: 52px;
+  --control-h: 34px;
+  --row-h: 48px;
+
+  // Type — one grotesk; mono for IDs and keys only
+  --font: 'IBM Plex Sans', Inter, system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --fs-title: 22px;
+  --fs-kpi: 28px;
+  --fs-section: 16px;
+  --fs-body: 14px;
+  --fs-small: 12px;
+
+  // Shadows: only for what floats
+  --shadow-float: 0 1px 2px rgb(16 24 32 / 6%), 0 8px 24px rgb(16 24 32 / 10%);
+  --shadow-dialog: 0 2px 4px rgb(16 24 32 / 6%), 0 24px 64px rgb(16 24 32 / 18%);
+
+  // Motion — transitions.dev scale with Emil Kowalski's custom curves
+  --duration-stagger: 40ms;
+  --duration-micro: 80ms;
+  --duration-press: 120ms;
+  --duration-quick: 150ms;
+  --duration-fast: 220ms;
+  --duration-medium: 320ms;
+  --duration-slow: 400ms;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1); // enter / exit
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1); // on-screen movement
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1); // sheets and drawers
+  --ease-bounce: cubic-bezier(0.34, 1.36, 0.64, 1); // small pops only
+  --scale-modal: 0.96;
+  --scale-menu: 0.97;
+  --blur-small: 2px;
+}
+
+// ── Dark theme: true neutral darks (no navy, no slate), elevation by lightness,
+// lines 1 step above the surface, colour still only on data. The accent is lifted so it
+// holds 4.5:1 as link text on the darkest surface.
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --frame: #0b0b0c;
+  --surface: #131314;
+  --raised: #1b1b1d;
+  --active: #26262a;
+  --border: #262628;
+  --rule: #1f1f21;
+  --control: #5c5c63;
+
+  --text: #f2f2f3;
+  --muted: #b2b2b8;
+  --faint: #95959c;
+
+  --accent: #4fb0d9;
+  --accent-strong: #7cc6e6;
+  --accent-weak: #102a35;
+  --primary: #f2f2f3; // inverted: light fill, dark label
+  --primary-hover: #d9d9dc;
+  --on-primary: #131314;
+  --on-accent: #0b0b0c;
+  --chart-1: var(--accent);
+  --chart-2: #d6a043;
+  --chart-3: #6e747b;
+  --chart-4: #52575d;
+  --grid: #2a2a2d;
+
+  --positive: #3fc07a;
+  --positive-bg: #15281c;
+  --positive-ink: #6fd69c;
+  --negative: #ef6b7b;
+  --negative-bg: #2e1a1e;
+  --negative-ink: #f39aa5;
+  --warning: #e2ad55;
+  --warning-bg: #2a2114;
+  --warning-ink: #ebc47f;
+  --warning-line: #5a4523;
+  --neutral-bg: #26262a;
+  --neutral-ink: #d0d0d5;
+
+  --overlay: rgb(0 0 0 / 55%);
+  --hover-tint: rgb(255 255 255 / 4%);
+  --map-tiles: invert(1) hue-rotate(180deg) grayscale(0.85) brightness(0.85) contrast(0.9);
+
+  --shadow-float: 0 1px 2px rgb(0 0 0 / 40%), 0 8px 24px rgb(0 0 0 / 50%);
+  --shadow-dialog: 0 2px 4px rgb(0 0 0 / 40%), 0 24px 64px rgb(0 0 0 / 60%);
+}

@@ -1,0 +1,90 @@
+<div class="frame" [class.nav-open]="navOpen()">
+  <aside class="sidebar" aria-label="Main navigation">
+    <a class="brand" routerLink="/dashboard">
+      <app-brand-mark />
+      <span class="wordmark">HyperNym</span>
+      <span class="scope">Onboarding</span>
+    </a>
+    <app-scope-switcher />
+
+    <nav>
+      @for (group of nav(); track group.label) {
+        <div class="group">
+          @if (group.label) {
+            <span class="group-label">{{ group.label }}</span>
+          }
+          @for (item of group.items; track item.path) {
+            <a
+              class="nav-item"
+              [routerLink]="item.path"
+              routerLinkActive="active"
+              [routerLinkActiveOptions]="{ exact: false }"
+              #rla="routerLinkActive"
+              [attr.aria-current]="rla.isActive ? 'page' : null"
+            >
+              <app-icon [name]="item.icon" />
+              <span class="label">{{ item.label }}</span>
+              @if (badgeFor(item)) {
+                <span class="badge num" [attr.aria-label]="badgeFor(item) + ' to ship'">{{ badgeFor(item) }}</span>
+              }
+            </a>
+          }
+        </div>
+      }
+    </nav>
+
+    <div class="sidebar-foot">
+      @for (item of navFooter(); track item.path) {
+        <a class="nav-item" [routerLink]="item.path" routerLinkActive="active">
+          <app-icon [name]="item.icon" />
+          <span class="label">{{ item.label }}</span>
+        </a>
+      }
+    </div>
+  </aside>
+
+  <header class="topbar">
+    <button class="btn ghost icon menu-btn" aria-label="Open navigation" (click)="navOpen.set(true)">
+      <app-icon name="menu" />
+    </button>
+    <a class="brand mobile-brand" routerLink="/dashboard">
+      <app-brand-mark [size]="20" />
+      <span class="wordmark">HyperNym</span>
+    </a>
+
+    <app-global-search class="search-slot" />
+
+    <div class="right">
+      <span class="env" title="Environment">Development</span>
+      <button
+        class="btn ghost icon theme-btn"
+        [attr.aria-label]="theme.mode() === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+        [title]="theme.mode() === 'dark' ? 'Light mode' : 'Dark mode'"
+        (click)="theme.toggle()"
+      >
+        <span class="swap" [class.dark]="theme.mode() === 'dark'">
+          <app-icon name="moon" [size]="17" class="moon" />
+          <app-icon name="sun" [size]="17" class="sun" />
+        </span>
+      </button>
+      <app-notification-bell />
+      <div class="account">
+        <span class="avatar" aria-hidden="true">{{ initials() }}</span>
+        <span class="who">
+          <strong>{{ user().name }}</strong>
+          <small>{{ roleLabel() }}</small>
+        </span>
+        <app-menu [items]="accountMenu()" icon="chevron-down" label="Account menu" />
+      </div>
+    </div>
+  </header>
+
+  <main class="sheet">
+    <div class="sheet-content">
+      <router-outlet />
+    </div>
+  </main>
+
+  <div class="scrim" (click)="navOpen.set(false)"></div>
+  <app-preview-as [(open)]="previewOpen" />
+</div>

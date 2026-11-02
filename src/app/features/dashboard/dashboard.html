@@ -1,0 +1,214 @@
+<div class="page">
+  <div class="title-row">
+    <div class="title-block">
+      <h1>Overview</h1>
+      <p class="subline">{{ finding() }}</p>
+    </div>
+    <div class="actions">
+      @if (can.inventory()) { <a class="btn" routerLink="/inventory"><app-icon name="boxes" />Inventory</a> }
+      @if (can.newCustomer()) { <a class="btn primary" routerLink="/customers/new"><app-icon name="plus" />New customer</a> }
+    </div>
+  </div>
+
+  <!-- KPI strip: one container split by hairlines, label over value, baseline named in the caption -->
+  <section class="kpi-strip" aria-label="Key figures">
+    <div class="kpi">
+      <span class="kpi-label">Active customers</span>
+      @if (loading()) { <span class="skeleton" style="width:56px;height:30px;margin:3px 0"></span> }
+      @else { <span class="kpi-value"><app-num [value]="active()" /></span> }
+      <span class="kpi-caption num">of {{ customers().length }} on the platform</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-label">Devices in service</span>
+      @if (loading()) { <span class="skeleton" style="width:72px;height:30px;margin:3px 0"></span> }
+      @else { <span class="kpi-value"><app-num [value]="byStatus().Sold" /></span> }
+      <span class="kpi-caption num">{{ pct(byStatus().Sold) }}% of all devices</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-label">Awaiting installation</span>
+      @if (loading()) { <span class="skeleton" style="width:48px;height:30px;margin:3px 0"></span> }
+      @else { <span class="kpi-value"><app-num [value]="byStatus().Allocated" /></span> }
+      <span class="kpi-caption">allocated, not yet active</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-label">In stock</span>
+      @if (loading()) { <span class="skeleton" style="width:48px;height:30px;margin:3px 0"></span> }
+      @else { <span class="kpi-value"><app-num [value]="byStatus().Available" /></span> }
+      <span class="kpi-caption num">{{ byStatus().Faulty }} faulty, held for RMA</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-label">Contracts ending</span>
+      @if (loading()) { <span class="skeleton" style="width:32px;height:30px;margin:3px 0"></span> }
+      @else { <span class="kpi-value"><app-num [value]="expiring().length" /></span> }
+      <span class="kpi-caption">within the next 60 days</span>
+    </div>
+  </section>
+
+  <div class="grid">
+    <!-- The screen's question, answered by its biggest block -->
+    <section class="card span-8">
+      <div class="card-head">
+        <div>
+          <h2>Devices activated</h2>
+          <p class="card-sub num">
+            {{ thisMonth() }} so far this month against {{ lastMonth() }} last month ·
+            {{ activationTotal() }} in the last {{ range() }} months
+          </p>
+        </div>
+        <div class="seg" role="group" aria-label="Range">
+          <button [class.on]="range() === 6" (click)="range.set(6)">6 months</button>
+          <button [class.on]="range() === 12" (click)="range.set(12)">12 months</button>
+        </div>
+      </div>
+      <div class="card-body">
+        @if (loading()) {
+          <div class="skeleton" style="width:100%;height:240px"></div>
+        } @else {
+          <app-bar-chart [data]="activations()" [height]="240" label="Devices activated per month" />
+          <p class="legend"><span class="sw"></span>Complete month <span class="sw part"></span>This month, in progress</p>
+        }
+      </div>
+    </section>
+
+    <section class="card span-4">
+      <div class="card-head">
+        <div>
+          <h2>Fleet by status</h2>
+          <p class="card-sub num">{{ fmtNum(devices().length) }} devices in total</p>
+        </div>
+        @if (can.inventory()) { <a class="btn ghost sm" routerLink="/inventory">View inventory</a> }
+      </div>
+      <div class="card-body status">
+        <app-ring [segments]="ring()" [size]="128" label="Devices by status" />
+        <table class="table legend-table">
+          <tbody>
+            @for (s of ring(); track s.label) {
+              <tr>
+                <td><span class="sw" [style.background]="s.colour"></span>{{ s.label }}</td>
+                <td class="num">{{ fmtNum(s.value) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card span-8">
+      <div class="card-head">
+        <div>
+          <h2>Onboarding in progress</h2>
+          <p class="card-sub">Customers who haven't finished all nine sections</p>
+        </div>
+        @if (can.customers()) { <a class="btn ghost sm" routerLink="/customers" [queryParams]="{ view: 'onboarding' }">View all</a> }
+      </div>
+      <div class="card-body">
+        @if (onboarding().length) {
+          <table class="table stack">
+            <thead>
+              <tr><th>Customer</th><th>Next section</th><th>Progress</th><th class="num">Started</th><th></th></tr>
+            </thead>
+            <tbody>
+              @for (c of onboarding().slice(0, 5); track c.id) {
+                <tr [class.clickable]="can.customers()" [routerLink]="can.customers() ? ['/customers', c.id] : null">
+                  <td><span class="primary-cell">{{ c.company }}</span><span class="sub">{{ c.package }} · {{ c.zone }}</span></td>
+                  <td>{{ stepName(c.stepsDone) }}</td>
+                  <td class="progress">
+                    <div class="meter"><span [style.width.%]="(c.stepsDone / 9) * 100"></span></div>
+                    <span class="num muted">{{ c.stepsDone }} of 9</span>
+                  </td>
+                  <td class="num muted">{{ c.createdAt | rel }}</td>
+                  <td class="keep">@if (can.newCustomer()) { <a class="link" [routerLink]="['/customers', c.id, 'edit']" (click)="$event.stopPropagation()">Continue</a> }</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        } @else {
+          <div class="empty">Every customer has finished onboarding. @if (can.newCustomer()) { <a class="link" routerLink="/customers/new">Add a customer</a> }</div>
+        }
+      </div>
+    </section>
+
+    <section class="card span-4">
+      <div class="card-head"><h2>Needs attention</h2></div>
+      <div class="card-body">
+        <ul class="attention">
+          @for (o of toShip(); track o.id) {
+            <li>
+              <app-icon name="truck" />
+              <div>
+                @if (can.orders()) { <a class="primary" routerLink="/orders">{{ o.orderNo }} · {{ o.quantity }} devices to ship</a> }
+                @else { <span class="primary">{{ o.orderNo }} · {{ o.quantity }} devices to ship</span> }
+                <span class="muted">{{ company(o.customerId) }} · {{ o.status }}, ordered {{ o.orderedAt | rel }}</span>
+              </div>
+            </li>
+          }
+          @for (c of deletionRequests(); track c.id) {
+            <li>
+              <app-icon name="trash" class="neg" />
+              <div>
+                @if (can.audit()) { <a class="primary" routerLink="/audit">Deletion requested: {{ c.company }}</a> }
+                @else if (can.customers()) { <a class="primary" [routerLink]="['/customers', c.id]">Deletion requested: {{ c.company }}</a> }
+                @else { <span class="primary">Deletion requested: {{ c.company }}</span> }
+                <span class="muted">Waiting for approval in the deletion audit</span>
+              </div>
+            </li>
+          }
+          @for (c of expiring(); track c.id) {
+            <li>
+              <app-icon name="calendar" />
+              <div>
+                @if (can.customers()) { <a class="primary" [routerLink]="['/customers', c.id]">{{ c.company }} contract ends in {{ daysFrom(c.contractExpiry) }} days</a> }
+                @else { <span class="primary">{{ c.company }} contract ends in {{ daysFrom(c.contractExpiry) }} days</span> }
+                <span class="muted">Expires {{ c.contractExpiry | date }}</span>
+              </div>
+            </li>
+          }
+          @if (!toShip().length && !deletionRequests().length && !expiring().length) {
+            <li class="muted">Nothing is waiting on you.</li>
+          }
+        </ul>
+      </div>
+    </section>
+
+    <section class="card span-6">
+      <div class="card-head">
+        <div>
+          <h2>Devices in service by package</h2>
+          <p class="card-sub">Customer count in brackets</p>
+        </div>
+        @if (can.packages()) { <a class="btn ghost sm" routerLink="/packages">Packages</a> }
+      </div>
+      <div class="card-body">
+        <ul class="bar-list">
+          @for (p of byPackage(); track p.name) {
+            <li>
+              <span class="name">{{ p.name }} <span class="muted num">({{ p.customers }})</span></span>
+              <span class="track"><span [style.width.%]="p.pct"></span></span>
+              <span class="num val">{{ fmtNum(p.devices) }}</span>
+            </li>
+          }
+        </ul>
+      </div>
+    </section>
+
+    <section class="card span-6">
+      <div class="card-head">
+        <h2>Recently added customers</h2>
+        @if (can.customers()) { <a class="btn ghost sm" routerLink="/customers">View all</a> }
+      </div>
+      <div class="card-body">
+        <table class="table">
+          <tbody>
+            @for (c of customers().slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 4); track c.id) {
+              <tr [class.clickable]="can.customers()" [routerLink]="can.customers() ? ['/customers', c.id] : null">
+                <td><span class="primary-cell">{{ c.company }}</span><span class="sub">{{ c.industry }}</span></td>
+                <td class="muted">{{ store.country(c.countryCode).name }}</td>
+                <td class="num muted">{{ c.createdAt | date }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>

@@ -1,0 +1,270 @@
+<div class="page">
+  <div class="title-row">
+    <div class="title-block">
+      <h1>Settings</h1>
+      <p class="subline">Rules for every staff account on the portal. Each section saves on its own.</p>
+      @if (!w.rw()) { <app-ro-note noun="the portal policies; your notification preferences stay yours to change" /> }
+    </div>
+  </div>
+
+  <div class="settings">
+    <!-- Password policy -->
+    <section class="row" aria-labelledby="s-pw">
+      <div class="label-col">
+        <h2 id="s-pw">Password policy</h2>
+        <p class="desc">What a new password must contain, how long it lasts and how many old ones are remembered.</p>
+        <ul class="rules" aria-label="Rules as people will see them">
+          @for (r of rules(); track r) { <li>{{ r }}</li> }
+        </ul>
+      </div>
+      <div class="panel">
+        @if (loading()) {
+          <span class="skeleton" style="width:100%;height:180px"></span>
+        } @else {
+          <fieldset class="ro-fieldset" [disabled]="!w.rw()">
+          <div class="fields three">
+            <div class="field">
+              <label for="pw-min">Minimum length</label>
+              <div class="input-group">
+                <input id="pw-min" class="input num" type="number" min="8" max="64" [value]="password().minLength"
+                       (input)="setPassword('minLength', num($event))" [class.invalid]="err('password.minLength')" />
+                <span class="suffix">characters</span>
+              </div>
+              @if (err('password.minLength')) { <span class="error">{{ err('password.minLength') }}</span> }
+            </div>
+            <div class="field">
+              <label for="pw-exp">Expires after</label>
+              <div class="input-group">
+                <input id="pw-exp" class="input num" type="number" min="0" max="365" [value]="password().expiryDays"
+                       (input)="setPassword('expiryDays', num($event))" [class.invalid]="err('password.expiryDays')" />
+                <span class="suffix">days</span>
+              </div>
+              @if (err('password.expiryDays')) { <span class="error">{{ err('password.expiryDays') }}</span> }
+              @else { <span class="hint">0 means it never expires.</span> }
+            </div>
+            <div class="field">
+              <label for="pw-hist">Remember last</label>
+              <div class="input-group">
+                <input id="pw-hist" class="input num" type="number" min="0" max="24" [value]="password().history"
+                       (input)="setPassword('history', num($event))" [class.invalid]="err('password.history')" />
+                <span class="suffix">passwords</span>
+              </div>
+              @if (err('password.history')) { <span class="error">{{ err('password.history') }}</span> }
+              @else { <span class="hint">These can't be reused.</span> }
+            </div>
+          </div>
+          <div class="switch-row">
+            <div>
+              <span class="switch-title">Require a number</span>
+              <span class="switch-desc">At least one digit, 0–9.</span>
+            </div>
+            <label class="toggle"><input type="checkbox" aria-label="Require a number" [checked]="password().requireNumber" (change)="setPassword('requireNumber', $any($event.target).checked)" /></label>
+          </div>
+          <div class="switch-row">
+            <div>
+              <span class="switch-title">Require a symbol</span>
+              <span class="switch-desc">At least one character that isn't a letter or digit.</span>
+            </div>
+            <label class="toggle"><input type="checkbox" aria-label="Require a symbol" [checked]="password().requireSymbol" (change)="setPassword('requireSymbol', $any($event.target).checked)" /></label>
+          </div>
+          @if (w.rw()) {
+          <div class="panel-foot">
+            @if (dirty().password) { <button class="btn ghost" (click)="discard('password')">Discard</button> }
+            <button class="btn" [class.primary]="dirty().password" [disabled]="!dirty().password" (click)="save('password')">Save password policy</button>
+          </div>
+          }
+          </fieldset>
+        }
+      </div>
+    </section>
+
+    <!-- Pagination -->
+    <section class="row" aria-labelledby="s-pg">
+      <div class="label-col">
+        <h2 id="s-pg">Pagination</h2>
+        <p class="desc">How many rows every list shows before it pages: customers, devices, users, vouchers and the audit.</p>
+      </div>
+      <div class="panel">
+        @if (loading()) {
+          <span class="skeleton" style="width:100%;height:76px"></span>
+        } @else {
+          <fieldset class="ro-fieldset" [disabled]="!w.rw()">
+          <div class="fields">
+            <div class="field narrow">
+              <label for="pg-size">Rows per page</label>
+              <select id="pg-size" class="select" [value]="pagination().pageSize" (change)="pagination.set({ pageSize: +$any($event.target).value })">
+                @for (n of pageSizes; track n) { <option [value]="n" [selected]="n === pagination().pageSize">{{ n }}</option> }
+              </select>
+            </div>
+            <p class="preview num">
+              With {{ pagination().pageSize }} rows, the {{ store.customers().length }} customers fit on
+              {{ pages(store.customers().length) }} {{ pages(store.customers().length) === 1 ? 'page' : 'pages' }}
+              and the {{ store.devices().length }} devices on {{ pages(store.devices().length) }}.
+            </p>
+          </div>
+          @if (w.rw()) {
+          <div class="panel-foot">
+            @if (dirty().pagination) { <button class="btn ghost" (click)="discard('pagination')">Discard</button> }
+            <button class="btn" [class.primary]="dirty().pagination" [disabled]="!dirty().pagination" (click)="save('pagination')">Save page size</button>
+          </div>
+          }
+          </fieldset>
+        }
+      </div>
+    </section>
+
+    <!-- Login & session -->
+    <section class="row" aria-labelledby="s-login">
+      <div class="label-col">
+        <h2 id="s-login">Sign-in and session</h2>
+        <p class="desc">When idle sessions end, and what happens after repeated wrong passwords.</p>
+        <p class="summary num">
+          Signed out after {{ login().sessionMinutes || '—' }} min idle. {{ login().maxAttempts || '—' }} wrong passwords lock the account
+          for {{ login().lockMinutes || '—' }} min.
+        </p>
+      </div>
+      <div class="panel">
+        @if (loading()) {
+          <span class="skeleton" style="width:100%;height:150px"></span>
+        } @else {
+          <fieldset class="ro-fieldset" [disabled]="!w.rw()">
+          <div class="fields three">
+            <div class="field">
+              <label for="lg-sess">Session timeout</label>
+              <div class="input-group">
+                <input id="lg-sess" class="input num" type="number" min="5" max="480" [value]="login().sessionMinutes"
+                       (input)="setLogin('sessionMinutes', num($event))" [class.invalid]="err('login.sessionMinutes')" />
+                <span class="suffix">min</span>
+              </div>
+              @if (err('login.sessionMinutes')) { <span class="error">{{ err('login.sessionMinutes') }}</span> }
+            </div>
+            <div class="field">
+              <label for="lg-att">Lock after</label>
+              <div class="input-group">
+                <input id="lg-att" class="input num" type="number" min="3" max="10" [value]="login().maxAttempts"
+                       (input)="setLogin('maxAttempts', num($event))" [class.invalid]="err('login.maxAttempts')" />
+                <span class="suffix">attempts</span>
+              </div>
+              @if (err('login.maxAttempts')) { <span class="error">{{ err('login.maxAttempts') }}</span> }
+            </div>
+            <div class="field">
+              <label for="lg-lock">Lock for</label>
+              <div class="input-group">
+                <input id="lg-lock" class="input num" type="number" min="1" max="1440" [value]="login().lockMinutes"
+                       (input)="setLogin('lockMinutes', num($event))" [class.invalid]="err('login.lockMinutes')" />
+                <span class="suffix">min</span>
+              </div>
+              @if (err('login.lockMinutes')) { <span class="error">{{ err('login.lockMinutes') }}</span> }
+            </div>
+          </div>
+          <div class="switch-row">
+            <div>
+              <span class="switch-title">One-time code on password reset</span>
+              <span class="switch-desc">Ask for a code sent by email before a forgotten password can be changed.</span>
+            </div>
+            <label class="toggle"><input type="checkbox" aria-label="One-time code on password reset" [checked]="login().otpOnReset" (change)="setLogin('otpOnReset', $any($event.target).checked)" /></label>
+          </div>
+          @if (w.rw()) {
+          <div class="panel-foot">
+            @if (dirty().login) { <button class="btn ghost" (click)="discard('login')">Discard</button> }
+            <button class="btn" [class.primary]="dirty().login" [disabled]="!dirty().login" (click)="save('login')">Save sign-in settings</button>
+          </div>
+          }
+          </fieldset>
+        }
+      </div>
+    </section>
+
+    <!-- Notifications -->
+    <section class="row notif-row" id="notifications" #notifSection [class.flash]="flash()" aria-labelledby="s-notif">
+      <div class="label-col">
+        <h2 id="s-notif">Notifications</h2>
+        <p class="desc">What reaches you in the portal and by email. These choices are yours; other staff set their own.</p>
+        <p class="summary num">{{ notifSummary() }}</p>
+      </div>
+      <div class="panel">
+        @if (loading()) {
+          <span class="skeleton" style="width:100%;height:320px"></span>
+        } @else {
+          <table class="kinds">
+            <thead>
+              <tr>
+                <th scope="col">Notify me about</th>
+                <th scope="col" class="ch">In the portal</th>
+                <th scope="col" class="ch">Email</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (k of kinds; track k) {
+                <tr>
+                  <th scope="row">
+                    <div class="kind-cell">
+                      <span class="switch-title">{{ kindMeta[k].label }}</span>
+                      <span class="switch-desc">{{ kindMeta[k].description }}</span>
+                    </div>
+                  </th>
+                  <td class="ch">
+                    <label class="toggle"><input type="checkbox" [attr.aria-label]="kindMeta[k].label + ' in the portal'"
+                           [checked]="notif().channels[k].inApp" (change)="setChannel(k, 'inApp', $any($event.target).checked)" /></label>
+                  </td>
+                  <td class="ch">
+                    <label class="toggle"><input type="checkbox" [attr.aria-label]="kindMeta[k].label + ' by email'"
+                           [checked]="notif().channels[k].email" (change)="setChannel(k, 'email', $any($event.target).checked)" /></label>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+
+          <div class="fields digest">
+            <div class="field narrow-wide">
+              <label for="nt-digest">Email digest</label>
+              <select id="nt-digest" class="select" [value]="notif().digest" [disabled]="!emailCount()"
+                      (change)="setNotif('digest', $any($event.target).value)">
+                <option value="off" [selected]="notif().digest === 'off'">Off</option>
+                <option value="daily" [selected]="notif().digest === 'daily'">Daily at 08:00</option>
+                <option value="weekly" [selected]="notif().digest === 'weekly'">Weekly on Monday</option>
+              </select>
+              <span class="hint">
+                @if (!emailCount()) { Turn on email for at least one kind to get a digest. }
+                @else if (notif().digest === 'off') { One email for each event, as it happens. }
+                @else { Emails are collected into one message instead of one per event. }
+              </span>
+            </div>
+          </div>
+
+          <div class="switch-row">
+            <div>
+              <span class="switch-title">Quiet hours</span>
+              <span class="switch-desc">No emails in this window. They are held and sent when it ends; the portal still collects everything.</span>
+            </div>
+            <label class="toggle"><input type="checkbox" aria-label="Quiet hours" [checked]="notif().quietOn"
+                   (change)="setNotif('quietOn', $any($event.target).checked)" /></label>
+          </div>
+          @if (notif().quietOn) {
+            <div class="quiet">
+              <div class="field">
+                <label for="nt-from">From</label>
+                <input id="nt-from" class="input num" type="time" [value]="notif().from" [class.invalid]="quietError().from"
+                       (input)="setNotif('from', $any($event.target).value)" />
+                @if (quietError().from) { <span class="error">{{ quietError().from }}</span> }
+              </div>
+              <div class="field">
+                <label for="nt-to">To</label>
+                <input id="nt-to" class="input num" type="time" [value]="notif().to" [class.invalid]="quietError().to"
+                       (input)="setNotif('to', $any($event.target).value)" />
+                @if (quietError().to) { <span class="error">{{ quietError().to }}</span> }
+              </div>
+              @if (quietSpan()) { <p class="preview num quiet-span">{{ quietSpan() }}</p> }
+            </div>
+          }
+
+          <div class="panel-foot">
+            @if (notifDirty()) { <button class="btn ghost" (click)="discardNotif()">Discard</button> }
+            <button class="btn" [class.primary]="notifDirty()" [disabled]="!notifDirty() || !notifValid()" (click)="saveNotif()">Save notification preferences</button>
+          </div>
+        }
+      </div>
+    </section>
+  </div>
+</div>

@@ -1,0 +1,158 @@
+<div class="page">
+  <div class="title-row">
+    <div class="title-block">
+      <h1>Hardware orders</h1>
+      <p class="subline num">{{ finding() }} · {{ inTransit() }} in transit</p>
+      @if (access.ro()) { <app-ro-note noun="hardware orders" /> }
+    </div>
+    <div class="actions">
+      <button class="btn" (click)="export()" [disabled]="!rows().length"><app-icon name="download" />Export CSV</button>
+    </div>
+  </div>
+
+  <div class="list">
+    <app-tabs [tabs]="tabs()" [(value)]="view" />
+
+    <div class="toolbar">
+      <div class="left">
+        <label class="search">
+          <app-icon name="search" />
+          <input class="input" type="search" placeholder="Order no, customer, device type or email" aria-label="Search orders"
+                 [value]="q()" (input)="q.set($any($event.target).value)" />
+        </label>
+        @if (orgs.showOrg()) { <app-org-filter [(value)]="orgId" /> }
+      </div>
+      <div class="right">
+        <span class="count num">{{ rows().length }} {{ rows().length === 1 ? 'order' : 'orders' }}</span>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table stack">
+        <thead>
+          <tr>
+            <th>Order no</th>
+            @if (orgs.showOrg()) { <th class="desk-only">Organization</th> }
+            <th>Customer / ordered by</th>
+            <th>Device type</th>
+            <th class="num">Qty</th>
+            <th class="num">Amount</th>
+            <th>Ordered</th>
+            <th>{{ orgs.showOrg() ? 'ETA / courier' : 'ETA' }}</th>
+            @if (!orgs.showOrg()) { <th>Courier</th> }
+            <th>Status</th>
+            <th><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (i of [1, 2, 3, 4, 5]; track i) {
+              <tr>
+                <td><span class="skeleton" style="width:110px;height:14px"></span></td>
+                @if (orgs.showOrg()) { <td class="desk-only"><span class="skeleton" style="width:100px;height:14px"></span></td> }
+                <td><span class="skeleton" style="width:140px;height:14px"></span><span class="sub"><span class="skeleton" style="width:110px;height:10px"></span></span></td>
+                <td><span class="skeleton" style="width:90px;height:14px"></span></td>
+                <td class="num"><span class="skeleton" style="width:20px;height:14px"></span></td>
+                <td class="num"><span class="skeleton" style="width:70px;height:14px"></span></td>
+                <td><span class="skeleton" style="width:80px;height:14px"></span></td>
+                <td><span class="skeleton" style="width:80px;height:14px"></span></td>
+                @if (!orgs.showOrg()) { <td><span class="skeleton" style="width:60px;height:14px"></span></td> }
+                <td><span class="skeleton" style="width:60px;height:20px"></span></td>
+                <td></td>
+              </tr>
+            }
+          } @else {
+            @for (o of pageRows(); track o.id) {
+              <tr>
+                <td>
+                  <span class="mono primary-cell">{{ o.orderNo }}</span>
+                </td>
+                @if (orgs.showOrg()) { <td class="desk-only"><app-org-tag [id]="o.orgId" /></td> }
+                <td class="phone-only">
+                  {{ o.customer?.company ?? '—' }} · <span class="num">{{ o.quantity }}</span> × {{ o.type?.name }} · {{ fmtMoney(o.amount) }}
+                </td>
+                <td class="desk-only">
+                  @if (o.customer && canCustomers()) { <a class="cust" [routerLink]="['/customers', o.customerId]">{{ o.customer.company }}</a> }
+                  @else if (o.customer) { <span class="cust">{{ o.customer.company }}</span> }
+                  @else { <span class="dash">—</span> }
+                  <span class="sub by" [title]="'Ordered by ' + o.orderedBy">{{ o.orderedBy }}</span>
+                </td>
+                <td class="desk-only">{{ o.type?.name }}<span class="sub">{{ o.type?.category }}</span></td>
+                <td class="num desk-only">{{ o.quantity }}</td>
+                <td class="num desk-only">{{ fmtMoney(o.amount) }}</td>
+                <td class="num desk-only">{{ o.orderedAt | date }}</td>
+                <td class="num desk-only" [class.warn]="o.eta && daysFrom(o.eta) < 0">
+                  @if (o.eta) { {{ o.eta | date }} } @else { <span class="dash">—</span> }
+                  @if (orgs.showOrg() && o.courier) { <span class="sub">{{ o.courier }}</span> }
+                </td>
+                @if (!orgs.showOrg()) {
+                  <td class="desk-only">
+                    @if (o.courier) { {{ o.courier }} } @else { <span class="dash">—</span> }
+                  </td>
+                }
+                <td class="keep"><span class="pill" [class]="o.status | tone">{{ o.status }}</span></td>
+                <td class="actions-cell row-menu" (click)="$event.stopPropagation()">
+                  @if (menu(o).length) { <app-menu [items]="menu(o)" [label]="'Actions for ' + o.orderNo" /> }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="10" class="empty-row">
+                  <div class="empty">
+                    @if (q()) {
+                      No order matches “{{ q() }}” in this view.
+                      <button class="btn sm" (click)="q.set(''); view.set('all'); orgId.set(null)">Clear filters</button>
+                    } @else if (view() === 'all') {
+                      No hardware orders yet. Orders placed from the consumer apps appear here.
+                    } @else {
+                      No {{ view().toLowerCase() }} orders.
+                      <button class="btn sm" (click)="view.set('all')">Show all orders</button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (!loading() && rows().length > size()) {
+      <app-pager [total]="rows().length" [size]="size()" [(page)]="page" noun="orders" />
+    }
+  </div>
+</div>
+
+<app-dialog [(open)]="shipOpen" [heading]="(shipping()?.status === 'Shipped' ? 'Edit shipment ' : 'Ship ') + (shipping()?.orderNo ?? '')"
+            [subheading]="shipping() ? shipping()!.address : ''" width="440px">
+  <form class="form" id="ship-form" (submit)="$event.preventDefault(); ship()" novalidate>
+    <div class="field">
+      <label for="ship-courier">Courier<span class="req">*</span></label>
+      <input id="ship-courier" class="input" list="couriers" placeholder="Aramex" [value]="courier()" (input)="courier.set($any($event.target).value)"
+             [class.invalid]="shipSubmitted() && shipErrors().courier" />
+      <datalist id="couriers">
+        @for (c of couriers; track c) { <option [value]="c"></option> }
+      </datalist>
+      @if (shipSubmitted() && shipErrors().courier) { <span class="error">{{ shipErrors().courier }}</span> }
+    </div>
+    <div class="field">
+      <label for="ship-eta">ETA</label>
+      <input id="ship-eta" class="input" type="date" [min]="todayInput" [value]="eta()" (input)="eta.set($any($event.target).value)"
+             [class.invalid]="!!shipErrors().eta" />
+      @if (shipErrors().eta) { <span class="error">{{ shipErrors().eta }}</span> }
+      @else { <span class="hint">Optional. Leave empty if the courier hasn’t confirmed a date.</span> }
+    </div>
+  </form>
+  <ng-container slot="footer">
+    <button class="btn" type="button" (click)="shipOpen.set(false)">Cancel</button>
+    <button class="btn primary" type="submit" form="ship-form">{{ shipping()?.status === 'Shipped' ? 'Save' : 'Mark shipped' }}</button>
+  </ng-container>
+</app-dialog>
+
+<app-dialog [(open)]="cancelOpen" [heading]="'Cancel ' + (cancelling()?.orderNo ?? '') + '?'" width="440px">
+  <p class="confirm-body">{{ cancelSummary() }}. The customer is not charged and the order can’t be shipped afterwards.</p>
+  <ng-container slot="footer">
+    <button class="btn" (click)="cancelOpen.set(false)">Keep order</button>
+    <button class="btn danger" (click)="runCancel()">Cancel order</button>
+  </ng-container>
+</app-dialog>

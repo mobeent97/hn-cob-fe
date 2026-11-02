@@ -1,0 +1,203 @@
+<div class="page">
+  <div class="title-row">
+    <div class="title-block">
+      <h1>Device actions</h1>
+      <p class="subline num">{{ store.actions().length }} commands support can send to a device in service</p>
+      @if (!w.rw()) { <app-ro-note [noun]="mayCommand() ? 'device actions and send them' : 'device actions'" /> }
+    </div>
+    <div class="actions">
+      @if (w.rw()) { <button class="btn primary" (click)="add()"><app-icon name="plus" />New action</button> }
+    </div>
+  </div>
+
+  <div class="list">
+    <div class="toolbar">
+      <div class="left">
+        <label class="search">
+          <app-icon name="search" />
+          <input class="input" type="search" placeholder="Name, endpoint or key" aria-label="Search actions"
+                 [value]="q()" (input)="q.set($any($event.target).value)" />
+        </label>
+      </div>
+      <div class="right">
+        <span class="count num">{{ rows().length }} {{ rows().length === 1 ? 'action' : 'actions' }}</span>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table stack">
+        <thead>
+          <tr>
+            <th>Action</th>
+            <th>Endpoint</th>
+            <th>Parameter</th>
+            <th>Response key</th>
+            <th><span class="sr-only">Send</span></th>
+            <th><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (i of [1, 2, 3, 4]; track i) {
+              <tr>
+                <td><span class="skeleton" style="width:130px;height:14px"></span></td>
+                <td><span class="skeleton" style="width:140px;height:14px"></span></td>
+                <td><span class="skeleton" style="width:70px;height:14px"></span></td>
+                <td><span class="skeleton" style="width:80px;height:14px"></span></td>
+                <td></td>
+                <td></td>
+              </tr>
+            }
+          } @else {
+            @for (a of rows(); track a.id) {
+              <tr>
+                <td>
+                  <span class="primary-cell">{{ a.name }}</span>
+                  @if (isCritical(a)) { <span class="sub">Needs the plate typed to confirm</span> }
+                </td>
+                <td class="phone-only"><span class="mono">POST {{ a.endpoint }}</span></td>
+                <td class="desk-only"><span class="mono"><span class="muted">POST</span> {{ a.endpoint }}</span></td>
+                <td class="desk-only"><span class="mono">{{ a.parameter }}</span></td>
+                <td class="desk-only"><span class="mono">{{ a.responseKey }}</span></td>
+                <td class="desk-only send-cell">
+                  @if (mayCommand()) { <button class="btn sm" (click)="openSend(a)"><app-icon name="zap" [size]="14" />Send to device</button> }
+                </td>
+                <td class="actions-cell row-menu" (click)="$event.stopPropagation()">
+                  @if (menu(a).length) { <app-menu [items]="menu(a)" [label]="'Actions for ' + a.name" /> }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="empty-row">
+                  <div class="empty">
+                    @if (q()) { No action matches “{{ q() }}”. <button class="btn sm" (click)="q.set('')">Clear search</button> }
+                    @else { No actions yet. @if (w.rw()) { <button class="btn sm" (click)="add()">New action</button> } }
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<app-dialog [(open)]="open" [heading]="draft().id ? 'Edit action' : 'New action'"
+            subheading="The portal posts the parameter to the endpoint and waits for the response key." width="520px">
+  <div class="form">
+    <div class="field">
+      <label for="a-name">Action name<span class="req">*</span></label>
+      <input id="a-name" class="input" maxlength="60" placeholder="e.g. Beep" [value]="draft().name"
+             (input)="set('name', $any($event.target).value)" [class.invalid]="tried() && errors().name" />
+      @if (tried() && errors().name) { <span class="error">{{ errors().name }}</span> }
+    </div>
+    <div class="field">
+      <label for="a-ep">Endpoint<span class="req">*</span></label>
+      <div class="input-group">
+        <span class="prefix mono">POST</span>
+        <input id="a-ep" class="input mono" maxlength="80" autocomplete="off" spellcheck="false" [value]="draft().endpoint"
+               (input)="set('endpoint', $any($event.target).value.trim())" [class.invalid]="tried() && errors().endpoint" />
+      </div>
+      @if (tried() && errors().endpoint) { <span class="error">{{ errors().endpoint }}</span> }
+    </div>
+    <div class="pair">
+      <div class="field">
+        <label for="a-param">Parameter<span class="req">*</span></label>
+        <input id="a-param" class="input mono" maxlength="40" placeholder="is_beep" autocomplete="off" spellcheck="false" [value]="draft().parameter"
+               (input)="set('parameter', $any($event.target).value.trim())" [class.invalid]="tried() && errors().parameter" />
+        @if (tried() && errors().parameter) { <span class="error">{{ errors().parameter }}</span> }
+      </div>
+      <div class="field">
+        <label for="a-key">Response key<span class="req">*</span></label>
+        <input id="a-key" class="input mono" maxlength="40" placeholder="is_beep" autocomplete="off" spellcheck="false" [value]="draft().responseKey"
+               (input)="set('responseKey', $any($event.target).value.trim())" [class.invalid]="tried() && errors().responseKey" />
+        @if (tried() && errors().responseKey) { <span class="error">{{ errors().responseKey }}</span> }
+      </div>
+    </div>
+    <div class="tray preview">
+      <span class="muted">Request</span>
+      <code class="mono">POST {{ draft().endpoint || '/…' }} {{ '{' }} "{{ draft().parameter || '…' }}": 1 {{ '}' }}</code>
+    </div>
+  </div>
+  <ng-container slot="footer">
+    <button class="btn" (click)="open.set(false)">Cancel</button>
+    <button class="btn primary" (click)="save()">{{ draft().id ? 'Save action' : 'Add action' }}</button>
+  </ng-container>
+</app-dialog>
+
+@if (action(); as a) {
+  <app-dialog [(open)]="sendOpen" [heading]="a.name" subheading="Send this command to one device in service." width="480px">
+    <div class="form">
+      @if (phase() === 'choose') {
+        <div class="field">
+          <label for="s-find">Device</label>
+          <label class="search wide">
+            <app-icon name="search" />
+            <input id="s-find" class="input" type="search" placeholder="Device ID, IMEI or plate" [value]="deviceQ()" (input)="deviceQ.set($any($event.target).value)" />
+          </label>
+          <select class="select" aria-label="Device" [value]="deviceId() ?? ''" (change)="pick($any($event.target).value)">
+            @if (!deviceOptions().length) { <option value="">No device matches</option> }
+            @if (device() && !deviceOptions().includes(device()!)) { <option [value]="device()!.id">{{ device()!.id }} · {{ device()!.plate }}</option> }
+            @for (d of deviceOptions(); track d.id) {
+              <option [value]="d.id">{{ d.plate }} · {{ d.id }} · {{ customerName(d.customerId) }}</option>
+            }
+          </select>
+        </div>
+      }
+
+      @if (device(); as d) {
+        <div class="tray device">
+          <div>
+            <span class="strong mono">{{ d.plate }}</span>
+            <span class="muted">{{ customerName(d.customerId) }} · {{ store.deviceType(d.typeId).name }}</span>
+          </div>
+          <span class="mono muted">{{ d.id }}</span>
+        </div>
+
+        @if (phase() === 'choose' && isCritical(a)) {
+          <div class="notice"><app-icon name="alert" /><span>The engine won't start again until someone sends the release command. Check the vehicle is parked.</span></div>
+          <div class="field">
+            <label for="s-plate">Type the plate <span class="mono">{{ d.plate }}</span> to confirm</label>
+            <input id="s-plate" class="input mono" autocomplete="off" spellcheck="false" [value]="typedPlate()" (input)="typedPlate.set($any($event.target).value)" />
+          </div>
+        }
+
+        @if (phase() !== 'choose') {
+          <div class="status-line" [attr.data-phase]="phase()" role="status" aria-live="polite">
+            <span class="status-icon">
+              <span class="spinner" aria-hidden="true"></span>
+              <span class="t-success-check" [attr.data-state]="phase() === 'done' ? 'in' : 'out'" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+                  <circle cx="12" cy="12" r="10" fill="var(--positive)" />
+                  <path d="M7.5 12.5l3 3 6-6.5" stroke="var(--on-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </span>
+            </span>
+            <span class="status-text">
+              @if (phase() === 'sending') {
+                <strong>Sending…</strong>
+                <span class="muted mono">POST {{ a.endpoint }}</span>
+              } @else {
+                <strong>Acknowledged</strong>
+                <span class="muted"><span class="mono">{{ a.responseKey }}: {{ ackValue(a) }}</span> · {{ time(ackAt()) }}</span>
+              }
+            </span>
+          </div>
+        }
+      }
+    </div>
+    <ng-container slot="footer">
+      @if (phase() === 'done') {
+        <button class="btn" (click)="again()">Send again</button>
+        <button class="btn primary" (click)="sendOpen.set(false)">Done</button>
+      } @else {
+        <button class="btn" (click)="sendOpen.set(false)">Cancel</button>
+        <button class="btn" [class.primary]="!isCritical(a)" [class.danger]="isCritical(a)" (click)="send()"
+                [disabled]="!canSend() || phase() === 'sending'">
+          {{ phase() === 'sending' ? 'Sending…' : isCritical(a) ? 'Immobilise ' + (device()?.plate ?? '') : 'Send ' + a.name.toLowerCase() }}
+        </button>
+      }
+    </ng-container>
+  </app-dialog>
+}

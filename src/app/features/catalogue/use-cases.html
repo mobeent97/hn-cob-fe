@@ -1,0 +1,117 @@
+<div class="page">
+  <div class="title-row">
+    <div class="title-block">
+      <h1>Use cases</h1>
+      <p class="subline num">{{ store.useCases().length }} use cases · {{ inUse() }} customers onboarded on one</p>
+      @if (!w.rw()) { <app-ro-note noun="use cases" /> }
+    </div>
+    <div class="actions">
+      @if (w.rw()) { <button class="btn primary" (click)="add()"><app-icon name="plus" />New use case</button> }
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="table stack">
+      <thead>
+        <tr>
+          <th>Use case</th>
+          <th>Packages</th>
+          <th>Modules</th>
+          <th class="num">Customers</th>
+          <th><span class="sr-only">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          @for (i of [1, 2, 3]; track i) {
+            <tr>
+              <td><span class="skeleton" style="width:180px;height:14px"></span></td>
+              <td><span class="skeleton" style="width:220px;height:14px"></span></td>
+              <td><span class="skeleton" style="width:260px;height:14px"></span></td>
+              <td class="num"><span class="skeleton" style="width:24px;height:14px"></span></td>
+              <td></td>
+            </tr>
+          }
+        } @else {
+          @for (u of rows(); track u.id) {
+            <tr [class.clickable]="w.rw()" (click)="w.rw() && edit(u)">
+              <td>
+                <span class="primary-cell">{{ u.name }}</span>
+                <span class="sub num">{{ u.features }} features</span>
+              </td>
+              <td class="phone-only num">{{ u.packages.length }} packages · {{ u.modules.length }} modules · {{ u.customers }} customers</td>
+              <td class="desk-only">
+                <span class="chips">@for (p of u.packages; track p) { <span class="pill">{{ p }}</span> }</span>
+              </td>
+              <td class="desk-only wrap modules">
+                {{ u.modules.join(', ') }}
+                <span class="sub num">{{ u.modules.length }} of {{ allModules().length }}</span>
+              </td>
+              <td class="num desk-only">{{ u.customers }}</td>
+              <td class="actions-cell row-menu" (click)="$event.stopPropagation()">
+                @if (w.rw()) { <app-menu [items]="menu(u)" [label]="'Actions for ' + u.name" /> }
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5" class="empty-row"><div class="empty">No use cases yet. Customers need one to be onboarded. @if (w.rw()) { <button class="btn sm" (click)="add()">New use case</button> }</div></td></tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<app-dialog [(open)]="open" [heading]="draft().id ? 'Edit use case' : 'New use case'"
+            subheading="Packages are what can be sold; modules are the feature groups customers see." width="560px">
+  <div class="form">
+    <div class="field">
+      <label for="uc-name">Name<span class="req">*</span></label>
+      <input id="uc-name" class="input" maxlength="60" [value]="draft().name" (input)="setName($any($event.target).value)"
+             [class.invalid]="tried() && errors().name" />
+      @if (tried() && errors().name) { <span class="error">{{ errors().name }}</span> }
+    </div>
+
+    <fieldset class="field">
+      <legend class="label">Packages<span class="req">*</span></legend>
+      <div class="checks">
+        @for (p of store.packages(); track p.id) {
+          <label class="check"><input type="checkbox" [checked]="draft().packages.includes(p.name)" (change)="togglePkg(p.name, $any($event.target).checked)" />{{ p.name }}</label>
+        }
+      </div>
+      @if (tried() && errors().packages) { <span class="error">{{ errors().packages }}</span> }
+    </fieldset>
+
+    <fieldset class="field">
+      <legend class="label">Modules<span class="req">*</span></legend>
+      <div class="checks">
+        @for (m of allModules(); track m) {
+          <label class="check"><input type="checkbox" [checked]="draft().modules.includes(m)" (change)="toggleModule(m, $any($event.target).checked)" />{{ m }}</label>
+        }
+      </div>
+      @if (tried() && errors().modules) { <span class="error">{{ errors().modules }}</span> }
+    </fieldset>
+
+    @if (removedModules().length) {
+      <div class="notice" role="status">
+        <app-icon name="alert" />
+        <span>
+          {{ removedModules().join(', ') }} will be removed when you save.
+          @if (affectedCustomers()) { {{ affectedCustomers() }} customers on this use case lose access to {{ removedModules().length === 1 ? 'its' : 'their' }} features. }
+          Cancel to keep {{ removedModules().length === 1 ? 'it' : 'them' }}.
+        </span>
+      </div>
+    }
+  </div>
+  <ng-container slot="footer">
+    <button class="btn" (click)="open.set(false)">Cancel</button>
+    <button class="btn primary" (click)="save()">{{ draft().id ? 'Save use case' : 'Add use case' }}</button>
+  </ng-container>
+</app-dialog>
+
+<app-dialog [(open)]="confirmOpen" [heading]="'Delete ' + (toDelete()?.name ?? '') + '?'" width="440px">
+  <p class="confirm-body">No customers are on it. Vouchers created for it stop being redeemable.</p>
+  <ng-container slot="footer">
+    <button class="btn" (click)="confirmOpen.set(false)">Keep it</button>
+    <button class="btn danger" (click)="runDelete()">Delete use case</button>
+  </ng-container>
+</app-dialog>

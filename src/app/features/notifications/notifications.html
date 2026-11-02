@@ -1,0 +1,141 @@
+<div class="page">
+  <div class="title-row">
+    <div class="title-block">
+      <h1>Notifications</h1>
+      @if (loading()) {
+        <p class="subline"><span class="skeleton" style="width:260px;height:12px"></span></p>
+      } @else {
+        <p class="subline num">{{ finding() }}</p>
+      }
+    </div>
+    <div class="actions">
+      @if (canOpen('/settings')) {
+        <a class="btn" routerLink="/settings" [queryParams]="{ section: 'notifications' }"><app-icon name="sliders" />Preferences</a>
+      }
+      <button class="btn primary" [disabled]="loading() || !store.unread()" (click)="markAllRead()">
+        <app-icon name="check-check" />Mark all read
+      </button>
+    </div>
+  </div>
+
+  <div class="list">
+    <app-tabs [tabs]="tabs()" [(value)]="view" />
+
+    <div class="toolbar">
+      <div class="left">
+        <label class="check select-all">
+          <input type="checkbox" [checked]="allShownSelected()" [indeterminate]="someSelected()"
+                 [disabled]="loading() || !shown().length" (change)="toggleAll($any($event.target).checked)" />
+          <span>Select all</span>
+        </label>
+      </div>
+      <div class="right">
+        <label class="sr-only" for="kind">Kind</label>
+        <select id="kind" class="select kind" [value]="kind()" (change)="kind.set($any($event.target).value)">
+          <option value="all" [selected]="kind() === 'all'">All kinds ({{ kindCounts().all }})</option>
+          @for (k of kinds; track k) {
+            <option [value]="k" [selected]="kind() === k">{{ meta[k].label }} ({{ kindCounts()[k] }})</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    @if (loading()) {
+      <div class="day">
+        <span class="skeleton" style="width:56px;height:12px"></span>
+        <ul class="items">
+          @for (i of [1, 2, 3, 4, 5]; track i) {
+            <li class="item"><div class="inner sk">
+              <span class="skeleton" style="width:16px;height:16px"></span>
+              <span class="skeleton" style="width:32px;height:32px;border-radius:50%"></span>
+              <span class="text">
+                <span class="skeleton" style="width:280px;max-width:100%;height:14px"></span>
+                <span class="skeleton" style="width:420px;max-width:100%;height:12px"></span>
+              </span>
+              <span class="skeleton" style="width:56px;height:12px"></span>
+            </div></li>
+          }
+        </ul>
+      </div>
+    } @else {
+      @for (g of groups(); track g.label) {
+        <section class="day" [attr.aria-labelledby]="'d-' + $index">
+          <h2 class="day-h" [id]="'d-' + $index">{{ g.label }}</h2>
+          <ul class="items">
+            @for (n of g.items; track n.id) {
+              <li class="item" [class.unread]="!n.read" [class.selected]="selected().has(n.id)" [class.removing]="removing().has(n.id)">
+                <div class="inner">
+                  <label class="check pick">
+                    <input type="checkbox" [checked]="selected().has(n.id)" [attr.aria-label]="'Select: ' + n.title"
+                           (change)="toggle(n.id, $any($event.target).checked)" />
+                  </label>
+                  <a class="main" [class.nolink]="!canOpen(n.link)" [routerLink]="canOpen(n.link) ? n.link : null" (click)="open(n)"
+                     [attr.title]="canOpen(n.link) ? null : 'You don’t have access to this screen'">
+                    <span class="ic" [title]="meta[n.kind].label"><app-icon [name]="meta[n.kind].icon" [size]="15" /></span>
+                    <span class="text">
+                      <span class="title">
+                        <span class="sr-only">{{ n.read ? '' : 'Unread: ' }}</span>{{ n.title }}
+                      </span>
+                      <span class="body">{{ n.body }}</span>
+                      <span class="sr-only">{{ meta[n.kind].label }}.</span>
+                    </span>
+                    <span class="meta">
+                      <time class="num" [attr.datetime]="n.at" [title]="n.at | datetime">{{ n.at | rel }}</time>
+                      <span class="dot" aria-hidden="true"></span>
+                    </span>
+                  </a>
+                  <div class="row-actions">
+                    @if (n.read) {
+                      <button class="btn ghost icon sm" [attr.aria-label]="'Mark unread: ' + n.title" title="Mark unread" (click)="setRead([n.id], false)">
+                        <app-icon name="circle-dot" />
+                      </button>
+                    } @else {
+                      <button class="btn ghost icon sm" [attr.aria-label]="'Mark read: ' + n.title" title="Mark read" (click)="setRead([n.id], true)">
+                        <app-icon name="check" />
+                      </button>
+                    }
+                    <button class="btn ghost icon sm" [attr.aria-label]="'Delete: ' + n.title" title="Delete" (click)="remove([n.id])">
+                      <app-icon name="trash" />
+                    </button>
+                  </div>
+                </div>
+              </li>
+            }
+          </ul>
+        </section>
+      } @empty {
+        <div class="empty">
+          @if (kind() !== 'all') {
+            <span>No {{ view() === 'unread' ? 'unread ' : '' }}notifications about {{ kindLabel().toLowerCase() }}. Other kinds may still need you.</span>
+            <button class="btn sm" (click)="kind.set('all')">Show all kinds</button>
+          } @else if (view() === 'unread') {
+            <span>You're all caught up. New orders, deletion requests and device alerts will appear here as they arrive.</span>
+            <button class="btn sm" (click)="showAll()">View all notifications</button>
+          } @else {
+            <span>No notifications yet. Hardware orders, onboarding progress, deletion requests and device alerts will appear here.</span>
+            @if (canOpen('/settings')) {
+              <a class="btn sm" routerLink="/settings" [queryParams]="{ section: 'notifications' }">Choose what you get</a>
+            }
+          }
+        </div>
+      }
+
+      @if (more()) {
+        <div class="load-more">
+          <span class="num muted">Showing {{ shown().length }} of {{ rows().length }}</span>
+          <button class="btn sm" (click)="limit.set(limit() + 20)">Load {{ more() > 20 ? 20 : more() }} more</button>
+        </div>
+      }
+    }
+  </div>
+
+  <div class="bulk-bar" [class.show]="selected().size > 0" role="toolbar" aria-label="Bulk actions" [attr.aria-hidden]="selected().size === 0" [attr.inert]="selected().size === 0 ? '' : null">
+    <span class="picked-count num"><strong>{{ selected().size }}</strong> selected</span>
+    <div class="bulk-actions">
+      <button class="btn sm" aria-label="Mark read" [disabled]="!selCounts().unread" (click)="bulkRead(true)"><app-icon name="check" /><span class="lbl">Mark read</span></button>
+      <button class="btn sm" aria-label="Mark unread" [disabled]="!selCounts().read" (click)="bulkRead(false)"><app-icon name="circle-dot" /><span class="lbl">Mark unread</span></button>
+      <button class="btn sm danger" aria-label="Delete" (click)="bulkDelete()"><app-icon name="trash" /><span class="lbl">Delete</span></button>
+    </div>
+    <button class="btn ghost icon sm" aria-label="Clear selection" (click)="clearSelection()"><app-icon name="x" /></button>
+  </div>
+</div>

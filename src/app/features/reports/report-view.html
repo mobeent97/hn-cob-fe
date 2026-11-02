@@ -1,0 +1,224 @@
+<div class="page rv-page">
+  @if (def(); as d) {
+    <div class="title-row">
+      <div class="title-block">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a routerLink="/reports">Reports</a>
+          <app-icon name="chevron-right" [size]="14" />
+          <span>{{ d.area }}</span>
+        </nav>
+        <h1>{{ d.name }}</h1>
+        <p class="subline">{{ d.question }}</p>
+      </div>
+      <div class="actions no-print">
+        @if (w.rw()) { <button class="btn" (click)="scheduleOpen.set(true)"><app-icon name="calendar-clock" />Schedule</button> }
+        <button class="btn" (click)="print()"><app-icon name="printer" />Print / PDF</button>
+        <button class="btn primary" (click)="exportCsv()" [disabled]="!table()?.rows?.length"><app-icon name="download" />Export CSV</button>
+      </div>
+    </div>
+
+    <!-- Scope first: date range, then the filters; freshness on the right -->
+    <div class="filters">
+      <div class="left no-print" role="group" aria-label="Report filters">
+        <label class="sr-only" for="rv-range">Date range</label>
+        <select id="rv-range" class="select" (change)="setRange($any($event.target).value)">
+          @for (r of ranges(); track r.id) { <option [value]="r.id" [selected]="r.id === filters().range">{{ r.label }}</option> }
+        </select>
+        <label class="sr-only" for="rv-country">Country</label>
+        <select id="rv-country" class="select" (change)="setFilter('country', $any($event.target).value)">
+          <option value="all" [selected]="filters().country === 'all'">All countries</option>
+          @for (c of countries; track c.code) { <option [value]="c.code" [selected]="c.code === filters().country">{{ c.name }}</option> }
+        </select>
+        <label class="sr-only" for="rv-pkg">Package</label>
+        <select id="rv-pkg" class="select" (change)="setFilter('pkg', $any($event.target).value)">
+          <option value="all" [selected]="filters().pkg === 'all'">All packages</option>
+          @for (p of packages; track p) { <option [value]="p" [selected]="p === filters().pkg">{{ p }}</option> }
+        </select>
+        @if (!isDefault()) { <button class="btn ghost sm" (click)="reset()">Reset</button> }
+      </div>
+      <p class="print-only scope">{{ summary() }}</p>
+      <p class="fresh num"><app-icon name="clock" [size]="14" />Data as of {{ fresh }} · sample data</p>
+    </div>
+
+    @if (result(); as r) {
+      @if (loading()) {
+        <span class="skeleton" style="width:min(560px,100%);height:18px"></span>
+      } @else {
+        <p class="finding">{{ r.finding }}</p>
+      }
+
+      <section class="kpi-strip" aria-label="Key figures">
+        @for (k of r.kpis; track k.label) {
+          <div class="kpi">
+            <span class="kpi-label">{{ k.label }}</span>
+            @if (loading()) {
+              <span class="skeleton" style="width:72px;height:30px;margin:3px 0"></span>
+            } @else {
+              <span class="kpi-value">
+                @if (k.value === null) {
+                  <span class="dash">—</span>
+                } @else {
+                  @if (k.prefix) { <span class="unit pre">{{ k.prefix.trim() }}</span> }
+                  <app-num [value]="k.value" [decimals]="k.decimals ?? 0" />
+                  @if (k.suffix) { <span class="unit">{{ k.suffix }}</span> }
+                }
+              </span>
+            }
+            <span class="kpi-caption">
+              @if (k.change) {
+                <span class="delta num" [class]="changeTone(k)">{{ changeText(k) }}</span> {{ k.change.vs }}
+              } @else {
+                {{ k.caption }}
+              }
+            </span>
+          </div>
+        }
+      </section>
+
+      <!-- The block that answers the report's question -->
+      <section class="card main-chart">
+        <div class="card-head">
+          <div>
+            <h2>{{ r.chartTitle }}</h2>
+            <p class="card-sub num">{{ r.chartSub }}</p>
+          </div>
+          @switch (r.chart.kind) {
+            @case ('bars') {
+              @if (r.chart.legend; as lg) {
+                <p class="legend"><span class="sw"></span>{{ lg[0] }}<span class="sw part"></span>{{ lg[1] }}</p>
+              }
+            }
+            @case ('lines') {
+              <p class="legend"><span class="sw line"></span>{{ r.chart.legend[0] }}<span class="sw line dashed"></span>{{ r.chart.legend[1] }}</p>
+            }
+          }
+        </div>
+        <div class="card-body">
+          @if (loading()) {
+            <div class="skeleton" style="width:100%;height:240px"></div>
+          } @else if (r.empty) {
+            <div class="empty">{{ r.emptyText }} <button class="btn sm no-print" (click)="reset()" [disabled]="isDefault()">Reset filters</button></div>
+          } @else {
+            @switch (r.chart.kind) {
+              @case ('bars') {
+                <app-bar-chart [data]="r.chart.data" [height]="240" [label]="r.chartTitle" />
+              }
+              @case ('lines') {
+                <app-line-chart [data]="r.chart.data" [compare]="r.chart.compare" [height]="240" [label]="r.chartTitle" />
+              }
+              @case ('hbars') {
+                <ul class="bar-list">
+                  @for (b of r.chart.rows; track b.label) {
+                    <li>
+                      <span class="name">{{ b.label }}</span>
+                      <span class="track"><span [style.width.%]="b.pct"></span></span>
+                      <span class="val num">{{ b.display }}</span>
+                      <span class="aside num">{{ b.sub ?? '' }}</span>
+                    </li>
+                  }
+                </ul>
+              }
+              @case ('ring') {
+                <div class="ring-wrap">
+                  <app-ring [segments]="r.chart.segments" [size]="168" [label]="r.chartTitle" />
+                  <div class="table-wrap">
+                    <table class="table legend-table">
+                      <thead>
+                        <tr>
+                          @for (h of r.chart.head; track h; let i = $index) { <th [class.num]="i > 0">{{ h }}</th> }
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (l of r.chart.legend; track l.label) {
+                          <tr>
+                            <td><span class="sw" [style.background]="l.colour"></span>{{ l.label }}</td>
+                            @for (v of l.cells; track $index) { <td class="num">{{ v }}</td> }
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              }
+            }
+          }
+        </div>
+      </section>
+
+      <!-- Breakdown: totals are summed from the rows shown -->
+      @if (table(); as t) {
+        <section class="card">
+          @if (r.tables.length > 1) {
+            <div class="tabs-head no-print"><app-tabs [tabs]="tabs()" [value]="t.id" (valueChange)="tableId.set($event)" /></div>
+          }
+          <div class="card-head">
+            <div>
+              <h2>{{ t.label }}</h2>
+              <p class="card-sub">{{ t.sub }}</p>
+            </div>
+          </div>
+          <div class="card-body">
+            @if (loading()) {
+              @for (i of [1, 2, 3, 4]; track i) { <div class="skeleton" style="width:100%;height:20px;margin:10px 0"></div> }
+            } @else if (!t.rows.length) {
+              <div class="empty">No {{ t.noun }} to show for {{ summary() }}. <button class="btn sm no-print" (click)="reset()" [disabled]="isDefault()">Reset filters</button></div>
+            } @else {
+              <div class="table-wrap">
+                <table class="table stack breakdown">
+                  <thead>
+                    <tr>
+                      @for (c of t.cols; track c.key) { <th [class.num]="isNum(c)">{{ c.label }}</th> }
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (row of t.rows; track $index) {
+                      <tr>
+                        @for (c of t.cols; track c.key; let first = $first) {
+                          @if (first) {
+                            <td>
+                              @if (row._link) { <a class="primary-cell name-link" [routerLink]="row._link">{{ cell(row, c) }}</a> }
+                              @else { <span class="primary-cell">{{ cell(row, c) }}</span> }
+                            </td>
+                            <td class="phone-only">{{ phoneLine(row, t.cols) }}</td>
+                          } @else {
+                            <td [class.num]="isNum(c)" [class.keep]="c.keep" [class.desk-only]="!c.keep" [class.dash]="cell(row, c) === '—'">{{ cell(row, c) }}</td>
+                          }
+                        }
+                      </tr>
+                    }
+                  </tbody>
+                  @if (t.total; as tot) {
+                    <tfoot>
+                      <tr>
+                        @for (c of t.cols; track c.key; let first = $first) {
+                          @if (first) { <td>{{ cell(tot, c) }}</td><td class="phone-only">{{ phoneLine(tot, t.cols) }}</td> }
+                          @else if (tot[c.key] === null) { <td [class.desk-only]="!c.keep"></td> }
+                          @else { <td [class.num]="isNum(c)" [class.keep]="c.keep" [class.desk-only]="!c.keep">{{ cell(tot, c) }}</td> }
+                        }
+                      </tr>
+                    </tfoot>
+                  }
+                </table>
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+      @if (r.footnote) {
+        <p class="footnote"><app-icon name="info" [size]="14" />{{ r.footnote }}</p>
+      }
+    }
+
+    <app-schedule-dialog [(open)]="scheduleOpen" [reportId]="d.id" [filters]="filters()" />
+  } @else {
+    <div class="title-row">
+      <div class="title-block">
+        <nav class="breadcrumb" aria-label="Breadcrumb"><a routerLink="/reports">Reports</a></nav>
+        <h1>Report not found</h1>
+        <p class="subline">There’s no report at “{{ id() }}”. It may have been renamed.</p>
+      </div>
+    </div>
+    <div class="empty">Pick a report from the list to see its figures. <a class="btn sm" routerLink="/reports">All reports</a></div>
+  }
+</div>

@@ -1,0 +1,357 @@
+<div class="page">
+  <div class="title-row">
+    <div class="title-block">
+      <h1>Inventory</h1>
+      <p class="subline num">{{ subline() }}</p>
+      @if (access.ro()) { <app-ro-note noun="devices and print QR labels" /> }
+    </div>
+    <div class="actions">
+      <button class="btn" (click)="export()" [disabled]="!rows().length"><app-icon name="download" />Export CSV</button>
+      @if (access.rw()) {
+        <button class="btn" (click)="openUpload()"><app-icon name="upload" />Bulk upload</button>
+        <button class="btn primary" (click)="openAdd()"><app-icon name="plus" />Add device</button>
+      }
+    </div>
+  </div>
+
+  <!-- Count cards are the status filter -->
+  <div class="count-cards" role="group" aria-label="Filter by status">
+    <button class="count-card" [class.selected]="status() === 'all'" (click)="status.set('all')" [attr.aria-pressed]="status() === 'all'">
+      <span class="cc-label">All devices</span>
+      <span class="cc-value">@if (loading()) { <span class="skeleton" style="width:40px;height:18px"></span> } @else { <app-num [value]="counts().all" /> }</span>
+    </button>
+    @for (s of statuses; track s) {
+      <button class="count-card" [class.selected]="status() === s" (click)="status.set(status() === s ? 'all' : s)" [attr.aria-pressed]="status() === s">
+        <span class="cc-label">{{ label[s] }}</span>
+        <span class="cc-value">@if (loading()) { <span class="skeleton" style="width:32px;height:18px"></span> } @else { <app-num [value]="counts()[s]" /> }</span>
+      </button>
+    }
+  </div>
+
+  <div class="list">
+    <div class="toolbar">
+      <div class="left">
+        <label class="search">
+          <app-icon name="search" />
+          <input class="input" type="search" placeholder="ID, IMEI, SIM, plate or customer" aria-label="Search devices"
+                 [value]="q()" (input)="q.set($any($event.target).value)" />
+        </label>
+        <label class="sr-only" for="inv-pkg">Package</label>
+        <select id="inv-pkg" class="select pkg" [value]="pkg()" (change)="pkg.set($any($event.target).value)">
+          <option value="all">All packages</option>
+          @for (p of packages; track p) { <option [value]="p">{{ p }}</option> }
+        </select>
+        @if (orgs.showOrg()) { <app-org-filter [(value)]="orgId" /> }
+      </div>
+      <div class="right">
+        <span class="count num">{{ rows().length }} {{ rows().length === 1 ? 'device' : 'devices' }}</span>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table stack">
+        <thead>
+          <tr>
+            <th>
+              <span class="id-cell">
+                <label class="check" title="Select this page">
+                  <input type="checkbox" aria-label="Select all devices on this page" [checked]="pageAllSelected()"
+                         [indeterminate]="pageSomeSelected()" [disabled]="loading() || !pageRows().length"
+                         (change)="togglePage($any($event.target).checked)" />
+                </label>
+                Device ID
+              </span>
+            </th>
+            @if (orgs.showOrg()) { <th class="desk-only">Organization</th> }
+            <th>Type</th>
+            <th>Customer</th>
+            <th>Package</th>
+            <th>Status</th>
+            <th>SIM SN / MSISDN</th>
+            <th class="num">Created</th>
+            <th><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) {
+              <tr>
+                <td><span class="id-cell"><span class="skeleton" style="width:16px;height:16px"></span><span><span class="skeleton" style="width:90px;height:14px"></span><span class="sub"><span class="skeleton" style="width:120px;height:10px"></span></span></span></span></td>
+                @if (orgs.showOrg()) { <td class="desk-only"><span class="skeleton" style="width:100px;height:14px"></span></td> }
+                <td class="desk-only"><span class="skeleton" style="width:90px;height:14px"></span></td>
+                <td class="desk-only"><span class="skeleton" style="width:140px;height:14px"></span></td>
+                <td class="desk-only"><span class="skeleton" style="width:60px;height:14px"></span></td>
+                <td class="keep"><span class="skeleton" style="width:64px;height:20px"></span></td>
+                <td class="desk-only"><span class="skeleton" style="width:150px;height:14px"></span></td>
+                <td class="desk-only"><span class="skeleton" style="width:80px;height:14px"></span></td>
+                <td></td>
+              </tr>
+            }
+          } @else {
+            @for (d of pageRows(); track d.id) {
+              <tr class="clickable" [class.picked]="selected().has(d.id)" (click)="openDetail(d.id)">
+                <td>
+                  <span class="id-cell">
+                    <label class="check" (click)="$event.stopPropagation()">
+                      <input type="checkbox" [attr.aria-label]="'Select ' + d.id" [checked]="selected().has(d.id)"
+                             (change)="toggle(d.id, $any($event.target).checked)" />
+                    </label>
+                    <span>
+                      <a class="primary-cell mono link" [routerLink]="['/devices', d.id]" (click)="$event.stopPropagation()">{{ d.id }}</a>
+                      <span class="sub mono desk-only">{{ d.imei }}</span>
+                    </span>
+                  </span>
+                </td>
+                <td class="phone-only">
+                  {{ d.type.name }} · {{ d.owner?.name ?? 'In stock' }}
+                </td>
+                @if (orgs.showOrg()) { <td class="desk-only"><app-org-tag [id]="d.orgId" /></td> }
+                <td class="desk-only">{{ d.type.name }}<span class="sub">{{ d.type.category }} · {{ d.type.make }}</span></td>
+                <td class="desk-only owner" (click)="$event.stopPropagation()">
+                  @if (d.owner; as o) {
+                    @if (ownerLinkable(o.link)) { <a class="link" [routerLink]="o.link" [queryParams]="o.query">{{ o.name }}</a> } @else { {{ o.name }} }
+                    <span class="sub">{{ o.kind }}@if (d.plate) { · {{ d.plate }} }</span>
+                  } @else {
+                    <span class="dash">—</span>
+                  }
+                </td>
+                <td class="desk-only">
+                  @if (d.package) { {{ d.package }} } @else { <span class="dash" title="Set when the device is allocated">—</span> }
+                </td>
+                <td class="keep"><span class="pill" [class]="d.status | tone">{{ label[d.status] }}</span></td>
+                <td class="desk-only">
+                  <span class="mono">{{ d.simSn || '—' }}</span>
+                  <span class="sub mono">{{ d.msisdn || '—' }}</span>
+                </td>
+                <td class="desk-only num">{{ d.createdAt | date }}</td>
+                <td class="actions-cell row-menu" (click)="$event.stopPropagation()">
+                  <app-menu [items]="menu(d)" [label]="'Actions for ' + d.id" />
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td [attr.colspan]="orgs.showOrg() ? 9 : 8" class="empty-row">
+                  <div class="empty">
+                    @if (q()) { No device matches “{{ q() }}” with these filters. }
+                    @else if (store.devices().length) { No {{ statusNoun() }}devices with these filters. }
+                    @else { No devices in stock yet. Add one or upload a CSV. }
+                    @if (store.devices().length) {
+                      <button class="btn sm" (click)="clearFilters()">Clear filters</button>
+                    } @else if (access.rw()) {
+                      <button class="btn sm" (click)="openUpload()">Bulk upload</button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (!loading() && rows().length) {
+      <app-pager [total]="rows().length" [size]="size()" [(page)]="page" noun="devices" />
+    }
+  </div>
+
+  <!-- Bulk action bar: rises in when rows are selected -->
+  <div class="bulk-bar" [class.show]="selected().size > 0" role="toolbar" aria-label="Bulk actions" [attr.aria-hidden]="selected().size === 0">
+    <span class="picked-count num"><strong>{{ selected().size }}</strong> selected</span>
+    <div class="bulk-actions">
+      @if (access.rw()) {
+      <button class="btn sm" [disabled]="!eligible().allocate" (click)="openAllocate()"
+              [title]="eligible().allocate ? '' : 'Only available devices can be allocated'">
+        <app-icon name="building" />Allocate @if (eligible().allocate && eligible().allocate < selected().size) { <span class="num">({{ eligible().allocate }})</span> }
+      </button>
+      <button class="btn sm" [disabled]="!eligible().faulty" (click)="apply('faulty')"><app-icon name="alert" />Mark faulty</button>
+      <button class="btn sm" [disabled]="!eligible().deactivate" (click)="apply('deactivate')"><app-icon name="power" />Deactivate</button>
+      <button class="btn sm" [disabled]="!eligible().stock" (click)="apply('stock')"><app-icon name="refresh" />Return to stock</button>
+      }
+      <a class="btn sm" routerLink="/qr-codes" [queryParams]="{ ids: selectedParam() }"><app-icon name="qr" />QR labels</a>
+    </div>
+    <button class="btn ghost icon sm" aria-label="Clear selection" (click)="clearSelection()"><app-icon name="x" /></button>
+  </div>
+</div>
+
+<!-- Allocate -->
+<app-dialog [(open)]="allocOpen" heading="Allocate to customer"
+            [subheading]="allocIds().length + (allocIds().length === 1 ? ' available device' : ' available devices')" width="460px">
+  <div class="stack-form">
+    <div class="field">
+      <label for="alloc-customer">Customer</label>
+      <select id="alloc-customer" class="select" [class.invalid]="allocTouched() && allocCustomer() == null"
+              [value]="allocCustomer() ?? ''" (change)="allocCustomer.set($any($event.target).value ? +$any($event.target).value : null)">
+        <option value="" disabled>Choose a customer</option>
+        @for (c of allocCustomers(); track c.id) {
+          <option [value]="c.id">{{ c.company }} · {{ c.package }}</option>
+        }
+      </select>
+      @if (allocTouched() && allocCustomer() == null) {
+        <span class="error">Choose who receives these devices.</span>
+      } @else {
+        <span class="hint">
+          Only active customers on a package that supports
+          @for (t of allocTypes(); track t.id; let last = $last) { {{ t.name }}{{ last ? '' : ', ' }} }
+          ({{ allocCustomers().length }}).
+        </span>
+      }
+    </div>
+    @if (!allocCustomers().length) {
+      <div class="notice"><app-icon name="info" />No active customer's package supports all of these device types. Allocate them in smaller groups.</div>
+    }
+  </div>
+  <ng-container slot="footer">
+    <button class="btn" (click)="allocOpen.set(false)">Cancel</button>
+    <button class="btn primary" [disabled]="!allocCustomers().length" (click)="allocate()">Allocate {{ allocIds().length }}</button>
+  </ng-container>
+</app-dialog>
+
+<!-- Device detail -->
+<app-dialog [(open)]="detailOpen" variant="drawer" [heading]="detail()?.id ?? ''"
+            [subheading]="detail() ? detail()!.type.name + ' · ' + label[detail()!.status] : ''" width="480px">
+  @if (detail(); as d) {
+    <dl class="dl drawer-dl">
+      <div><dt>Status</dt><dd><span class="pill" [class]="d.status | tone">{{ label[d.status] }}</span></dd></div>
+      <div><dt>Device type</dt><dd>{{ d.type.name }} <span class="muted">· {{ d.type.make }}</span></dd></div>
+      <div><dt>IMEI</dt><dd class="mono">{{ d.imei }}</dd></div>
+      <div><dt>Category</dt><dd>{{ d.type.category }}</dd></div>
+      <div class="sim"><dt>SIM serial number</dt><dd class="mono">@if (d.simSn) { {{ d.simSn }} } @else { <span class="dash">—</span> }</dd></div>
+      <div><dt>MSISDN</dt><dd class="mono">@if (d.msisdn) { {{ d.msisdn }} } @else { <span class="dash">—</span> }</dd></div>
+      <div>
+        <dt>Owner</dt>
+        <dd>
+          @if (d.owner; as o) {
+            @if (ownerLinkable(o.link)) { <a class="link" [routerLink]="o.link" [queryParams]="o.query" (click)="detailOpen.set(false)">{{ o.name }}</a> } @else { {{ o.name }} }
+          }
+          @else { <span class="dash">—</span> }
+        </dd>
+      </div>
+      <div><dt>Package</dt><dd>@if (d.package) { {{ d.package }} } @else { <span class="dash">—</span> }</dd></div>
+      <div><dt>Plate</dt><dd>@if (d.plate) { {{ d.plate }} } @else { <span class="dash">—</span> }</dd></div>
+      <div><dt>Last seen</dt><dd>@if (d.lastSeen) { {{ d.lastSeen | rel }} } @else { <span class="dash">—</span> }</dd></div>
+      <div><dt>Received</dt><dd class="num">{{ d.createdAt | date }}</dd></div>
+      <div><dt>Warranty</dt><dd class="num">{{ d.type.warrantyYears }} {{ d.type.warrantyYears === 1 ? 'year' : 'years' }}</dd></div>
+    </dl>
+
+    <h3 class="section-h">History</h3>
+    <ol class="timeline">
+      @for (e of history(); track $index; let first = $first) {
+        <li [class.now]="first">
+          <span class="marker" aria-hidden="true"></span>
+          <div>
+            <div class="ev-head"><span class="pill" [class]="e.status | tone">{{ label[e.status] }}</span><span class="muted num">{{ e.at | datetime }}</span></div>
+            <p>{{ e.note }}</p>
+            <p class="muted by">by {{ e.by }}</p>
+          </div>
+        </li>
+      }
+    </ol>
+  }
+  <ng-container slot="footer">
+    @if (detail(); as d) {
+      <a class="btn" style="margin-right:auto" [routerLink]="['/devices', d.id]" (click)="detailOpen.set(false)"><app-icon name="external" />Open device page</a>
+      @if (access.rw() && can(d, 'faulty')) { <button class="btn" (click)="apply('faulty', [d.id])">Mark faulty</button> }
+      @if (access.rw() && can(d, 'stock')) { <button class="btn" (click)="apply('stock', [d.id])">Return to stock</button> }
+      @if (access.rw() && can(d, 'allocate')) { <button class="btn primary" (click)="detailOpen.set(false); openAllocate([d.id])">Allocate</button> }
+    }
+  </ng-container>
+</app-dialog>
+
+<!-- Add device -->
+<app-dialog [(open)]="addOpen" heading="Add device" subheading="It goes into stock as Available." width="560px">
+  <form class="two-col" (submit)="$event.preventDefault(); addDevice()" novalidate id="add-device-form">
+    <div class="field">
+      <label for="add-id">Device ID<span class="req">*</span></label>
+      <input id="add-id" class="input mono" autocomplete="off" maxlength="20" placeholder="DEV-20001"
+             [class.invalid]="addTried() && addErrors().id" [value]="form.id()" (input)="form.id.set($any($event.target).value)" />
+      @if (addTried() && addErrors().id) { <span class="error">{{ addErrors().id }}</span> }
+    </div>
+    <div class="field">
+      <label for="add-imei">IMEI<span class="req">*</span></label>
+      <input id="add-imei" class="input mono" inputmode="numeric" autocomplete="off" maxlength="15" placeholder="15 digits"
+             [class.invalid]="addTried() && addErrors().imei" [value]="form.imei()" (input)="form.imei.set($any($event.target).value)" />
+      @if (addTried() && addErrors().imei) { <span class="error">{{ addErrors().imei }}</span> }
+      @else { <span class="hint num">{{ form.imei().length }}/15 digits</span> }
+    </div>
+    <div class="field full">
+      <label for="add-type">Device type<span class="req">*</span></label>
+      <select id="add-type" class="select" [class.invalid]="addTried() && addErrors().type"
+              [value]="form.typeId() ?? ''" (change)="form.typeId.set($any($event.target).value ? +$any($event.target).value : null)">
+        <option value="" disabled>Choose a type</option>
+        @for (t of store.deviceTypes(); track t.id) {
+          <option [value]="t.id">{{ t.name }} · {{ t.make }} {{ t.category }}</option>
+        }
+      </select>
+      @if (addTried() && addErrors().type) { <span class="error">{{ addErrors().type }}</span> }
+    </div>
+    <div class="field">
+      <label for="add-sim">SIM serial number</label>
+      <input id="add-sim" class="input mono" inputmode="numeric" autocomplete="off" maxlength="20"
+             [class.invalid]="addTried() && addErrors().sim" [value]="form.simSn()" (input)="form.simSn.set($any($event.target).value)" />
+      @if (addTried() && addErrors().sim) { <span class="error">{{ addErrors().sim }}</span> } @else { <span class="hint">Optional. Add it when the SIM is fitted.</span> }
+    </div>
+    <div class="field">
+      <label for="add-msisdn">MSISDN</label>
+      <input id="add-msisdn" class="input mono" inputmode="tel" autocomplete="off" maxlength="16" placeholder="971501234567"
+             [class.invalid]="addTried() && addErrors().msisdn" [value]="form.msisdn()" (input)="form.msisdn.set($any($event.target).value)" />
+      @if (addTried() && addErrors().msisdn) { <span class="error">{{ addErrors().msisdn }}</span> } @else { <span class="hint">Optional</span> }
+    </div>
+  </form>
+  <ng-container slot="footer">
+    <button class="btn" (click)="addOpen.set(false)">Cancel</button>
+    <button class="btn primary" type="submit" form="add-device-form">Add device</button>
+  </ng-container>
+</app-dialog>
+
+<!-- Bulk upload -->
+<app-dialog [(open)]="uploadOpen" heading="Bulk upload devices" subheading="Valid rows go into stock as Available; rows with errors are skipped." width="760px">
+  <label class="drop" [class.over]="dragging()" (dragover)="$event.preventDefault(); dragging.set(true)" (dragleave)="dragging.set(false)" (drop)="onDrop($event)">
+    <input type="file" accept=".csv,text/csv" class="sr-only" (change)="onPick($event)" />
+    <app-icon name="upload" [size]="20" />
+    <span><strong>Drop a CSV here</strong> or <span class="link">choose a file</span></span>
+    <span class="muted small">Columns: <span class="mono">{{ importColumns.join(', ') }}</span> · up to 2 MB</span>
+  </label>
+  <div class="drop-foot">
+    <button class="btn ghost sm" (click)="downloadTemplate()"><app-icon name="download" />Download template</button>
+    @if (fileName()) { <span class="muted">{{ fileName() }}</span> }
+  </div>
+
+  @if (fileError()) {
+    <div class="inline-error file-error"><app-icon name="circle-x" />{{ fileError() }}</div>
+  }
+
+  @if (importRows().length) {
+    <div class="preview-head">
+      <span class="num"><strong>{{ validRows().length }}</strong> ready · <span [class.neg]="badRows().length">{{ badRows().length }} with errors</span></span>
+      @if (badRows().length) { <button class="btn ghost sm" (click)="downloadErrors()"><app-icon name="download" />Rows with errors</button> }
+    </div>
+    <div class="table-wrap preview">
+      <table class="table">
+        <thead>
+          <tr><th class="num">Line</th><th>Device ID / type</th><th>IMEI</th><th>SIM SN / MSISDN</th><th>Check</th></tr>
+        </thead>
+        <tbody>
+          @for (r of importRows(); track r.line) {
+            <tr>
+              <td class="num muted">{{ r.line }}</td>
+              <td><span class="mono">{{ r.deviceId || '—' }}</span><span class="sub">{{ r.type || '—' }}</span></td>
+              <td class="mono">{{ r.imei || '—' }}</td>
+              <td><span class="mono">{{ r.simSn || '—' }}</span><span class="sub mono">{{ r.msisdn || '—' }}</span></td>
+              <td class="wrap check-cell">
+                @if (r.errors.length) {
+                  <ul class="err-list">@for (e of r.errors; track e) { <li>{{ e }}</li> }</ul>
+                } @else { <span class="ok"><app-icon name="check" [size]="14" />Ready</span> }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+  <ng-container slot="footer">
+    <button class="btn" (click)="uploadOpen.set(false)">Cancel</button>
+    <button class="btn primary" [disabled]="!validRows().length" (click)="importValid()">
+      Import {{ validRows().length || '' }} {{ validRows().length === 1 ? 'device' : 'devices' }}
+    </button>
+  </ng-container>
+</app-dialog>

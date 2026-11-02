@@ -1,0 +1,191 @@
+<div class="page">
+  <div class="title-row">
+    <div class="title-block">
+      <h1>Device types</h1>
+      <p class="subline num">{{ subline() }}</p>
+      @if (!w.rw()) { <app-ro-note noun="device types" /> }
+    </div>
+    <div class="actions">
+      <button class="btn" (click)="export()" [disabled]="!rows().length"><app-icon name="download" />Export CSV</button>
+      @if (w.rw()) { <button class="btn primary" (click)="openAdd()"><app-icon name="plus" />Add device type</button> }
+    </div>
+  </div>
+
+  <div class="list">
+    <div class="toolbar">
+      <div class="left">
+        <label class="search">
+          <app-icon name="search" />
+          <input class="input" type="search" placeholder="Model, make, package or sensor" aria-label="Search device types"
+                 [value]="q()" (input)="q.set($any($event.target).value)" />
+        </label>
+      </div>
+      <div class="right">
+        <span class="count num">{{ rows().length }} {{ rows().length === 1 ? 'type' : 'types' }}</span>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table stack">
+        <thead>
+          <tr>
+            <th>Device type</th>
+            <th>Category</th>
+            <th>Packages</th>
+            <th class="num">Warranty</th>
+            <th>Connected sensors</th>
+            <th class="num">Unit price</th>
+            <th>Data sheet</th>
+            <th><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (i of [1, 2, 3, 4, 5]; track i) {
+              <tr>
+                <td><span class="skeleton" style="width:130px;height:14px"></span><span class="sub"><span class="skeleton" style="width:70px;height:10px"></span></span></td>
+                <td><span class="skeleton" style="width:60px;height:14px"></span></td>
+                <td><span class="skeleton" style="width:150px;height:14px"></span></td>
+                <td class="num"><span class="skeleton" style="width:40px;height:14px"></span></td>
+                <td><span class="skeleton" style="width:180px;height:14px"></span></td>
+                <td class="num"><span class="skeleton" style="width:70px;height:14px"></span></td>
+                <td><span class="skeleton" style="width:110px;height:14px"></span></td>
+                <td></td>
+              </tr>
+            }
+          } @else {
+            @for (t of pageRows(); track t.id) {
+              <tr [class.clickable]="w.rw()" (click)="w.rw() && openEdit(t)">
+                <td>
+                  <span class="primary-cell">{{ t.name }}</span>
+                  <span class="sub">{{ t.make }} · <span class="num">{{ t.devices }}</span> devices</span>
+                </td>
+                <td class="phone-only">{{ t.category }} · {{ fmtMoney(t.unitPrice) }} · {{ t.packages.join(', ') }}</td>
+                <td class="desk-only">{{ t.category }}</td>
+                <td class="wrap pk desk-only">{{ t.packages.join(', ') }}</td>
+                <td class="num desk-only">{{ t.warrantyYears }} {{ t.warrantyYears === 1 ? 'year' : 'years' }}</td>
+                <td class="wrap sensors desk-only">
+                  @if (t.sensorNames.length) { {{ t.sensorNames.join(', ') }} } @else { <span class="dash">—</span> }
+                </td>
+                <td class="num desk-only">{{ fmtMoney(t.unitPrice) }}</td>
+                <td class="desk-only" (click)="$event.stopPropagation()">
+                  @if (t.dataSheet) {
+                    <a class="link sheet" href="#" (click)="$event.preventDefault()" [title]="t.dataSheet"><app-icon name="file" [size]="14" />{{ t.dataSheet }}</a>
+                  } @else {
+                    <span class="dash">—</span>
+                  }
+                </td>
+                <td class="actions-cell row-menu" (click)="$event.stopPropagation()">
+                  @if (w.rw()) { <app-menu [items]="menu(t)" [label]="'Actions for ' + t.name" /> }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="8" class="empty-row">
+                  <div class="empty">
+                    @if (q()) {
+                      No device type matches “{{ q() }}”.
+                      <button class="btn sm" (click)="q.set('')">Clear search</button>
+                    } @else {
+                      No device types yet.
+                      @if (w.rw()) { Add the first model you stock. <button class="btn sm" (click)="openAdd()">Add device type</button> }
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (!loading() && rows().length > size()) {
+      <app-pager [total]="rows().length" [size]="size()" [(page)]="page" noun="device types" />
+    }
+  </div>
+</div>
+
+<app-dialog [(open)]="formOpen" [heading]="draft().id == null ? 'Add device type' : 'Edit ' + draft().name"
+            subheading="Customers can only be allocated devices whose type supports their package." width="640px">
+  <form class="form" (submit)="$event.preventDefault(); save()" id="dt-form" novalidate>
+    <div class="form-grid two">
+      <div class="field">
+        <label for="dt-name">Model name<span class="req">*</span></label>
+        <input id="dt-name" class="input" maxlength="60" [value]="draft().name" (input)="patch({ name: $any($event.target).value })"
+               [class.invalid]="submitted() && errors().name" />
+        @if (submitted() && errors().name) { <span class="error">{{ errors().name }}</span> }
+      </div>
+      <div class="field">
+        <label for="dt-make">Make<span class="req">*</span></label>
+        <input id="dt-make" class="input" [value]="draft().make" (input)="patch({ make: $any($event.target).value })"
+               [class.invalid]="submitted() && errors().make" />
+        @if (submitted() && errors().make) { <span class="error">{{ errors().make }}</span> }
+      </div>
+      <div class="field">
+        <label for="dt-cat">Category<span class="req">*</span></label>
+        <select id="dt-cat" class="select" [value]="draft().category" (change)="patch({ category: $any($event.target).value })">
+          <option value="Gateway">Gateway</option>
+          <option value="Dashcam">Dashcam</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="dt-warranty">Warranty (years)<span class="req">*</span></label>
+        <input id="dt-warranty" class="input num" type="number" min="0" max="10" step="1" [value]="draft().warrantyYears"
+               (input)="patch({ warrantyYears: $any($event.target).value })" [class.invalid]="submitted() && errors().warranty" />
+        @if (submitted() && errors().warranty) { <span class="error">{{ errors().warranty }}</span> }
+      </div>
+      <div class="field">
+        <label for="dt-price">Unit price (AED)<span class="req">*</span></label>
+        <input id="dt-price" class="input num" type="number" min="0" step="1" [value]="draft().unitPrice"
+               (input)="patch({ unitPrice: $any($event.target).value })" [class.invalid]="submitted() && errors().price" />
+        @if (submitted() && errors().price) { <span class="error">{{ errors().price }}</span> }
+      </div>
+      <div class="field">
+        <label for="dt-sheet">Data sheet</label>
+        <input id="dt-sheet" class="input" placeholder="FMC130_datasheet.pdf" [value]="draft().dataSheet ?? ''"
+               (input)="patch({ dataSheet: $any($event.target).value })" />
+        <span class="hint">Optional. PDF, JPG or PNG up to 5 MB.</span>
+      </div>
+
+      <fieldset class="field full">
+        <legend class="label">Packages<span class="req">*</span></legend>
+        <div class="checks">
+          @for (p of packages; track p) {
+            <label class="check">
+              <input type="checkbox" [checked]="draft().packages.includes(p)" (change)="toggle('packages', p, $any($event.target).checked)" />
+              {{ p }}
+            </label>
+          }
+        </div>
+        @if (submitted() && errors().packages) { <span class="error">{{ errors().packages }}</span> }
+      </fieldset>
+
+      <fieldset class="field full">
+        <legend class="label">Connected sensors<span class="req">*</span></legend>
+        <div class="checks">
+          @for (s of store.sensors(); track s.key) {
+            <label class="check">
+              <input type="checkbox" [checked]="draft().sensors.includes(s.key)" (change)="toggle('sensors', s.key, $any($event.target).checked)" />
+              {{ s.name }}
+            </label>
+          } @empty {
+            <span class="hint">No sensors defined. Add them under Sensors first.</span>
+          }
+        </div>
+        @if (submitted() && errors().sensors) { <span class="error">{{ errors().sensors }}</span> }
+      </fieldset>
+    </div>
+  </form>
+  <ng-container slot="footer">
+    <button class="btn" type="button" (click)="formOpen.set(false)">Cancel</button>
+    <button class="btn primary" type="submit" form="dt-form">{{ draft().id == null ? 'Add device type' : 'Save changes' }}</button>
+  </ng-container>
+</app-dialog>
+
+<app-dialog [(open)]="confirmOpen" [heading]="'Delete ' + (toDelete()?.name ?? '') + '?'" width="440px">
+  <p class="confirm-body">No devices use this type. It stops appearing in the Add device and hardware order forms.</p>
+  <ng-container slot="footer">
+    <button class="btn" (click)="confirmOpen.set(false)">Keep it</button>
+    <button class="btn danger" (click)="runDelete()">Delete</button>
+  </ng-container>
+</app-dialog>

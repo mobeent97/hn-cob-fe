@@ -1,0 +1,590 @@
+<div class="page">
+  <div class="title-row">
+    <div class="title-block">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a routerLink="/customers">Customers</a><span aria-hidden="true">/</span>
+        @if (existing(); as c) { <a [routerLink]="['/customers', c.id]">{{ c.company }}</a><span aria-hidden="true">/</span><span>Onboarding</span> }
+        @else { <span>New customer</span> }
+      </nav>
+      <h1>{{ existing() ? companyName() : (general.controls.company.value.trim() || 'New customer') }}</h1>
+      @if (!notFound()) {
+        <p class="subline num">
+          @if (done() === 9) { Onboarding complete · editing {{ steps[step()] }} }
+          @else { {{ done() }} of 9 sections complete · next: {{ steps[done()] }} }
+        </p>
+      }
+    </div>
+    <div class="actions">
+      @if (customerId(); as cid) {
+        <a class="btn" [routerLink]="['/customers', cid]">Save and exit</a>
+      } @else {
+        <a class="btn" routerLink="/customers">Cancel</a>
+      }
+    </div>
+  </div>
+
+  @if (notFound()) {
+    <div class="empty">
+      There's no customer with the ID “{{ id() }}”. It may have been deleted.
+      <a class="btn sm" routerLink="/customers">Back to customers</a>
+    </div>
+  } @else if (loading()) {
+    <div class="wizard">
+      <div class="rail">
+        <span class="skeleton" style="width:110px;height:14px"></span>
+        <span class="skeleton" style="width:100%;height:6px;margin:10px 0 14px"></span>
+        @for (i of [1, 2, 3, 4, 5, 6, 7, 8, 9]; track i) {
+          <span class="skeleton rail-sk" style="width:80%;height:16px"></span>
+        }
+      </div>
+      <div class="card panel-card">
+        <div class="card-body">
+          <span class="skeleton" style="width:180px;height:20px"></span>
+          <div class="form-grid" style="margin-top:24px">
+            @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+              <div class="field"><span class="skeleton" style="width:90px;height:14px"></span><span class="skeleton" style="width:100%;height:34px"></span></div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="wizard">
+      <!-- Step rail: completed sections can be revisited; later ones unlock in order -->
+      <nav class="rail" aria-label="Onboarding sections">
+        <div class="rail-progress">
+          <span class="num"><strong>{{ done() }}</strong> of 9 complete</span>
+          <div class="meter" aria-hidden="true"><span [style.width.%]="(done() / 9) * 100"></span></div>
+        </div>
+        <ol>
+          @for (s of steps; track s; let i = $index) {
+            <li>
+              <button type="button" class="rail-step" [attr.data-state]="stepState(i)" [disabled]="i > done()"
+                      [attr.aria-current]="i === step() ? 'step' : null" (click)="go(i)">
+                <span class="marker num">
+                  @if (i < done()) { <app-icon name="check" [size]="12" [stroke]="2.4" /> } @else { {{ i + 1 }} }
+                </span>
+                <span class="rail-label">{{ s }}</span>
+              </button>
+            </li>
+          }
+        </ol>
+      </nav>
+
+      <div class="stage" [attr.data-dir]="dir()" [class.moving]="moved()">
+        @for (s of [step()]; track s) {
+          <section class="card panel-card panel" [class.shake]="shake()" animate.enter="slide-in" animate.leave="slide-out"
+                   [attr.aria-labelledby]="'step-h-' + s">
+            <div class="card-head">
+              <div>
+                <p class="step-kicker num">Section {{ s + 1 }} of 9</p>
+                <h2 [id]="'step-h-' + s">{{ steps[s] }}</h2>
+              </div>
+            </div>
+            <div class="card-body">
+              @switch (s) {
+                <!-- 1 ─ General details -->
+                @case (0) {
+                  <form [formGroup]="general" (ngSubmit)="saveAndContinue()" novalidate>
+                    <h3 class="group-h">Customer information</h3>
+                    <div class="form-grid">
+                      <div class="field">
+                        <label for="company">Company name<span class="req">*</span></label>
+                        <input id="company" class="input" formControlName="company" maxlength="60" autocomplete="organization" [class.invalid]="bad(general.controls.company)" />
+                        @if (err(general.controls.company, 'the company name'); as e) { <span class="error">{{ e }}</span> }
+                      </div>
+                      <div class="field">
+                        <label for="group">Group name<span class="req">*</span></label>
+                        <input id="group" class="input" formControlName="group" maxlength="60" [class.invalid]="bad(general.controls.group)" />
+                        @if (err(general.controls.group, 'a group name'); as e) { <span class="error">{{ e }}</span> } @else { <span class="hint">Used as the tenant name on the fleet platform.</span> }
+                      </div>
+                      <div class="field">
+                        <label for="industry">Industry<span class="req">*</span></label>
+                        <select id="industry" class="select" formControlName="industry" [class.invalid]="bad(general.controls.industry)">
+                          <option value="" disabled>Choose an industry</option>
+                          @for (x of store.industries; track x) { <option [value]="x">{{ x }}</option> }
+                        </select>
+                        @if (err(general.controls.industry, 'an industry'); as e) { <span class="error">Choose an industry.</span> }
+                      </div>
+
+                      <div class="field">
+                        <label for="country">Country<span class="req">*</span></label>
+                        <select id="country" class="select" formControlName="countryCode" [class.invalid]="bad(general.controls.countryCode)">
+                          <option value="" disabled>Choose a country</option>
+                          @for (c of countryOptions(); track c.code) { <option [value]="c.code">{{ c.name }}</option> }
+                        </select>
+                        @if (err(general.controls.countryCode, 'a country')) { <span class="error">Choose a country.</span> }
+                      </div>
+                      <div class="field">
+                        <label for="zone">Zone<span class="req">*</span></label>
+                        <select id="zone" class="select" formControlName="zone" [class.invalid]="bad(general.controls.zone)">
+                          <option value="" disabled>{{ country() ? 'Choose a zone' : 'Choose a country first' }}</option>
+                          @for (z of zonesFor(); track z) { <option [value]="z">{{ z }}</option> }
+                        </select>
+                        @if (err(general.controls.zone, 'a zone')) { <span class="error">Choose a zone.</span> }
+                      </div>
+                      <div class="field">
+                        <label for="currency">Currency</label>
+                        <input id="currency" class="input" [value]="currency() || '—'" readonly tabindex="-1" />
+                        <span class="hint">Set by the country.</span>
+                      </div>
+
+                      <div class="field org-row">
+                        @if (pickOrg()) {
+                          <label for="org">Organization<span class="req">*</span></label>
+                          <div class="org-line">
+                            <select id="org" class="select" [value]="orgChoice() ?? ''" (change)="orgChoice.set(+$any($event.target).value || null)"
+                                    [class.invalid]="submitted() && !orgChoice()" [disabled]="!orgOptions().length">
+                              @if (!orgOptions().length) { <option value="">No organization serves this country</option> }
+                              @for (o of orgOptions(); track o.id) { <option [value]="o.id" [selected]="o.id === orgChoice()">{{ o.name }}{{ o.kind === 'Platform' ? ' (direct)' : '' }}</option> }
+                            </select>
+                            @if (orgUsage(); as u) {
+                              <span class="hint num" [class.limit]="u.full">
+                                @if (u.max != null) { {{ u.used }} of {{ u.max }} customers used{{ u.full ? ' · limit reached' : '' }} } @else { {{ u.used }} customers · no limit }
+                              </span>
+                            }
+                          </div>
+                          <span class="hint">{{ country() ? 'Organizations that onboard business customers in ' + country()!.name + '.' : 'Choose a country to see which organizations serve it.' }}</span>
+                        } @else if (targetOrg(); as o) {
+                          <span class="label">Organization</span>
+                          <div class="org-line">
+                            <span class="org-fixed"><app-org-tag [id]="o.id" /></span>
+                            @if (orgUsage(); as u) {
+                              @if (u.max != null && !existing() && customerId() === null) {
+                                <span class="hint num" [class.limit]="u.full">{{ u.used }} of {{ u.max }} customers used{{ u.full ? ' · limit reached' : '' }}</span>
+                              }
+                            }
+                          </div>
+                        }
+                      </div>
+
+                      <div class="field">
+                        <label for="phone">Phone<span class="req">*</span></label>
+                        <div class="input-group">
+                          <select class="select" formControlName="phoneDial" aria-label="Dial code">
+                            @for (c of store.countries; track c.code) { <option [value]="c.dial">{{ c.dial }}</option> }
+                          </select>
+                          <input id="phone" class="input num" formControlName="phone" inputmode="tel" autocomplete="tel-national" [class.invalid]="bad(general.controls.phone)" />
+                        </div>
+                        @if (err(general.controls.phone, 'a phone number', 'Use 7 to 15 digits, without the dial code.'); as e) { <span class="error">{{ e }}</span> }
+                      </div>
+                      <div class="field">
+                        <label for="email">Company email<span class="req">*</span></label>
+                        <input id="email" class="input" type="email" formControlName="email" autocomplete="email" [class.invalid]="bad(general.controls.email)" />
+                        @if (err(general.controls.email, 'the company email', 'Enter an email like fleet@company.com.'); as e) { <span class="error">{{ e }}</span> }
+                      </div>
+                      <div class="field">
+                        <label for="website">Website<span class="req">*</span></label>
+                        <input id="website" class="input" type="url" formControlName="website" placeholder="https://" [class.invalid]="bad(general.controls.website)" />
+                        @if (err(general.controls.website, 'the website', 'Start with https:// and include the domain.'); as e) { <span class="error">{{ e }}</span> }
+                      </div>
+
+                      <div class="field">
+                        <label for="cr">CR number<span class="req">*</span></label>
+                        <input id="cr" class="input mono" formControlName="crNumber" maxlength="60" [class.invalid]="bad(general.controls.crNumber)" />
+                        @if (err(general.controls.crNumber, 'the commercial registration number'); as e) { <span class="error">{{ e }}</span> }
+                      </div>
+                      <div class="field">
+                        <label for="expiry">Contract expiry<span class="req">*</span></label>
+                        <input id="expiry" class="input num" type="date" formControlName="contractExpiry" [min]="today" [class.invalid]="bad(general.controls.contractExpiry)" />
+                        @if (err(general.controls.contractExpiry, 'the contract expiry date'); as e) { <span class="error">{{ e }}</span> }
+                      </div>
+                    </div>
+
+                    <h3 class="group-h rule">Single point of contact</h3>
+                    <div class="form-grid">
+                      <div class="field">
+                        <label for="first">First name<span class="req">*</span></label>
+                        <input id="first" class="input" formControlName="firstName" autocomplete="given-name" [class.invalid]="bad(general.controls.firstName)" />
+                        @if (err(general.controls.firstName, 'a first name'); as e) { <span class="error">{{ e }}</span> }
+                      </div>
+                      <div class="field">
+                        <label for="last">Last name<span class="req">*</span></label>
+                        <input id="last" class="input" formControlName="lastName" autocomplete="family-name" [class.invalid]="bad(general.controls.lastName)" />
+                        @if (err(general.controls.lastName, 'a last name'); as e) { <span class="error">{{ e }}</span> }
+                      </div>
+                      <div class="field">
+                        <label for="qid">Q-ID or passport<span class="req">*</span></label>
+                        <input id="qid" class="input mono" formControlName="qid" [class.invalid]="bad(general.controls.qid)" />
+                        @if (err(general.controls.qid, 'a Q-ID or passport number', 'Use 6 to 20 letters, digits or dashes.'); as e) { <span class="error">{{ e }}</span> }
+                      </div>
+                      <div class="field">
+                        <label for="cemail">Email<span class="req">*</span></label>
+                        <input id="cemail" class="input" type="email" formControlName="contactEmail" [class.invalid]="bad(general.controls.contactEmail)" />
+                        @if (err(general.controls.contactEmail, 'the contact email', 'Enter an email like name@company.com.'); as e) { <span class="error">{{ e }}</span> }
+                      </div>
+                      <div class="field">
+                        <label for="cphone">Phone<span class="req">*</span></label>
+                        <div class="input-group">
+                          <select class="select" formControlName="contactDial" aria-label="Dial code">
+                            @for (c of store.countries; track c.code) { <option [value]="c.dial">{{ c.dial }}</option> }
+                          </select>
+                          <input id="cphone" class="input num" formControlName="contactPhone" inputmode="tel" [class.invalid]="bad(general.controls.contactPhone)" />
+                        </div>
+                        @if (err(general.controls.contactPhone, 'a phone number', 'Use 7 to 15 digits, without the dial code.'); as e) { <span class="error">{{ e }}</span> }
+                      </div>
+                      <fieldset class="field groups">
+                        <legend class="label">User groups</legend>
+                        <div class="check-row">
+                          @for (g of userGroupOptions; track g) {
+                            <label class="check">
+                              <input type="checkbox" [checked]="general.controls.userGroups.value.includes(g)" (change)="toggleGroup(g, $any($event.target).checked)" />{{ g }}
+                            </label>
+                          }
+                        </div>
+                      </fieldset>
+                    </div>
+                  </form>
+                }
+
+                <!-- 2 ─ Documents -->
+                @case (1) {
+                  <label class="drop" [class.over]="dragging()" (dragover)="$event.preventDefault(); dragging.set(true)"
+                         (dragleave)="dragging.set(false)" (drop)="onDrop($event)">
+                    <input type="file" class="sr-only" multiple accept=".pdf,.jpg,.jpeg,.png" (change)="onPick($event)" />
+                    <app-icon name="upload" [size]="20" />
+                    <span><strong>Drop files here</strong> or <span class="link">browse</span></span>
+                    <span class="hint">Trade licence, signed contract, ID copies · PDF, JPG or PNG up to 5 MB each</span>
+                  </label>
+                  @for (r of rejected(); track r) {
+                    <p class="inline-error file-error"><app-icon name="circle-x" />{{ r }}</p>
+                  }
+                  @if (docs().length) {
+                    <div class="table-wrap">
+                      <table class="table stack doc-table">
+                        <thead><tr><th>File</th><th>Kind</th><th class="num">Size</th><th class="num">Added</th><th><span class="sr-only">Remove</span></th></tr></thead>
+                        <tbody>
+                          @for (d of docs(); track d.id) {
+                            <tr>
+                              <td><span class="file-name"><app-icon name="file" />{{ d.name }}</span></td>
+                              <td class="phone-only">{{ d.kind }} · {{ fmtSize(d.sizeKb) }}</td>
+                              <td class="desk-only">
+                                <label class="sr-only" [for]="'kind-' + d.id">Kind of {{ d.name }}</label>
+                                <select class="select kind" [id]="'kind-' + d.id" (change)="setKind(d.id, $any($event.target).value)">
+                                  @for (k of docKinds; track k) { <option [value]="k" [selected]="k === d.kind">{{ k }}</option> }
+                                </select>
+                              </td>
+                              <td class="num desk-only">{{ fmtSize(d.sizeKb) }}</td>
+                              <td class="num desk-only">{{ d.uploadedAt | date }}</td>
+                              <td class="row-menu keep-right">
+                                <button type="button" class="btn ghost icon sm" [attr.aria-label]="'Remove ' + d.name" (click)="removeDoc(d)"><app-icon name="trash" /></button>
+                              </td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  } @else {
+                    <div class="empty">No documents yet. Most customers send the trade licence and the signed contract first.</div>
+                  }
+                }
+
+                <!-- 3 ─ Package -->
+                @case (2) {
+                  <div class="choice-grid four" role="radiogroup" aria-label="Package">
+                    @for (p of packageCards(); track p.id) {
+                      <button type="button" class="choice" role="radio" [attr.aria-checked]="pkg() === p.name" [class.selected]="pkg() === p.name" (click)="choosePackage(p.name)">
+                        <span class="choice-top">
+                          <span class="choice-title">{{ p.name }}</span>
+                          <span class="radio" aria-hidden="true"></span>
+                        </span>
+                        <span class="price num"><strong>{{ fmtMoney(p.monthlyPrice, 'AED') }}</strong> <span class="muted">per device / month</span></span>
+                        <span class="muted desc">{{ p.description }}</span>
+                        <ul class="feat-list">
+                          @for (f of p.feats.slice(0, 5); track f) { <li><app-icon name="check" [size]="13" />{{ f }}</li> }
+                          @if (p.feats.length > 5) { <li class="more num">and {{ p.feats.length - 5 }} more</li> }
+                        </ul>
+                        <span class="choice-foot num">{{ p.feats.length }} features · {{ p.devices }} device types</span>
+                      </button>
+                    }
+                  </div>
+                  <p class="hint-line">Changing the package resets the features to its defaults and removes devices it doesn't support.</p>
+                }
+
+                <!-- 4 ─ Customer type -->
+                @case (3) {
+                  <div class="choice-grid three" role="radiogroup" aria-label="Customer type">
+                    @for (t of customerTypes; track t.id) {
+                      <button type="button" class="choice" role="radio" [attr.aria-checked]="customerType() === t.id" [class.selected]="customerType() === t.id" (click)="chooseType(t.id)">
+                        <span class="choice-top"><span class="choice-title">{{ t.title }}</span><span class="radio" aria-hidden="true"></span></span>
+                        <span class="muted desc">{{ t.body }}</span>
+                      </button>
+                    }
+                  </div>
+                  <h3 class="group-h rule">Billing</h3>
+                  <div class="form-grid">
+                    <fieldset class="field">
+                      <legend class="label">Account</legend>
+                      <div class="seg" role="radiogroup" aria-label="Billing">
+                        @for (b of ['Billable', 'POC']; track b) {
+                          <button type="button" role="radio" [attr.aria-checked]="billing() === b" [class.on]="billing() === b" (click)="billing.set($any(b))">{{ b === 'POC' ? 'Proof of concept' : b }}</button>
+                        }
+                      </div>
+                    </fieldset>
+                    @if (billing() === 'Billable') {
+                      <fieldset class="field">
+                        <legend class="label">Billing cycle</legend>
+                        <div class="seg" role="radiogroup" aria-label="Billing cycle">
+                          @for (c of ['Monthly', 'Quarterly', 'Annual']; track c) {
+                            <button type="button" role="radio" [attr.aria-checked]="cycle() === c" [class.on]="cycle() === c" (click)="cycle.set($any(c))">{{ c }}</button>
+                          }
+                        </div>
+                      </fieldset>
+                    } @else {
+                      <div class="field"><span class="label">Billing cycle</span><span class="hint pad">Not billed during the proof of concept.</span></div>
+                    }
+                  </div>
+                }
+
+                <!-- 5 ─ Features -->
+                @case (4) {
+                  <div class="feat-head">
+                    <p class="muted num">{{ features().size }} of {{ featureTotal() }} {{ pkg() }} features on</p>
+                    <button type="button" class="btn sm" (click)="resetFeatures()">Reset to package defaults</button>
+                  </div>
+                  <div class="feat-groups">
+                    @for (g of featureGroups(); track g.id) {
+                      <div class="feat-group">
+                        <h3>{{ g.name }}</h3>
+                        @for (f of g.features; track f.id) {
+                          <label class="toggle feat-row">
+                            <span>{{ f.name }}</span>
+                            <input type="checkbox" [checked]="features().has(f.id)" (change)="toggleFeature(f.id, $any($event.target).checked)" />
+                          </label>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+
+                <!-- 6 ─ Admins -->
+                @case (5) {
+                  @if (admins().length) {
+                    <div class="table-wrap">
+                      <table class="table stack">
+                        <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th><span class="sr-only">Remove</span></th></tr></thead>
+                        <tbody>
+                          @for (a of admins(); track a.email; let first = $first) {
+                            <tr>
+                              <td><span class="primary-cell">{{ a.name }}</span>@if (first) { <span class="sub">Super admin</span> }</td>
+                              <td class="phone-only">{{ a.email }} · {{ a.phone }}</td>
+                              <td class="desk-only">{{ a.email }}</td>
+                              <td class="desk-only"><span class="num">{{ a.phone }}</span></td>
+                              <td class="row-menu keep-right">
+                                <button type="button" class="btn ghost icon sm" [attr.aria-label]="'Remove ' + a.name" (click)="removeAdmin(a)"><app-icon name="trash" /></button>
+                              </td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  } @else {
+                    <div class="empty">No admins yet. The first admin becomes the customer's super admin and gets the sign-in invitation.</div>
+                  }
+
+                  <form class="tray add-admin" [formGroup]="adminForm" (ngSubmit)="addAdmin()" novalidate>
+                    <div class="tray-head">
+                      <h3>Add an admin</h3>
+                      <button type="button" class="btn ghost sm" (click)="useContactAsAdmin()">Use the contact person</button>
+                    </div>
+                    <div class="form-grid">
+                      <div class="field">
+                        <label for="a-name">Full name<span class="req">*</span></label>
+                        <input id="a-name" class="input" formControlName="name" [class.invalid]="adminErr(adminForm.controls.name, 'x')" />
+                        @if (adminErr(adminForm.controls.name, 'a name'); as e) { <span class="error">{{ e }}</span> }
+                      </div>
+                      <div class="field">
+                        <label for="a-email">Email<span class="req">*</span></label>
+                        <input id="a-email" class="input" type="email" formControlName="email" [class.invalid]="adminErr(adminForm.controls.email, 'x')" />
+                        @if (adminErr(adminForm.controls.email, 'an email', 'Enter an email like name@company.com.'); as e) { <span class="error">{{ e }}</span> }
+                      </div>
+                      <div class="field">
+                        <label for="a-phone">Phone<span class="req">*</span></label>
+                        <div class="input-group">
+                          <select class="select" formControlName="dial" aria-label="Dial code">
+                            @for (c of store.countries; track c.code) { <option [value]="c.dial">{{ c.dial }}</option> }
+                          </select>
+                          <input id="a-phone" class="input num" formControlName="phone" inputmode="tel" [class.invalid]="adminErr(adminForm.controls.phone, 'x')" />
+                        </div>
+                        @if (adminErr(adminForm.controls.phone, 'a phone number', 'Use 7 to 15 digits, without the dial code.'); as e) { <span class="error">{{ e }}</span> }
+                      </div>
+                    </div>
+                    <div class="tray-foot"><button type="submit" class="btn"><app-icon name="plus" />Add admin</button></div>
+                  </form>
+                }
+
+                <!-- 7 ─ Hardware -->
+                @case (6) {
+                  @if (assigned().length || onOrder().length) {
+                    <div class="have">
+                      <app-icon name="cpu" />
+                      <span class="num">
+                        {{ assigned().length }} {{ assigned().length === 1 ? 'device' : 'devices' }} already assigned
+                        @if (onOrder().length) { · {{ onOrderUnits() }} on order ({{ onOrder().length }} {{ onOrder().length === 1 ? 'order' : 'orders' }}) }
+                      </span>
+                    </div>
+                  }
+                  <div class="hw">
+                    <div class="hw-block">
+                      <h3 class="group-h">Order new devices</h3>
+                      <p class="muted small">Device types the {{ pkg() }} package supports. Orders ship to the address in the next section.</p>
+                      <table class="table hw-table">
+                        <thead><tr><th>Device type</th><th class="num">Unit price</th><th class="num">In stock</th><th class="num">Quantity</th></tr></thead>
+                        <tbody>
+                          @for (t of allowedTypes(); track t.id) {
+                            <tr>
+                              <td><span class="primary-cell">{{ t.name }}</span><span class="sub">{{ t.make }} · {{ t.category }}</span></td>
+                              <td class="num">{{ fmtMoney(t.unitPrice, 'AED') }}</td>
+                              <td class="num">{{ stockByType().get(t.id) ?? 0 }}</td>
+                              <td class="num">
+                                <input class="input num qty" type="number" min="0" max="999" [attr.aria-label]="'Quantity of ' + t.name"
+                                       [value]="qty()[t.id] ?? 0" (input)="setQty(t.id, $any($event.target).value)" />
+                              </td>
+                            </tr>
+                          }
+                        </tbody>
+                        @if (orderUnits()) {
+                          <tfoot><tr><td>To order</td><td class="num" colspan="2">{{ fmtMoney(orderTotal(), 'AED') }}</td><td class="num">{{ orderUnits() }}</td></tr></tfoot>
+                        }
+                      </table>
+                    </div>
+
+                    <div class="hw-block">
+                      <div class="hw-head">
+                        <h3 class="group-h">Allocate from stock</h3>
+                        <span class="muted num">{{ picked().size }} selected · {{ stock().length }} available</span>
+                      </div>
+                      @if (stock().length) {
+                        <ul class="stock-list">
+                          @for (d of stock(); track d.id) {
+                            <li>
+                              <label class="check">
+                                <input type="checkbox" [checked]="picked().has(d.id)" (change)="togglePick(d.id, $any($event.target).checked)" />
+                                <span class="mono">{{ d.id }}</span>
+                              </label>
+                              <span class="muted">{{ typeName(d.typeId) }}</span>
+                              <span class="mono muted imei">{{ d.imei }}</span>
+                            </li>
+                          }
+                        </ul>
+                      } @else {
+                        <div class="empty">No {{ pkg() }} devices in stock. Order them on the left instead.</div>
+                      }
+                    </div>
+                  </div>
+                }
+
+                <!-- 8 ─ Shipment & installation -->
+                @case (7) {
+                  <form [formGroup]="shipment" (ngSubmit)="saveAndContinue()" novalidate>
+                    <div class="form-grid">
+                      <div class="field full">
+                        <label for="addr">Delivery address<span class="req">*</span></label>
+                        <textarea id="addr" class="textarea" formControlName="address" maxlength="600" rows="3" [class.invalid]="bad(shipment.controls.address)"></textarea>
+                        @if (err(shipment.controls.address, 'the delivery address'); as e) { <span class="error">{{ e }}</span> }
+                        @else if (onOrder().length) { <span class="hint num">{{ onOrder().length }} open {{ onOrder().length === 1 ? 'order ships' : 'orders ship' }} here.</span> }
+                      </div>
+                      <div class="field">
+                        <label for="pdate">Preferred date<span class="req">*</span></label>
+                        <input id="pdate" class="input num" type="date" formControlName="preferredDate" [min]="today" [class.invalid]="bad(shipment.controls.preferredDate)" />
+                        @if (err(shipment.controls.preferredDate, 'a preferred date'); as e) { <span class="error">{{ e }}</span> }
+                      </div>
+                      <div class="field span-2">
+                        <span class="label">Installation</span>
+                        <label class="toggle pad"><input type="checkbox" formControlName="installation" />A technician installs the devices on site</label>
+                      </div>
+                      @if (installation()) {
+                        <div class="field">
+                          <label for="icontact">Installation contact<span class="req">*</span></label>
+                          <input id="icontact" class="input" formControlName="contactName" [class.invalid]="bad(shipment.controls.contactName)" />
+                          @if (err(shipment.controls.contactName, 'a contact name'); as e) { <span class="error">{{ e }}</span> }
+                        </div>
+                        <div class="field">
+                          <label for="iphone">Contact phone<span class="req">*</span></label>
+                          <div class="input-group">
+                            <select class="select" formControlName="contactDial" aria-label="Dial code">
+                              @for (c of store.countries; track c.code) { <option [value]="c.dial">{{ c.dial }}</option> }
+                            </select>
+                            <input id="iphone" class="input num" formControlName="contactPhone" inputmode="tel" [class.invalid]="bad(shipment.controls.contactPhone)" />
+                          </div>
+                          @if (err(shipment.controls.contactPhone, 'a phone number', 'Use 7 to 15 digits, without the dial code.'); as e) { <span class="error">{{ e }}</span> }
+                        </div>
+                      }
+                      <div class="field full">
+                        <label for="note">Note for the courier</label>
+                        <textarea id="note" class="textarea" formControlName="courierNote" maxlength="300" rows="2" placeholder="Gate number, loading bay, working hours"></textarea>
+                      </div>
+                    </div>
+                  </form>
+                }
+
+                <!-- 9 ─ Branding -->
+                @case (8) {
+                  <div class="brand">
+                    <div class="brand-form">
+                      <div class="field">
+                        <span class="label">Brand colour</span>
+                        <div class="swatches" role="radiogroup" aria-label="Brand colour">
+                          @for (sw of swatches; track sw) {
+                            <button type="button" class="swatch" role="radio" [style.background]="sw" [attr.aria-checked]="colour() === sw" [attr.aria-label]="sw" (click)="setColour(sw)">
+                              @if (colour() === sw) { <app-icon name="check" [size]="14" [stroke]="2.4" /> }
+                            </button>
+                          }
+                        </div>
+                        <div class="colour-row">
+                          <input type="color" class="picker" [value]="colour()" (input)="setColour($any($event.target).value)" aria-label="Pick any colour" />
+                          <input class="input mono hex" [value]="colourText()" (input)="setColour($any($event.target).value.trim())" aria-label="Hex value" [class.invalid]="submitted() && !colour()" />
+                        </div>
+                      </div>
+                      <div class="field">
+                        <label for="ptitle">Portal page title</label>
+                        <input id="ptitle" class="input" [value]="pageTitle()" (input)="pageTitle.set($any($event.target).value)" maxlength="60" />
+                      </div>
+                      <div class="field">
+                        <span class="label">Logo</span>
+                        <div class="logo-row">
+                          <label class="btn"><app-icon name="upload" />{{ logo() ? 'Replace logo' : 'Upload logo' }}
+                            <input type="file" class="sr-only" accept=".png,.jpg,.jpeg,.svg" (change)="onLogo($event)" />
+                          </label>
+                          @if (logo(); as l) {
+                            <span class="muted ellipsis">{{ l.name }}</span>
+                            <button type="button" class="btn ghost sm" (click)="clearLogo()">Remove</button>
+                          }
+                        </div>
+                        @if (logoError(); as e) { <span class="error">{{ e }}</span> } @else { <span class="hint">PNG, JPG or SVG up to 2 MB. A wide logo on a transparent background works best.</span> }
+                      </div>
+                    </div>
+
+                    <figure class="preview" aria-label="Portal preview">
+                      <div class="pv-bar" [style.background]="colour()">
+                        @if (logo(); as l) { <img [src]="l.url" alt="Logo preview" /> }
+                        @else { <span class="pv-mark">{{ initials() }}</span> }
+                        <span class="pv-title">{{ pageTitle() || general.controls.company.value }}</span>
+                      </div>
+                      <div class="pv-body">
+                        <span class="pv-line w60"></span><span class="pv-line w40"></span>
+                        <span class="pv-btn" [style.background]="colour()">Track fleet</span>
+                      </div>
+                      <figcaption class="muted">How the customer's portal header will look</figcaption>
+                    </figure>
+                  </div>
+                }
+              }
+
+              @if (stepError(); as e) {
+                <p class="inline-error step-error" role="alert"><app-icon name="alert" />{{ e }}</p>
+              }
+            </div>
+
+            <footer class="panel-foot">
+              <button type="button" class="btn" (click)="back()" [disabled]="s === 0"><app-icon name="arrow-left" />Back</button>
+              <button type="button" class="btn primary" (click)="saveAndContinue()">
+                {{ nextLabel() }}@if (s < 8 || done() < 9) { <app-icon name="arrow-right" /> }
+              </button>
+            </footer>
+          </section>
+        }
+      </div>
+    </div>
+  }
+</div>

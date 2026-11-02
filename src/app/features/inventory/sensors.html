@@ -1,0 +1,131 @@
+<div class="page">
+  <div class="title-row">
+    <div class="title-block">
+      <h1>Sensors &amp; features</h1>
+      <p class="subline num">
+        {{ store.sensors().length }} defined ·
+        @if (unused()) { {{ unused() }} not on any device type yet } @else { all in use by a device type }
+      </p>
+      @if (!w.rw()) { <app-ro-note noun="sensors" /> }
+    </div>
+    <div class="actions">
+      <button class="btn" (click)="export()" [disabled]="!rows().length"><app-icon name="download" />Export CSV</button>
+      @if (w.rw()) { <button class="btn primary" (click)="openAdd()"><app-icon name="plus" />Add sensor</button> }
+    </div>
+  </div>
+
+  <div class="list">
+    <div class="toolbar">
+      <div class="left">
+        <label class="search">
+          <app-icon name="search" />
+          <input class="input" type="search" placeholder="Name or key" aria-label="Search sensors"
+                 [value]="q()" (input)="q.set($any($event.target).value)" />
+        </label>
+      </div>
+      <div class="right">
+        <span class="count num">{{ rows().length }} {{ rows().length === 1 ? 'sensor' : 'sensors' }}</span>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table stack">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Key</th>
+            <th class="num">Device types</th>
+            <th>Used by</th>
+            <th><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (i of [1, 2, 3, 4, 5]; track i) {
+              <tr>
+                <td><span class="skeleton" style="width:130px;height:14px"></span></td>
+                <td><span class="skeleton" style="width:160px;height:14px"></span></td>
+                <td class="num"><span class="skeleton" style="width:20px;height:14px"></span></td>
+                <td><span class="skeleton" style="width:220px;height:14px"></span></td>
+                <td></td>
+              </tr>
+            }
+          } @else {
+            @for (s of pageRows(); track s.id) {
+              <tr [class.clickable]="w.rw()" (click)="w.rw() && openEdit(s)">
+                <td><span class="primary-cell">{{ s.name }}</span></td>
+                <td class="phone-only"><span class="mono">{{ s.key }}</span> · <span class="num">{{ s.types.length }}</span> {{ s.types.length === 1 ? 'type' : 'types' }}</td>
+                <td class="desk-only"><span class="mono">{{ s.key }}</span></td>
+                <td class="num desk-only">{{ s.types.length }}</td>
+                <td class="desk-only wrap used">
+                  @if (s.types.length) { {{ s.types.join(', ') }} } @else { <span class="dash">—</span> }
+                </td>
+                <td class="actions-cell row-menu" (click)="$event.stopPropagation()">
+                  @if (w.rw()) { <app-menu [items]="menu(s)" [label]="'Actions for ' + s.name" /> }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="empty-row">
+                  <div class="empty">
+                    @if (q()) {
+                      No sensor matches “{{ q() }}”.
+                      <button class="btn sm" (click)="q.set('')">Clear search</button>
+                    } @else {
+                      No sensors yet.
+                      @if (w.rw()) { Add the first capability a device can report. <button class="btn sm" (click)="openAdd()">Add sensor</button> }
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (!loading() && rows().length > size()) {
+      <app-pager [total]="rows().length" [size]="size()" [(page)]="page" noun="sensors" />
+    }
+  </div>
+</div>
+
+<app-dialog [(open)]="formOpen" [heading]="editing() ? 'Edit ' + editing()!.name : 'Add sensor or feature'" width="460px">
+  <form class="form" id="sensor-form" (submit)="$event.preventDefault(); save()" novalidate>
+    <div class="field">
+      <label for="s-name">Name<span class="req">*</span></label>
+      <input id="s-name" class="input" maxlength="60" placeholder="Door sensor" [value]="name()" (input)="setName($any($event.target).value)"
+             [class.invalid]="submitted() && errors().name" />
+      @if (submitted() && errors().name) { <span class="error">{{ errors().name }}</span> }
+    </div>
+    <div class="field">
+      <label for="s-key">Key<span class="req">*</span></label>
+      <input id="s-key" class="input mono" maxlength="60" placeholder="has_door_sensor" spellcheck="false" autocapitalize="off"
+             [value]="key()" (input)="setKey($any($event.target).value)"
+             [class.invalid]="(submitted() || keyTouched()) && errors().key" />
+      @if ((submitted() || keyTouched()) && errors().key) {
+        <span class="error">{{ errors().key }}</span>
+      } @else {
+        <span class="hint">The flag the device reports. Lower-case, starts with has_.</span>
+      }
+    </div>
+    @if (renameCount()) {
+      <div class="notice">
+        <app-icon name="info" />
+        <span>{{ renameCount() }} device {{ renameCount() === 1 ? 'type uses' : 'types use' }} this key. They switch to the new key when you save.</span>
+      </div>
+    }
+  </form>
+  <ng-container slot="footer">
+    <button class="btn" type="button" (click)="formOpen.set(false)">Cancel</button>
+    <button class="btn primary" type="submit" form="sensor-form">{{ editing() ? 'Save changes' : 'Add sensor' }}</button>
+  </ng-container>
+</app-dialog>
+
+<app-dialog [(open)]="confirmOpen" [heading]="'Delete ' + (toDelete()?.name ?? '') + '?'" width="440px">
+  <p class="confirm-body">No device type uses it. It disappears from the device type form.</p>
+  <ng-container slot="footer">
+    <button class="btn" (click)="confirmOpen.set(false)">Keep it</button>
+    <button class="btn danger" (click)="runDelete()">Delete</button>
+  </ng-container>
+</app-dialog>

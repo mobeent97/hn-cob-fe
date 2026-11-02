@@ -1,0 +1,184 @@
+<div class="page">
+  <div class="title-row">
+    <div class="title-block">
+      <h1>Vouchers</h1>
+      <p class="subline num">
+        @if (expiringSoon()) { {{ expiringSoon() }} active {{ expiringSoon() === 1 ? 'voucher expires' : 'vouchers expire' }} within 14 days · }
+        {{ redemptions() }} redemptions across {{ store.vouchers().length }} codes
+      </p>
+      @if (!w.rw()) { <app-ro-note noun="vouchers" /> }
+    </div>
+    <div class="actions">
+      @if (w.rw()) { <button class="btn primary" (click)="add()"><app-icon name="plus" />New voucher</button> }
+    </div>
+  </div>
+
+  <div class="list">
+    <app-tabs [tabs]="tabs()" [(value)]="view" />
+
+    <div class="toolbar">
+      <div class="left">
+        <label class="search">
+          <app-icon name="search" />
+          <input class="input" type="search" placeholder="Code or use case" aria-label="Search vouchers"
+                 [value]="q()" (input)="q.set($any($event.target).value)" />
+        </label>
+      </div>
+      <div class="right">
+        <span class="count num">{{ rows().length }} {{ rows().length === 1 ? 'voucher' : 'vouchers' }}</span>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table stack">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th class="num">Discount</th>
+            <th class="num">Min spend</th>
+            <th class="num">Max spend</th>
+            <th>Use case</th>
+            <th class="num">Created</th>
+            <th class="num">Expires</th>
+            <th class="num">Redemptions</th>
+            <th>Status</th>
+            <th><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (i of [1, 2, 3, 4]; track i) {
+              <tr>
+                <td><span class="skeleton" style="width:110px;height:14px"></span></td>
+                <td class="num"><span class="skeleton" style="width:32px;height:14px"></span></td>
+                <td class="num"><span class="skeleton" style="width:70px;height:14px"></span></td>
+                <td class="num"><span class="skeleton" style="width:80px;height:14px"></span></td>
+                <td><span class="skeleton" style="width:150px;height:14px"></span></td>
+                <td><span class="skeleton" style="width:80px;height:14px"></span></td>
+                <td><span class="skeleton" style="width:80px;height:14px"></span></td>
+                <td class="num"><span class="skeleton" style="width:20px;height:14px"></span></td>
+                <td><span class="skeleton" style="width:54px;height:20px"></span></td>
+                <td></td>
+              </tr>
+            }
+          } @else {
+            @for (v of pageRows(); track v.id) {
+              <tr>
+                <td>
+                  <span class="mono primary-cell">{{ v.code }}</span>
+                  <span class="sub phone-sub">{{ v.discountPct }}% off · {{ v.useCase }}</span>
+                </td>
+                <td class="phone-only num">
+                  AED {{ v.minSpend | n }}–{{ v.maxSpend | n }} ·
+                  <span [class.warn]="soon(v)">until {{ v.expiresAt | date }}</span> · {{ v.redemptions }} used
+                </td>
+                <td class="num desk-only">{{ v.discountPct }}%</td>
+                <td class="num desk-only">AED {{ v.minSpend | n }}</td>
+                <td class="num desk-only">AED {{ v.maxSpend | n }}</td>
+                <td class="desk-only">{{ v.useCase }}</td>
+                <td class="num desk-only">{{ v.createdAt | date }}</td>
+                <td class="num desk-only" [class.warn]="soon(v)">
+                  {{ v.expiresAt | date }}
+                  @if (soon(v)) { <span class="sub">in {{ daysFrom(v.expiresAt) }} days</span> }
+                </td>
+                <td class="num desk-only">{{ v.redemptions }}</td>
+                <td class="keep"><span class="pill" [class]="v.state | tone">{{ v.state }}</span></td>
+                <td class="actions-cell row-menu" (click)="$event.stopPropagation()">
+                  @if (editable(v)) {
+                    <app-menu [items]="menu(v)" [label]="'Actions for ' + v.code" />
+                  } @else if (w.rw() && v.orgId == null) {
+                    <span class="muted" title="Platform vouchers are managed by HyperNym">Shared</span>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="10" class="empty-row">
+                  <div class="empty">
+                    @if (q()) { No voucher matches “{{ q() }}” in this view. <button class="btn sm" (click)="q.set('')">Clear search</button> }
+                    @else if (view() === 'Active') { No voucher can be redeemed right now. @if (w.rw()) { <button class="btn sm" (click)="add()">New voucher</button> } }
+                    @else { No {{ view() === 'All' ? '' : view().toLowerCase() }} vouchers. }
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (!loading() && rows().length) {
+      <app-pager [total]="rows().length" [size]="size()" [(page)]="page" noun="vouchers" />
+    }
+  </div>
+</div>
+
+<app-dialog [(open)]="open" [heading]="editing() ? 'Edit ' + editing()!.code : 'New voucher'"
+            subheading="The discount applies to the first invoice when the spend falls between the limits." width="560px">
+  <div class="form-grid two">
+    <div class="field full">
+      <label for="v-code">Code<span class="req">*</span></label>
+      <div class="code-row">
+        <input id="v-code" class="input mono" maxlength="16" autocomplete="off" spellcheck="false"
+               [value]="draft().code" [readonly]="locked()"
+               (input)="codeIn($event)"
+               [class.invalid]="tried() && errors().code" />
+        <button class="btn" type="button" (click)="generate()" [disabled]="locked()"><app-icon name="sparkles" />Generate code</button>
+      </div>
+      @if (tried() && errors().code) { <span class="error">{{ errors().code }}</span> }
+      @else if (locked()) { <span class="hint">Redeemed {{ editing()!.redemptions }} times, so the code and terms can't change. You can extend the expiry.</span> }
+      @else { <span class="hint">4–16 capital letters and digits.</span> }
+    </div>
+
+    <div class="field">
+      <label for="v-pct">Discount<span class="req">*</span></label>
+      <div class="input-group">
+        <input id="v-pct" class="input num" type="number" min="1" max="90" step="1" [readonly]="locked()"
+               [value]="draft().discountPct ?? ''" (input)="set('discountPct', numIn($event))" [class.invalid]="tried() && errors().discountPct" />
+        <span class="suffix">%</span>
+      </div>
+      @if (tried() && errors().discountPct) { <span class="error">{{ errors().discountPct }}</span> }
+    </div>
+
+    <div class="field">
+      <label for="v-uc">Use case<span class="req">*</span></label>
+      <select id="v-uc" class="select" [value]="draft().useCase" [disabled]="locked()" (change)="set('useCase', $any($event.target).value)"
+              [class.invalid]="tried() && errors().useCase">
+        @for (u of store.useCases(); track u.id) { <option [value]="u.name">{{ u.name }}</option> }
+      </select>
+      @if (tried() && errors().useCase) { <span class="error">{{ errors().useCase }}</span> }
+    </div>
+
+    <div class="field">
+      <label for="v-min">Minimum spend<span class="req">*</span></label>
+      <div class="input-group">
+        <span class="prefix">AED</span>
+        <input id="v-min" class="input num" type="number" min="0" step="100" [readonly]="locked()"
+               [value]="draft().minSpend ?? ''" (input)="set('minSpend', numIn($event))" [class.invalid]="tried() && errors().minSpend" />
+      </div>
+      @if (tried() && errors().minSpend) { <span class="error">{{ errors().minSpend }}</span> }
+    </div>
+
+    <div class="field">
+      <label for="v-max">Maximum spend<span class="req">*</span></label>
+      <div class="input-group">
+        <span class="prefix">AED</span>
+        <input id="v-max" class="input num" type="number" min="0" step="100" [readonly]="locked()"
+               [value]="draft().maxSpend ?? ''" (input)="set('maxSpend', numIn($event))" [class.invalid]="tried() && errors().maxSpend" />
+      </div>
+      @if (tried() && errors().maxSpend) { <span class="error">{{ errors().maxSpend }}</span> }
+    </div>
+
+    <div class="field">
+      <label for="v-exp">Expires on<span class="req">*</span></label>
+      <input id="v-exp" class="input num" type="date" [value]="draft().expiresAt" (input)="set('expiresAt', $any($event.target).value)"
+             [class.invalid]="tried() && errors().expiresAt" />
+      @if (tried() && errors().expiresAt) { <span class="error">{{ errors().expiresAt }}</span> }
+      @else if (draft().expiresAt) { <span class="hint num">{{ daysFrom(draft().expiresAt) }} days from today</span> }
+    </div>
+  </div>
+  <ng-container slot="footer">
+    <button class="btn" (click)="open.set(false)">Cancel</button>
+    <button class="btn primary" (click)="save()">{{ editing() ? 'Save voucher' : 'Create voucher' }}</button>
+  </ng-container>
+</app-dialog>

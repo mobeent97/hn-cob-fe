@@ -1,0 +1,308 @@
+<div class="page">
+  <div class="title-row">
+    <div class="title-block">
+      <h1>Fleet health</h1>
+      @if (loading()) { <span class="skeleton" style="width:420px;height:14px;margin:3px 0"></span> }
+      @else { <p class="subline num">{{ finding() }}</p> }
+      @if (!w.rw() && !loading()) { <app-ro-note noun="fleet health" /> }
+    </div>
+    <div class="actions">
+      <span class="hub-line" title="IoT Hub">
+        <app-icon name="radar" />
+        <span class="mono">{{ hub().hubName }}</span>
+        <span class="muted">· {{ hub().region }} · {{ hub().tier }} × {{ hub().units }}</span>
+      </span>
+      <a class="btn" routerLink="/commands"><app-icon name="send" />Commands</a>
+    </div>
+  </div>
+
+  <section class="kpi-strip" aria-label="Key figures">
+    <div class="kpi">
+      <span class="kpi-label">Connected now</span>
+      @if (loading()) { <span class="skeleton" style="width:64px;height:30px;margin:3px 0"></span> }
+      @else { <span class="kpi-value"><app-num [value]="connected()" /></span> }
+      <span class="kpi-caption num">of {{ fmtNum(live().length) }} live devices · {{ connectedPct() }}%</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-label">Messages today</span>
+      @if (loading()) { <span class="skeleton" style="width:110px;height:30px;margin:3px 0"></span> }
+      @else { <span class="kpi-value"><app-num [value]="messagesToday()" /></span> }
+      <span class="kpi-caption num">{{ quotaPct() }}% of {{ compact(hub().dailyQuota) }} quota · {{ compact(projected()) }} projected at today's pace</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-label">Config in sync</span>
+      @if (loading()) { <span class="skeleton" style="width:72px;height:30px;margin:3px 0"></span> }
+      @else { <span class="kpi-value"><app-num [value]="twinStates().pct" [decimals]="1" /><span class="unit">%</span></span> }
+      <span class="kpi-caption num">{{ fmtNum(twinStates().inSync) }} of {{ fmtNum(twinStates().profiled) }} live twins with a profile · {{ twinStates().pending }} pending</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-label">Commands failed</span>
+      @if (loading()) { <span class="skeleton" style="width:32px;height:30px;margin:3px 0"></span> }
+      @else { <span class="kpi-value"><app-num [value]="failed24().length" /></span> }
+      <span class="kpi-caption num">of {{ commands24().length }} sent in the last 24 h · {{ timedOut24() }} timed out</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-label">C2D queued</span>
+      @if (loading()) { <span class="skeleton" style="width:40px;height:30px;margin:3px 0"></span> }
+      @else { <span class="kpi-value"><app-num [value]="c2dTotal()" /></span> }
+      <span class="kpi-caption num">messages for {{ c2dDevices().length }} offline {{ c2dDevices().length === 1 ? 'device' : 'devices' }}</span>
+    </div>
+  </section>
+
+  <div class="grid">
+    <!-- The screen's question: is the fleet reporting? -->
+    <section class="card span-8">
+      <div class="card-head">
+        <div>
+          <h2>Device-to-cloud messages per hour</h2>
+          <p class="card-sub num">
+            Last 24 hours · {{ fmtNum(messagesToday()) }} since 00:00 ·
+            busiest hour {{ peak().label }}:00 with {{ fmtNum(peak().value) }}
+          </p>
+        </div>
+      </div>
+      <div class="card-body">
+        @if (loading()) {
+          <div class="skeleton" style="width:100%;height:240px"></div>
+        } @else {
+          <app-bar-chart [data]="hourly()" [height]="240" label="Device-to-cloud messages per hour, last 24 hours" />
+          <p class="legend"><span class="sw"></span>Complete hour <span class="sw part"></span>{{ nowLabel }}:00–{{ nowTime }}, in progress</p>
+        }
+      </div>
+    </section>
+
+    <section class="card span-4 quota">
+      <div class="card-head">
+        <div>
+          <h2>Daily quota</h2>
+          <p class="card-sub">{{ hub().tier }} × {{ hub().units }} {{ hub().units === 1 ? 'unit' : 'units' }} · {{ compact(hub().dailyQuota / hub().units) }} messages per unit a day</p>
+        </div>
+      </div>
+      <div class="card-body">
+        @if (loading()) {
+          <span class="skeleton" style="width:180px;height:24px"></span>
+          <span class="skeleton" style="width:100%;height:6px;margin-top:12px"></span>
+        } @else {
+          <p class="ratio num"><strong>{{ compact(messagesToday()) }}</strong><span class="muted">&nbsp;of {{ compact(hub().dailyQuota) }} today</span></p>
+          <div class="meter" role="meter" [attr.aria-valuenow]="messagesToday()" aria-valuemin="0" [attr.aria-valuemax]="hub().dailyQuota"
+               [attr.aria-label]="'Messages today against the daily quota'">
+            <span [style.width.%]="quotaPct()"></span>
+          </div>
+          <div class="meter-ends num muted"><span>0</span><span>{{ compact(hub().dailyQuota) }}</span></div>
+        }
+        <dl class="facts">
+          <div>
+            <dt>Projected for the day</dt>
+            <dd class="num">{{ fmtNum(projected()) }} <span class="muted">· {{ projectedPct() }}% of quota</span></dd>
+            <dd class="muted small">at today's pace of {{ fmtNum(pace()) }} an hour since 00:00</dd>
+          </div>
+          <div>
+            <dt>Throttled today</dt>
+            <dd class="num">{{ hub().throttledToday }} <span class="muted">messages</span></dd>
+          </div>
+        </dl>
+        <button class="link size-link" (click)="sizeOpen.set(true)">Size the hub</button>
+      </div>
+    </section>
+
+    <!-- What needs a look -->
+    <section class="card span-8">
+      <div class="card-head">
+        <div>
+          <h2>Needs a look</h2>
+          <p class="card-sub num">
+            {{ lookCounts().error }} config errors · {{ lookCounts().attest }} attestation failures ·
+            {{ lookCounts().offline }} sold devices offline over 24 h · {{ lookCounts().c2d }} with queued C2D
+          </p>
+        </div>
+        @if (look().length > 6) {
+          <button class="btn ghost sm" (click)="lookAll.set(!lookAll())">{{ lookAll() ? 'Show fewer' : 'View all ' + look().length }}</button>
+        }
+      </div>
+      <div class="card-body">
+        @if (loading()) {
+          @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+            <div class="look-skel"><span class="skeleton" style="width:280px;height:14px"></span><span class="skeleton" style="width:200px;height:10px"></span></div>
+          }
+        } @else if (look().length) {
+          <table class="table stack look">
+            <tbody>
+              @for (i of lookShown(); track i.key) {
+                <tr>
+                  <td class="dev"><a class="link mono" [routerLink]="['/devices', i.deviceId]">{{ i.deviceId }}</a></td>
+                  <td class="wrap what">
+                    <span class="primary-cell">{{ i.title }}</span>
+                    <span class="sub">{{ i.detail }}</span>
+                  </td>
+                  <td class="keep act">
+                    @switch (i.kind) {
+                      @case ('error') {
+                        @if (w.rw()) { <button class="btn sm" (click)="retryConfig(i.deviceId)"><app-icon name="refresh" />Retry</button> }
+                        @else { <a class="btn sm" [routerLink]="['/devices', i.deviceId]">Open device</a> }
+                      }
+                      @case ('c2d') { <a class="btn sm" routerLink="/commands" [queryParams]="{ tab: 'Queued', q: i.deviceId }">View queue</a> }
+                      @default { <a class="btn sm" [routerLink]="['/devices', i.deviceId]">Open device</a> }
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        } @else {
+          <div class="empty">Every live device is connected, configured and has nothing queued.</div>
+        }
+      </div>
+    </section>
+
+    <section class="card span-4">
+      <div class="card-head">
+        <div>
+          <h2>Connection by transport</h2>
+          <p class="card-sub">Live devices, by how they reach the hub</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <table class="table transport">
+          <thead>
+            <tr><th>Transport</th><th class="num">Devices</th><th class="num">Connected</th><th class="num">%</th></tr>
+          </thead>
+          <tbody>
+            @for (r of byTransport(); track r.transport) {
+              <tr>
+                <td>{{ r.transport }}</td>
+                @if (loading()) {
+                  <td class="num"><span class="skeleton" style="width:28px;height:14px"></span></td>
+                  <td class="num"><span class="skeleton" style="width:28px;height:14px"></span></td>
+                  <td class="num"><span class="skeleton" style="width:36px;height:14px"></span></td>
+                } @else {
+                  <td class="num">{{ fmtNum(r.devices) }}</td>
+                  <td class="num">{{ fmtNum(r.connected) }}</td>
+                  <td class="num">{{ r.pct }}%</td>
+                }
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>All live devices</td>
+              <td class="num">{{ fmtNum(live().length) }}</td>
+              <td class="num">{{ fmtNum(connected()) }}</td>
+              <td class="num">{{ connectedPct() }}%</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+    <section class="card span-12">
+      <div class="card-head">
+        <div>
+          <h2>Message routes</h2>
+          <p class="card-sub num">{{ hub().routes.length - unhealthyRoutes().length }} of {{ hub().routes.length }} routes delivering</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-wrap">
+          <table class="table stack routes">
+            <thead>
+              <tr><th>Route</th><th>Source</th><th>Condition</th><th>Health</th></tr>
+            </thead>
+            <tbody>
+              @for (r of hub().routes; track r.name) {
+                <tr>
+                  <td class="wrap"><span class="primary-cell mono">{{ r.name }}</span><span class="sub">{{ r.endpoint }}</span></td>
+                  <td class="desk-only">{{ r.source }}</td>
+                  <td class="hide-sm"><code class="mono cond" [title]="r.condition">{{ r.condition }}</code></td>
+                  <td class="keep"><span class="pill" [class.positive]="r.healthy" [class.negative]="!r.healthy">{{ r.healthy ? 'Healthy' : 'Unhealthy' }}</span></td>
+                </tr>
+                @if (!r.healthy) {
+                  <tr class="impact">
+                    <td colspan="4" class="wrap">
+                      <app-icon name="alert" />
+                      <span>
+                        Twin change events aren't reaching Service Bus, so the portal isn't told when a device rejects a profile.
+                        The {{ configErrors().length }} config errors above were found by reading twins directly.
+                      </span>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="card span-12">
+      <div class="card-head">
+        <div>
+          <h2>Recent events</h2>
+          <p class="card-sub num">{{ fmtNum(events().length) }} connection and twin events in the last 24 hours</p>
+        </div>
+        @if (events().length > 8) {
+          <button class="btn ghost sm" (click)="eventsAll.set(!eventsAll())">{{ eventsAll() ? 'Show fewer' : 'View all ' + events().length }}</button>
+        }
+      </div>
+      <div class="card-body">
+        @if (loading()) {
+          @for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) {
+            <div class="look-skel row"><span class="skeleton" style="width:100%;height:14px"></span></div>
+          }
+        } @else if (events().length) {
+          <div class="table-wrap" [class.scroll]="eventsAll()">
+            <table class="table stack events">
+              <thead>
+                <tr><th>Time</th><th>Device</th><th>Event</th><th>Detail</th></tr>
+              </thead>
+              <tbody>
+                @for (e of eventsShown(); track $index) {
+                  <tr>
+                    <td class="num muted time">{{ e.at | datetime }}</td>
+                    <td class="keep"><a class="link mono" [routerLink]="['/devices', e.deviceId]">{{ e.deviceId }}</a></td>
+                    <td>{{ e.type }}</td>
+                    <td class="muted hide-sm">{{ e.detail }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <div class="empty">No connection or twin events in the last 24 hours.</div>
+        }
+      </div>
+    </section>
+  </div>
+</div>
+
+<app-dialog [(open)]="sizeOpen" heading="Size the hub" subheading="How many units today's projected volume needs" width="560px">
+  <p class="dlg-p">
+    IoT Hub caps device-to-cloud messages per unit per day: <strong>S1</strong> allows 400,000 and <strong>S2</strong> allows 6,000,000.
+    Messages are metered in 4 KB blocks, so a larger message counts more than once. Past the quota, the hub throttles and then rejects messages.
+  </p>
+  <p class="dlg-p num">
+    Today's pace since 00:00 is {{ fmtNum(pace()) }} messages an hour, which projects to <strong>{{ fmtNum(projected()) }}</strong> for the day.
+    The hub runs {{ hub().tier }} × {{ hub().units }} = {{ fmtNum(hub().dailyQuota) }} a day, so
+    @if (enoughNow()) { it has room for {{ fmtNum(hub().dailyQuota - projected()) }} more. }
+    @else { it is {{ fmtNum(projected() - hub().dailyQuota) }} short. }
+  </p>
+  <table class="table size-table">
+    <thead>
+      <tr><th>Tier</th><th class="num">Per unit a day</th><th class="num">Units needed</th><th class="num">Daily quota</th><th class="num">Projection uses</th></tr>
+    </thead>
+    <tbody>
+      @for (t of sizing(); track t.tier) {
+        <tr>
+          <td>{{ t.tier }} @if (t.current) { <span class="muted">· current</span> }</td>
+          <td class="num">{{ fmtNum(t.perUnit) }}</td>
+          <td class="num">{{ t.units }}</td>
+          <td class="num">{{ fmtNum(t.quota) }}</td>
+          <td class="num">{{ t.usePct }}%</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  <p class="dlg-p muted small">Units needed = projected messages ÷ messages per unit, rounded up. Add headroom for the evening peak: the pace since midnight includes the quiet night hours.</p>
+  <ng-container slot="footer">
+    <button class="btn" (click)="sizeOpen.set(false)">Close</button>
+  </ng-container>
+</app-dialog>

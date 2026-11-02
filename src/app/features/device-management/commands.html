@@ -1,0 +1,203 @@
+<div class="page">
+  <div class="title-row">
+    <div class="title-block">
+      <h1>Commands</h1>
+      @if (loading()) { <span class="skeleton" style="width:380px;height:14px;margin:3px 0"></span> }
+      @else { <p class="subline num">{{ finding() }}</p> }
+      @if (!w.rw() && !loading()) { <app-ro-note noun="commands and their results" /> }
+    </div>
+    <div class="actions">
+      <button class="btn" (click)="export()" [disabled]="loading() || !rows().length"><app-icon name="download" />Export CSV</button>
+    </div>
+  </div>
+
+  <div class="list">
+    <app-tabs [tabs]="tabs()" [value]="tab()" (valueChange)="setTab($event)" />
+
+    <div class="toolbar">
+      <div class="left">
+        <label class="search">
+          <app-icon name="search" />
+          <input class="input" type="search" placeholder="Device ID" aria-label="Search by device ID"
+                 [value]="q()" (input)="setFilter(q, $any($event.target).value)" />
+        </label>
+        <label class="sr-only" for="cmd-method">Method</label>
+        <select id="cmd-method" class="select auto" [value]="method()" (change)="setFilter(method, $any($event.target).value)">
+          <option value="">All methods</option>
+          @for (m of methods(); track m) { <option [value]="m">{{ m }}</option> }
+        </select>
+        <label class="sr-only" for="cmd-kind">Kind</label>
+        <select id="cmd-kind" class="select auto" [value]="kind()" (change)="setFilter(kind, $any($event.target).value)">
+          <option value="">All kinds</option>
+          @for (k of kinds; track k) { <option [value]="k">{{ k }}</option> }
+        </select>
+        <label class="sr-only" for="cmd-by">Sent by</label>
+        <select id="cmd-by" class="select auto" [value]="sentBy()" (change)="setFilter(sentBy, $any($event.target).value)">
+          <option value="">Anyone</option>
+          @for (u of senders(); track u) { <option [value]="u">{{ u }}</option> }
+        </select>
+      </div>
+      <div class="right">
+        <span class="count num">{{ rows().length }} {{ rows().length === 1 ? 'command' : 'commands' }}</span>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table stack cmds">
+        <thead>
+          <tr>
+            <th>
+              <span class="id-cell">
+                @if (w.rw()) {
+                <label class="check" title="Select this page">
+                  <input type="checkbox" aria-label="Select all commands on this page" [checked]="pageAllSelected()"
+                         [indeterminate]="pageSomeSelected()" [disabled]="loading() || !pageRows().length"
+                         (change)="togglePage($any($event.target).checked)" />
+                </label>
+                }
+                Sent
+              </span>
+            </th>
+            <th>Device</th>
+            <th>Method</th>
+            <th>Payload</th>
+            <th>Status</th>
+            <th>Response</th>
+            <th class="num">Latency</th>
+            <th>Sent by</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) {
+              <tr>
+                <td><span class="id-cell"><span class="skeleton" style="width:16px;height:16px"></span><span class="skeleton" style="width:90px;height:14px"></span></span></td>
+                <td class="desk-only"><span class="skeleton" style="width:90px;height:14px"></span><span class="sub"><span class="skeleton" style="width:120px;height:10px"></span></span></td>
+                <td class="desk-only"><span class="skeleton" style="width:70px;height:14px"></span><span class="sub"><span class="skeleton" style="width:80px;height:10px"></span></span></td>
+                <td class="desk-only"><span class="skeleton" style="width:110px;height:14px"></span></td>
+                <td class="keep"><span class="skeleton" style="width:70px;height:20px"></span></td>
+                <td class="desk-only"><span class="skeleton" style="width:160px;height:14px"></span></td>
+                <td class="num desk-only"><span class="skeleton" style="width:40px;height:14px"></span></td>
+                <td class="desk-only"><span class="skeleton" style="width:100px;height:14px"></span></td>
+              </tr>
+            }
+          } @else {
+            @for (c of pageRows(); track c.id) {
+              <tr class="clickable" [class.picked]="selected().has(c.id)" (click)="open(c)">
+                <td>
+                  <span class="id-cell">
+                    @if (w.rw()) {
+                      <label class="check" (click)="$event.stopPropagation()">
+                        <input type="checkbox" [attr.aria-label]="'Select command ' + c.id" [checked]="selected().has(c.id)"
+                               (change)="toggle(c.id, $any($event.target).checked)" />
+                      </label>
+                    }
+                    <span class="num desk-only">{{ c.sentAt | datetime }}</span>
+                    <span class="phone-only primary-cell mono">{{ c.deviceId }}</span>
+                  </span>
+                </td>
+                <td class="phone-only">
+                  <span class="mono">{{ c.method }}</span> · {{ c.sentAt | datetime }} · {{ customerOf(c.deviceId) }}
+                </td>
+                <td class="desk-only">
+                  <a class="link mono" [routerLink]="['/devices', c.deviceId]" (click)="$event.stopPropagation()">{{ c.deviceId }}</a>
+                  <span class="sub">{{ customerOf(c.deviceId) }}</span>
+                </td>
+                <td class="desk-only"><span class="mono">{{ c.method }}</span><span class="sub">{{ c.kind }}</span></td>
+                <td class="desk-only"><code class="mono payload" [title]="payloadText(c)">{{ payloadText(c) }}</code></td>
+                <td class="keep"><span class="pill" [class]="tone[c.status]">{{ c.status }}</span></td>
+                <td class="desk-only resp">
+                  @if (c.responseCode != null || c.response) {
+                    <span class="code num">{{ c.responseCode ?? '—' }}</span>
+                    <span class="resp-text" [title]="c.response ?? ''">{{ c.response ?? '' }}</span>
+                  } @else { <span class="dash">—</span> }
+                </td>
+                <td class="num desk-only">
+                  @if (c.latencyMs != null) { {{ c.latencyMs.toLocaleString('en-GB') }}<span class="unit">ms</span> }
+                  @else { <span class="dash">—</span> }
+                </td>
+                <td class="desk-only muted">{{ c.sentBy }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="8" class="empty-row">
+                  <div class="empty">
+                    @if (filtered()) {
+                      No {{ tab() === 'All' ? '' : tab().toLowerCase() + ' ' }}commands match these filters.
+                      <button class="btn sm" (click)="clearFilters()">Clear filters</button>
+                    } @else {
+                      @switch (tab()) {
+                        @case ('Failed') { No command has failed. Devices answered or timed out. }
+                        @case ('Timed out') { No command timed out: every device answered within 30 s. }
+                        @case ('Queued') { No C2D messages are waiting for a device to reconnect. }
+                        @case ('Pending') { Nothing is in flight right now. }
+                        @default { No commands sent yet. Send one from a device page. }
+                      }
+                      @if (tab() !== 'All') { <button class="btn sm" (click)="setTab('All')">Show all</button> }
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (!loading() && rows().length) {
+      <app-pager [total]="rows().length" [size]="size" [(page)]="page" noun="commands" />
+    }
+  </div>
+
+  <div class="bulk-bar" [class.show]="w.rw() && selected().size > 0" role="toolbar" aria-label="Bulk actions" [attr.aria-hidden]="selected().size === 0">
+    <span class="picked-count num"><strong>{{ selected().size }}</strong> selected</span>
+    <span class="muted num skip-note">
+      @if (retryableSelected().length < selected().size) {
+        {{ selected().size - retryableSelected().length }} not failed or timed out, will be skipped
+      }
+    </span>
+    <button class="btn sm" [disabled]="!retryableSelected().length" (click)="retrySelected()">
+      <app-icon name="refresh" />Retry {{ retryableSelected().length }}
+    </button>
+    <button class="btn ghost icon sm" aria-label="Clear selection" (click)="clearSelection()"><app-icon name="x" /></button>
+  </div>
+</div>
+
+<app-dialog [(open)]="detailOpen" variant="drawer" width="520px"
+            [heading]="detail() ? detail()!.method + ' · #' + detail()!.id : ''"
+            [subheading]="detail() ? detail()!.kind + ' to ' + detail()!.deviceId : ''">
+  @if (detail(); as c) {
+    <dl class="dl drawer-dl">
+      <div><dt>Status</dt><dd><span class="pill" [class]="tone[c.status]">{{ c.status }}</span></dd></div>
+      <div><dt>Device</dt><dd><a class="link mono" [routerLink]="['/devices', c.deviceId]" (click)="detailOpen.set(false)">{{ c.deviceId }}</a></dd></div>
+      <div><dt>Customer</dt><dd>{{ customerOf(c.deviceId) }}</dd></div>
+      <div><dt>Sent</dt><dd class="num">{{ c.sentAt | datetime }}</dd></div>
+      <div><dt>Sent by</dt><dd>{{ c.sentBy }}</dd></div>
+      <div><dt>Latency</dt><dd class="num">@if (c.latencyMs != null) { {{ fmtLatency(c.latencyMs) }} } @else { <span class="dash">—</span> }</dd></div>
+    </dl>
+
+    <div class="code-head">
+      <h3>Request</h3>
+      <button class="btn ghost sm" (click)="copy(requestJson(), 'Request')"><app-icon name="copy" />Copy</button>
+    </div>
+    <pre class="code mono">{{ requestJson() }}</pre>
+
+    <div class="code-head">
+      <h3>Response</h3>
+      @if (responseJson()) { <button class="btn ghost sm" (click)="copy(responseJson(), 'Response')"><app-icon name="copy" />Copy</button> }
+    </div>
+    @if (responseJson()) {
+      <pre class="code mono">{{ responseJson() }}</pre>
+    } @else {
+      <div class="empty waiting"><span><span class="dot pulse"></span> Waiting for {{ c.deviceId }} to answer…</span></div>
+    }
+  }
+  <ng-container slot="footer">
+    <button class="btn" (click)="detailOpen.set(false)">Close</button>
+    @if (detail(); as c) {
+      @if (w.rw()) {
+      <button class="btn primary" [disabled]="c.status === 'Pending'" (click)="retry(c)"><app-icon name="refresh" />Retry</button>
+      }
+    }
+  </ng-container>
+</app-dialog>

@@ -1,0 +1,122 @@
+@if (openId(); as id) {
+  <app-org-detail [orgId]="id" [tabParam]="tabParam()" [canWrite]="canWrite()"
+                  (back)="close()" (viewAs)="viewAs($event)" (resend)="resend($event)" (status)="ask($event.kind, $event.org)" />
+} @else {
+  <div class="page">
+    <div class="title-row">
+      <div class="title-block">
+        <h1>Organizations</h1>
+        <p class="subline num">
+          @if (loading()) { <span class="skeleton" style="width:320px;height:12px"></span> } @else { {{ subline() }} }
+        </p>
+      </div>
+      @if (canWrite()) {
+        <div class="actions">
+          <button class="btn primary" (click)="wizardOpen.set(true)"><app-icon name="plus" />New organization</button>
+        </div>
+      }
+    </div>
+
+    @if (!canWrite()) {
+      <app-ro-note noun="every organization" />
+    }
+
+    <div class="table-wrap">
+      <table class="table stack orgs">
+        <thead>
+          <tr>
+            <th>Organization</th>
+            <th>Kind</th>
+            <th>Status</th>
+            <th>Market</th>
+            <th class="num">Customers</th>
+            <th class="num">Devices in service</th>
+            <th class="num">Users</th>
+            <th class="num">Features</th>
+            <th class="num">Created</th>
+            <th><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (i of [1, 2, 3, 4]; track i) {
+              <tr>
+                <td><span class="skeleton" style="width:150px;height:14px"></span><span class="sub"><span class="skeleton" style="width:190px;height:10px"></span></span></td>
+                <td class="desk-only"><span class="skeleton" style="width:58px;height:20px"></span></td>
+                <td class="keep"><span class="skeleton" style="width:54px;height:20px"></span></td>
+                <td class="desk-only"><span class="skeleton" style="width:80px;height:14px"></span></td>
+                <td class="num desk-only"><span class="skeleton" style="width:90px;height:14px"></span></td>
+                <td class="num desk-only"><span class="skeleton" style="width:30px;height:14px"></span></td>
+                <td class="num desk-only"><span class="skeleton" style="width:40px;height:14px"></span></td>
+                <td class="num desk-only"><span class="skeleton" style="width:50px;height:14px"></span></td>
+                <td class="num desk-only"><span class="skeleton" style="width:80px;height:14px"></span></td>
+                <td></td>
+              </tr>
+            }
+          } @else {
+            @for (o of rows(); track o.id) {
+              <tr class="clickable" (click)="open(o.id)">
+                <td>
+                  <span class="org-name primary-cell"><span class="sw" [style.background]="o.brandColour" aria-hidden="true"></span>{{ o.name }}</span>
+                  <span class="sub legal">{{ o.legalName }}</span>
+                </td>
+                <td class="phone-only num">
+                  {{ o.kind }} · {{ countryLabel(o) }} · {{ o.s.customers }}@if (o.limits.maxCustomers) {/{{ o.limits.maxCustomers }}} customers
+                </td>
+                <td class="desk-only"><span class="pill">{{ o.kind }}</span></td>
+                <td class="keep"><span class="pill" [class]="orgTone(o.status)">{{ o.status }}</span></td>
+                <td class="desk-only" [title]="countryTitle(o)">
+                  {{ countryLabel(o) }}
+                  <span class="sub">{{ o.segments.join(' · ') }}</span>
+                </td>
+                <td class="num desk-only">
+                  <span class="usage">
+                    {{ o.s.customers }}@if (o.limits.maxCustomers) { <span class="muted"> / {{ o.limits.maxCustomers }}</span> }
+                  </span>
+                  @if (o.limits.maxCustomers) {
+                    <span class="meter cap" [class.full]="o.s.customers >= o.limits.maxCustomers" role="meter"
+                          [attr.aria-valuenow]="o.s.customers" aria-valuemin="0" [attr.aria-valuemax]="o.limits.maxCustomers"
+                          [attr.aria-label]="o.name + ' customers against its limit'">
+                      <span [style.width.%]="pct(o.s.customers, o.limits.maxCustomers)"></span>
+                    </span>
+                  } @else {
+                    <span class="sub">no limit</span>
+                  }
+                </td>
+                <td class="num desk-only">{{ o.s.inService }}</td>
+                <td class="num desk-only">
+                  {{ o.s.users }}@if (o.limits.maxUsers) { <span class="muted"> / {{ o.limits.maxUsers }}</span> }
+                </td>
+                <td class="num desk-only">{{ o.f.on }} <span class="muted">of {{ o.f.of }}</span></td>
+                <td class="num desk-only">{{ o.createdAt | date }}</td>
+                <td class="actions-cell row-menu" (click)="$event.stopPropagation()">
+                  <app-menu [items]="menu(o)" [label]="'Actions for ' + o.name" />
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="10" class="empty-row">
+                  <div class="empty">No organizations yet. Add the first partner to let it onboard its own customers.
+                    @if (canWrite()) { <button class="btn sm" (click)="wizardOpen.set(true)">New organization</button> }
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}
+
+<app-org-wizard [(open)]="wizardOpen" (created)="created($event)" />
+
+<app-dialog [(open)]="confirmOpen" [heading]="confirmCopy().title" width="460px">
+  <p class="confirm-body">{{ confirmCopy().body }}</p>
+  <ng-container slot="footer">
+    <button class="btn" (click)="confirmOpen.set(false)">Keep as is</button>
+    <button class="btn" [class.danger]="confirm()?.kind === 'suspend'" [class.primary]="confirm()?.kind === 'reactivate'" (click)="runConfirm()">
+      {{ confirmCopy().action }}
+    </button>
+  </ng-container>
+</app-dialog>

@@ -1,0 +1,33 @@
+@use './org-shared';
+
+.org-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.legal {
+  padding-left: 20px;
+}
+
+.usage {
+  display: block;
+}
+// Customers against the organization's limit, at true ratio.
+.meter.cap {
+  display: block;
+  width: 72px;
+  margin: 5px 0 0 auto;
+  &.full > span {
+    background: var(--negative);
+  }
+}
+
+.actions-cell {
+  width: 40px;
+  text-align: right;
+}
+.confirm-body {
+  color: var(--muted);
+  line-height: 22px;
+  margin: 0;
+}

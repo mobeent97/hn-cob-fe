@@ -15,9 +15,11 @@ describe('App', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should render a router outlet', () => {
+  it('should render a router outlet and the toast host', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('router-outlet')).toBeTruthy();
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('router-outlet')).toBeTruthy();
+    expect(el.querySelector('app-toaster')).toBeTruthy();
   });
 });

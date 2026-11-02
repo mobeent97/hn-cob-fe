@@ -1,0 +1,123 @@
+@use './settings-layout';
+
+// ── Notifications ──
+// Arriving from ?section=notifications: a tint behind the row that fades out.
+.notif-row {
+  position: relative;
+  scroll-margin-top: 16px;
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 8px -16px;
+    border-radius: var(--radius-card);
+    background: var(--accent-weak);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 900ms ease;
+    z-index: -1;
+  }
+  &.flash::before {
+    opacity: 1;
+    transition-duration: var(--duration-fast);
+  }
+  > * {
+    position: relative;
+  }
+}
+.settings {
+  isolation: isolate;
+}
+
+.kinds {
+  width: 100%;
+  border-collapse: collapse;
+  th,
+  td {
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+    vertical-align: top;
+    text-align: left;
+  }
+  thead th {
+    border-top: 0;
+    padding-top: 0;
+    font-size: var(--fs-small);
+    font-weight: 500;
+    color: var(--muted);
+  }
+  tbody th {
+    font-weight: 400;
+    padding-right: 16px;
+  }
+  .kind-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .switch-title {
+    font-weight: 500;
+  }
+  .switch-desc {
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .ch {
+    width: 104px;
+    text-align: center;
+  }
+  td.ch {
+    padding-top: 12px;
+  }
+}
+
+.digest {
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  .narrow-wide {
+    max-width: 260px;
+  }
+}
+
+.quiet {
+  display: grid;
+  grid-template-columns: 140px 140px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  margin-top: -4px;
+  .quiet-span {
+    align-self: end;
+    padding-bottom: 9px;
+  }
+}
+
+@media (max-width: 640px) {
+  .kinds .ch {
+    width: 64px;
+  }
+  .kinds thead .ch {
+    white-space: normal;
+    line-height: 16px;
+  }
+  .digest .narrow-wide {
+    max-width: none;
+  }
+  .quiet {
+    grid-template-columns: 1fr 1fr;
+    .quiet-span {
+      grid-column: 1 / -1;
+      padding-bottom: 0;
+    }
+  }
+  .notif-row::before {
+    inset: 4px -8px;
+  }
+}
+
+// Read-only wrapper for policy panels (Settings R): keeps the layout, disables every control.
+.ro-fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  display: contents;
+}

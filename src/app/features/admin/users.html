@@ -1,0 +1,221 @@
+<div class="page">
+  <div class="title-row">
+    <div class="title-block">
+      <h1>Users</h1>
+      <p class="subline num">
+        @if (seats(); as s) {
+          {{ s.used }} of {{ s.max }} seats used
+        } @else {
+          {{ activeCount() }} of {{ store.users().length }} users can sign in
+          @if (allOrgs()) { across {{ orgCount() }} organizations }
+        }
+        @if (dormant()) { · {{ dormant() }} active {{ dormant() === 1 ? 'account has' : 'accounts have' }} never signed in }
+      </p>
+    </div>
+    @if (canWrite()) {
+      <div class="actions">
+        @if (createBlocked(); as why) { <span class="blocked muted">{{ why }}</span> }
+        <button class="btn primary" [disabled]="!!createBlocked()" [attr.title]="createBlocked()" (click)="add()"><app-icon name="plus" />New user</button>
+      </div>
+    }
+  </div>
+
+  @if (!canWrite()) {
+    <p class="ro-hint"><app-icon name="lock" [size]="14" />You can view users. Ask an administrator to add or change them.</p>
+  }
+
+  <div class="list">
+    <app-tabs [tabs]="tabs()" [(value)]="view" />
+
+    <div class="toolbar">
+      <div class="left">
+        <label class="search">
+          <app-icon name="search" />
+          <input class="input" type="search" placeholder="Name, username, email or manager" aria-label="Search users"
+                 [value]="q()" (input)="q.set($any($event.target).value)" />
+        </label>
+      </div>
+      <div class="right">
+        <span class="count num">{{ rows().length }} {{ rows().length === 1 ? 'user' : 'users' }}</span>
+        @if (allOrgs()) {
+          <label class="sr-only" for="u-org-f">Organization</label>
+          <select id="u-org-f" class="select auto" [value]="org()" (change)="org.set($any($event.target).value === 'all' ? 'all' : +$any($event.target).value); group.set('all')">
+            <option value="all">All organizations</option>
+            @for (o of orgOptions(); track o.id) { <option [value]="o.id" [selected]="org() === o.id">{{ o.name }}</option> }
+          </select>
+        }
+        <label class="sr-only" for="grp">Role</label>
+        <select id="grp" class="select auto" [value]="group()" (change)="group.set($any($event.target).value)">
+          <option value="all">All roles</option>
+          @for (g of roleNames(); track g) { <option [value]="g" [selected]="group() === g">{{ g }}</option> }
+        </select>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table stack">
+        <thead>
+          <tr>
+            <th>Name</th>
+            @if (allOrgs()) { <th>Organization</th> }
+            <th>Email</th>
+            <th>Roles</th>
+            <th>Manager</th>
+            <th class="num">Last sign-in</th>
+            <th>Status</th>
+            @if (canWrite()) { <th><span class="sr-only">Actions</span></th> }
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+              <tr>
+                <td><span class="skeleton" style="width:130px;height:14px"></span><span class="sub"><span class="skeleton" style="width:90px;height:10px"></span></span></td>
+                @if (allOrgs()) { <td><span class="skeleton" style="width:100px;height:14px"></span></td> }
+                <td><span class="skeleton" style="width:200px;height:14px"></span></td>
+                <td><span class="skeleton" style="width:110px;height:20px"></span></td>
+                <td><span class="skeleton" style="width:100px;height:14px"></span></td>
+                <td><span class="skeleton" style="width:70px;height:14px"></span></td>
+                <td><span class="skeleton" style="width:54px;height:20px"></span></td>
+                @if (canWrite()) { <td></td> }
+              </tr>
+            }
+          } @else {
+            @for (u of pageRows(); track u.id) {
+              <tr [class.clickable]="editable(u)" (click)="rowClick(u)">
+                <td>
+                  <span class="primary-cell">{{ u.name }}</span>
+                  @if (isMe(u)) { <span class="you">You</span> }
+                  <span class="sub">{{ u.username }}@if (allOrgs()) {<span class="phone-inline"> · {{ orgName(u.orgId) }}</span>}</span>
+                </td>
+                <td class="phone-only">
+                  @if (u.isSuperuser) { Superuser } @else { {{ u.groups.join(', ') || 'No role' }} }
+                  · @if (u.lastLogin) { {{ u.lastLogin | rel }} } @else { never signed in }
+                </td>
+                @if (allOrgs()) { <td class="desk-only">{{ orgName(u.orgId) }}</td> }
+                <td class="desk-only email">{{ u.email }}</td>
+                <td class="desk-only">
+                  <span class="chips">
+                    @if (u.isSuperuser) { <span class="pill info" title="Full access to every organization. Managed with manage.py createsuperuser.">Superuser</span> }
+                    @for (g of u.groups; track g) { <span class="pill">{{ g }}</span> }
+                    @empty { @if (!u.isSuperuser) { <span class="dash">—</span> } }
+                  </span>
+                </td>
+                <td class="desk-only">
+                  @if (u.manager) { {{ u.manager }} } @else { <span class="dash">—</span> }
+                </td>
+                <td class="desk-only num">
+                  @if (u.lastLogin) { {{ u.lastLogin | rel }} } @else { <span class="muted">Never</span> }
+                </td>
+                <td class="keep"><span class="pill" [class]="u.status | tone">{{ u.status }}</span></td>
+                @if (canWrite()) {
+                  <td class="actions-cell row-menu" (click)="$event.stopPropagation()">
+                    <app-menu [items]="menu(u)" [label]="'Actions for ' + u.name" [icon]="u.isSuperuser ? 'lock' : 'more'" />
+                  </td>
+                }
+              </tr>
+            } @empty {
+              <tr>
+                <td [attr.colspan]="cols()" class="empty-row">
+                  <div class="empty">
+                    @if (filtered()) {
+                      No user matches these filters.
+                      <button class="btn sm" (click)="clearFilters()">Clear filters</button>
+                    } @else if (view() !== 'all') {
+                      No users in this view.
+                      <button class="btn sm" (click)="view.set('all')">Show all users</button>
+                    } @else {
+                      No users yet.
+                      @if (canWrite() && !createBlocked()) { <button class="btn sm" (click)="add()">New user</button> }
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (!loading() && rows().length) {
+      <app-pager [total]="rows().length" [size]="size()" [(page)]="page" noun="users" />
+    }
+  </div>
+</div>
+
+<app-dialog [(open)]="open" [heading]="draft().id ? 'Edit ' + draft().name : 'New user'"
+            [subheading]="draft().id ? orgName(draft().orgId) : 'They get an email with a link to set their password.'" width="600px">
+  <div class="form-grid two">
+    @if (pickOrg()) {
+      <div class="field full">
+        <label for="u-org">Organization<span class="req">*</span></label>
+        <select id="u-org" class="select" [value]="draft().orgId ?? ''" (change)="setOrg($any($event.target).value)"
+                [class.invalid]="tried() && errors().orgId">
+          <option value="" disabled [selected]="draft().orgId == null">Choose an organization</option>
+          @for (o of orgChoices(); track o.id) {
+            <option [value]="o.id" [selected]="draft().orgId === o.id">
+              {{ o.name }}@if (o.limits.maxUsers != null) { · {{ seatsUsed(o.id) }} of {{ o.limits.maxUsers }} seats }
+            </option>
+          }
+        </select>
+        @if (tried() && errors().orgId) { <span class="error">{{ errors().orgId }}</span> }
+        @else if (draft().orgId != null && errors().orgId) { <span class="error">{{ errors().orgId }}</span> }
+        @else { <span class="hint">They only see this organization's data, through its roles.</span> }
+      </div>
+    }
+    <div class="field full">
+      <label for="u-name">Full name<span class="req">*</span></label>
+      <input id="u-name" class="input" maxlength="120" autocomplete="off" [value]="draft().name" (input)="set('name', $any($event.target).value)"
+             [class.invalid]="tried() && errors().name" />
+      @if (tried() && errors().name) { <span class="error">{{ errors().name }}</span> }
+    </div>
+    <div class="field">
+      <label for="u-email">Work email<span class="req">*</span></label>
+      <input id="u-email" class="input" type="email" autocomplete="off" [value]="draft().email" (input)="setEmail($any($event.target).value)"
+             [class.invalid]="tried() && errors().email" />
+      @if (tried() && errors().email) { <span class="error">{{ errors().email }}</span> }
+    </div>
+    <div class="field">
+      <label for="u-user">Username<span class="req">*</span></label>
+      <input id="u-user" class="input" autocomplete="off" spellcheck="false" [value]="draft().username" (input)="set('username', $any($event.target).value.trim().toLowerCase())"
+             [class.invalid]="tried() && errors().username" />
+      @if (tried() && errors().username) { <span class="error">{{ errors().username }}</span> }
+    </div>
+    <div class="field">
+      <label for="u-mgr">Manager</label>
+      <select id="u-mgr" class="select" [value]="draft().manager" [disabled]="draft().orgId == null" (change)="set('manager', $any($event.target).value)">
+        <option value="">No manager</option>
+        @for (m of managers(); track m.id) { <option [value]="m.name" [selected]="draft().manager === m.name">{{ m.name }}</option> }
+      </select>
+    </div>
+    <fieldset class="field full">
+      <legend class="label">Roles<span class="req">*</span></legend>
+      @if (draft().orgId == null) {
+        <p class="hint">Choose an organization to see its roles.</p>
+      } @else {
+        <div class="group-list">
+          @for (g of dialogRoles(); track g.id) {
+            <label class="check group-opt">
+              <input type="checkbox" [checked]="draft().groups.includes(g.name)" [disabled]="lockedRole() === g.name"
+                     (change)="toggleGroup(g.name, $any($event.target).checked)" />
+              <span>
+                {{ g.name }} @if (g.status === 'Inactive') { <span class="pill">Inactive</span> }
+                <span class="sub">
+                  @if (lockedRole() === g.name) { Your last admin role. Another admin can remove it. } @else { {{ g.description }} }
+                </span>
+              </span>
+            </label>
+          } @empty {
+            <p class="hint">{{ orgName(draft().orgId) }} has no roles yet. Create one in Roles first.</p>
+          }
+        </div>
+        <span class="hint">Access is the lower of the role and {{ orgName(draft().orgId) }}'s plan.</span>
+      }
+      @if (tried() && errors().groups) { <span class="error">{{ errors().groups }}</span> }
+    </fieldset>
+  </div>
+  <ng-container slot="footer">
+    <button class="btn" (click)="open.set(false)">Cancel</button>
+    <button class="btn primary" (click)="save()">{{ draft().id ? 'Save user' : 'Send invite' }}</button>
+  </ng-container>
+</app-dialog>
