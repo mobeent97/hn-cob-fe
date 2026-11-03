@@ -5,7 +5,7 @@ import { Store } from '../../core/data/store';
 @Component({
   selector: 'app-auth-steps',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: './auth-form.scss',
+  styleUrl: './auth-form.css',
   template: `
     <div class="steps-aside">
       <h2>Reset your password in three steps</h2>

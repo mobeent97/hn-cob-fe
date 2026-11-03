@@ -20,56 +20,7 @@ const RESEND_AFTER = 30;
   selector: 'app-forgot-password',
   imports: [RouterLink, Icon, AuthLayout, AuthSteps, OtpInput],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: './auth-form.scss',
-  styles: `
-    // Side-by-side step slide (transitions.dev 08): 8px + fade + 3px blur, 250ms, direction-aware.
-    .steps {
-      display: grid;
-    }
-    .pane {
-      grid-area: 1 / 1;
-      opacity: 0;
-      filter: blur(3px);
-      visibility: hidden;
-      transition:
-        opacity 250ms var(--ease-out),
-        transform 250ms var(--ease-out),
-        filter 250ms var(--ease-out),
-        visibility 0s linear 250ms;
-    }
-    .pane[data-pane='1'] {
-      transform: translateX(-8px);
-    }
-    .pane[data-pane='2'] {
-      transform: translateX(8px);
-    }
-    .steps[data-step='1'] .pane[data-pane='1'],
-    .steps[data-step='2'] .pane[data-pane='2'] {
-      opacity: 1;
-      filter: blur(0);
-      transform: none;
-      visibility: visible;
-      transition-delay: 0s;
-    }
-    .resend {
-      color: var(--muted);
-      text-align: center;
-      font-size: 13px;
-    }
-    .link-btn {
-      border: 0;
-      background: none;
-      padding: 0;
-      font: inherit;
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .pane {
-        transition: none !important;
-        transform: none !important;
-        filter: none !important;
-      }
-    }
-  `,
+  styleUrls: ['./auth-form.css', './forgot-password.css'],
   template: `
     <app-auth-layout asideLabel="Steps to reset your password">
       <div class="steps" [attr.data-step]="step()">
@@ -81,7 +32,7 @@ const RESEND_AFTER = 30;
           </div>
           <div class="field">
             <label for="fp-email">Email</label>
-            <input #emailInput id="fp-email" class="ui-control" type="email" autocomplete="username" inputmode="email" spellcheck="false"
+            <input #emailInput id="fp-email" class="ui-control ui-control-lg" type="email" autocomplete="username" inputmode="email" spellcheck="false"
                    [class.invalid]="tried() && emailError()" [attr.aria-invalid]="tried() && !!emailError()"
                    [value]="email()" (input)="email.set($any($event.target).value)" />
             @if (tried() && emailError()) {

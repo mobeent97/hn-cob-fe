@@ -1,0 +1,170 @@
+@reference "../../../styles.css";
+
+/*
+ * Shared by the signed-out screens, after IoTility's login page (login-page.css): large fields, a pill-shaped
+ * brand submit, the error block and the field shake. Field and button looks come from the global classes.
+ */
+.auth-form {
+  @apply flex flex-col gap-5;
+}
+
+.form-head {
+  @apply mb-1 flex flex-col gap-1.5;
+}
+.form-head h1 {
+  @apply text-2xl leading-8 font-bold text-ink dark:text-white;
+}
+.form-head p {
+  @apply text-sm text-muted dark:text-brand-300;
+}
+.form-head strong {
+  @apply font-medium wrap-anywhere text-ink dark:text-white;
+}
+
+.row-between {
+  @apply flex flex-wrap items-center justify-between gap-3 text-xs;
+}
+
+/* IoTility submit: full width, rounded-full, brand. */
+.btn.block {
+  @apply min-h-11 w-full rounded-full text-sm;
+}
+/* While busy the button keeps its colour; only the label swaps. */
+.btn.primary[aria-busy='true']:disabled {
+  @apply cursor-progress opacity-100;
+}
+
+.back {
+  @apply inline-flex items-center gap-1.5 self-center text-xs font-medium text-muted hover:text-brand-600 dark:text-brand-300 dark:hover:text-white;
+}
+
+/* Password with a show/hide button inside the field. */
+.pw {
+  @apply relative flex items-center;
+}
+.pw .ui-control {
+  @apply pr-11;
+}
+.pw .reveal {
+  @apply absolute right-1.5 grid size-8 cursor-pointer place-items-center rounded-lg border-0 bg-transparent text-muted dark:text-brand-300;
+  transition:
+    background-color var(--duration-hover) ease,
+    color var(--duration-hover) ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .pw .reveal:hover {
+    @apply bg-brand-50 text-brand-600 dark:bg-dark-canvas dark:text-brand-300;
+  }
+}
+
+/* Text swap: both labels share one cell and cross-blur. */
+.t-text-soft {
+  @apply inline-grid justify-items-center;
+}
+.t-text-soft > span {
+  grid-area: 1 / 1;
+  white-space: pre;
+  transition:
+    filter 200ms ease-in-out,
+    opacity 200ms ease-in-out;
+}
+.t-text-soft .t-text-soft-new {
+  opacity: 0;
+  filter: blur(2px);
+}
+.t-text-soft.is-swapping .t-text-soft-old {
+  opacity: 0;
+  filter: blur(2px);
+}
+.t-text-soft.is-swapping .t-text-soft-new {
+  opacity: 1;
+  filter: blur(0);
+}
+
+/* Invalid submit: a short decaying shake. */
+.t-shake {
+  will-change: transform;
+}
+.t-shake.is-shaking {
+  animation: field-shake 400ms var(--ease-out);
+}
+@keyframes field-shake {
+  20% {
+    transform: translateX(-8px);
+  }
+  40% {
+    transform: translateX(8px);
+  }
+  60% {
+    transform: translateX(-6px);
+  }
+  80% {
+    transform: translateX(6px);
+  }
+}
+
+/* Form-level error (login-page .login-error). */
+.form-error {
+  @apply flex items-start gap-2 rounded-xl border border-danger/30 bg-danger/10 px-3 py-2.5 text-xs leading-[18px] text-danger;
+  animation: err-in var(--duration-popover) var(--ease-out);
+}
+.form-error app-icon {
+  @apply mt-px;
+}
+@keyframes err-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* Steps panel: sits on the black brand panel of the auth layout, so it is drawn light-on-dark. */
+.steps-aside {
+  @apply flex w-full max-w-90 flex-col gap-5 text-white;
+}
+.steps-aside h2 {
+  @apply text-base font-semibold;
+}
+.steps-aside ol {
+  @apply m-0 flex list-none flex-col gap-1 p-0;
+}
+.steps-aside li {
+  @apply grid grid-cols-[28px_1fr] gap-x-3 gap-y-0.5 rounded-2xl p-3 text-brand-300;
+  transition:
+    background-color var(--duration-popover) ease,
+    color var(--duration-popover) ease;
+}
+.steps-aside li .n {
+  @apply row-span-2 grid size-6 place-items-center rounded-full border border-white/20 text-xs font-semibold;
+}
+.steps-aside li strong {
+  @apply text-[13px] font-semibold;
+}
+.steps-aside li small {
+  @apply text-xs;
+}
+.steps-aside li.current {
+  @apply bg-white/5 text-white;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-brand-300) 35%, transparent);
+}
+.steps-aside li.current .n {
+  @apply border-brand-500 bg-brand-600 text-white;
+}
+.steps-aside li.current small {
+  @apply text-brand-200;
+}
+.steps-aside li.done .n {
+  @apply border-brand-400 text-brand-300;
+}
+.steps-aside .note {
+  @apply text-xs text-brand-300;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-shake.is-shaking {
+    animation: none;
+  }
+  .t-text-soft > span {
+    transition: none;
+  }
+}

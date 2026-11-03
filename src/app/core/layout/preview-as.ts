@@ -33,19 +33,7 @@ import { Icon } from '../../shared/ui/icon';
       }
     </app-dialog>
   `,
-  styles: `
-    section + section { margin-top: 18px; }
-    h3 { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-    .sw { width: 10px; height: 10px; border-radius: 3px; }
-    ul { list-style: none; margin: 0; padding: 0; }
-    li + li { border-top: 1px solid var(--rule); }
-    button { width: 100%; display: flex; align-items: center; gap: 10px; border: 0; background: none; text-align: left; padding: 9px 8px; border-radius: 6px; color: var(--text); }
-    button:hover { background: var(--raised); }
-    button app-icon { color: var(--muted); margin-left: auto; }
-    .pill { margin-left: auto; }
-    .who { display: flex; flex-direction: column; }
-    .who small { color: var(--muted); font-size: 12px; }
-  `,
+  styleUrl: './preview-as.css',
 })
 export class PreviewAs {
   protected readonly store = inject(Store);

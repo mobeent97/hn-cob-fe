@@ -1,0 +1,81 @@
+@reference "../../../styles.css";
+
+/* IoTility auth layout (auth-layout.css): brand panel left, form card right. */
+:host {
+  @apply flex min-h-dvh bg-canvas dark:bg-dark-canvas;
+}
+
+.auth-brand-panel {
+  @apply relative hidden w-[58%] flex-col justify-between overflow-hidden p-10 text-white lg:flex;
+}
+/* Deep black base with a glow behind the visual and another under the tagline. */
+.auth-backdrop {
+  @apply absolute inset-0 overflow-hidden;
+  background:
+    radial-gradient(ellipse 55% 45% at 50% 46%, color-mix(in srgb, var(--color-brand-600) 30%, transparent), transparent 72%),
+    radial-gradient(ellipse 70% 40% at 50% 105%, color-mix(in srgb, var(--color-brand-600) 45%, transparent), transparent 70%),
+    var(--color-black);
+}
+.auth-brand-row {
+  @apply relative z-10 flex items-center gap-4;
+}
+.auth-brand-row img {
+  @apply h-7 w-auto max-w-36;
+}
+.auth-brand-row span {
+  @apply h-7 w-px;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--color-white) 35%, transparent), transparent);
+}
+.auth-brand-row strong {
+  @apply text-sm font-semibold text-brand-200;
+}
+.auth-visual {
+  @apply relative z-10 my-6 flex min-h-0 flex-1 items-center justify-center;
+}
+.auth-tagline {
+  @apply relative z-10 mx-auto text-center;
+  animation: auth-tagline-in 600ms var(--ease-out) 400ms both;
+}
+.auth-tagline h1 {
+  @apply text-3xl leading-tight font-bold;
+  letter-spacing: -0.03em;
+}
+.auth-tagline h1 span {
+  background: linear-gradient(90deg, var(--color-white) 0%, var(--color-brand-200) 45%, var(--color-brand-300) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.auth-tagline p {
+  @apply mt-2 text-sm text-brand-300;
+}
+@keyframes auth-tagline-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.auth-content-panel {
+  @apply flex min-w-0 flex-1 flex-col items-center justify-center px-5 py-10 sm:px-8;
+}
+.auth-content {
+  @apply flex w-full max-w-[26rem] flex-col gap-6;
+}
+.mobile-brand {
+  @apply flex items-center justify-center gap-2 text-base font-semibold text-ink lg:hidden dark:text-white;
+}
+/* login-page .login-card */
+.auth-card {
+  @apply rounded-2xl border border-line bg-white p-6 sm:p-8 dark:border-dark-line dark:bg-dark-surface;
+  box-shadow: var(--shadow-card);
+}
+.foot {
+  @apply text-center text-xs text-muted dark:text-brand-300;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-tagline {
+    animation: none;
+  }
+}

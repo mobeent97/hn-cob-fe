@@ -21,108 +21,7 @@ interface Rule {
   selector: 'app-reset-password',
   imports: [RouterLink, Icon, AuthLayout, AuthSteps],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: './auth-form.scss',
-  styles: `
-    .rules {
-      list-style: none;
-      margin: -4px 0 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 13px;
-      color: var(--muted);
-
-      li {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        transition: color var(--duration-quick) ease;
-      }
-      li.ok {
-        color: var(--text);
-      }
-      svg {
-        flex: none;
-        overflow: visible;
-      }
-      circle {
-        fill: var(--surface);
-        stroke: var(--control);
-        transition:
-          fill var(--duration-quick) var(--ease-out),
-          stroke var(--duration-quick) var(--ease-out);
-      }
-      path {
-        stroke: var(--on-accent);
-        stroke-dasharray: 10;
-        stroke-dashoffset: 10;
-        transition: stroke-dashoffset var(--duration-fast) var(--ease-out) 60ms;
-      }
-      li.ok circle {
-        fill: var(--positive);
-        stroke: var(--positive);
-      }
-      li.ok path {
-        stroke-dashoffset: 0;
-      }
-    }
-
-    // Success check (transitions.dev 10): fade + rotate + bob + blur, then the stroke draws.
-    .done {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      align-items: flex-start;
-    }
-    .t-success-check {
-      display: inline-block;
-      color: var(--positive);
-      animation:
-        t-check-fade 500ms cubic-bezier(0.22, 1, 0.36, 1) both,
-        t-check-rotate 500ms cubic-bezier(0.22, 1, 0.36, 1) both,
-        t-check-blur 500ms cubic-bezier(0.22, 1, 0.36, 1) both,
-        t-check-bob 500ms cubic-bezier(0.34, 1.35, 0.64, 1) both;
-
-      svg {
-        display: block;
-        overflow: visible;
-      }
-      path {
-        stroke-dasharray: 27;
-        stroke-dashoffset: 27;
-        animation: t-check-draw 500ms cubic-bezier(0.22, 1, 0.36, 1) 80ms forwards;
-      }
-    }
-    @keyframes t-check-fade {
-      from { opacity: 0; }
-    }
-    @keyframes t-check-rotate {
-      from { transform: rotate(80deg); }
-    }
-    @keyframes t-check-blur {
-      from { filter: blur(8px); }
-    }
-    @keyframes t-check-bob {
-      from { translate: 0 24px; }
-    }
-    @keyframes t-check-draw {
-      to { stroke-dashoffset: 0; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .t-success-check {
-        animation: none !important;
-      }
-      .t-success-check path,
-      .rules path {
-        animation: none !important;
-        stroke-dashoffset: 0 !important;
-      }
-      .rules li:not(.ok) path {
-        stroke-dashoffset: 10 !important;
-      }
-    }
-  `,
+  styleUrls: ['./auth-form.css', './reset-password.css'],
   template: `
     <app-auth-layout asideLabel="Steps to reset your password">
       @if (!done()) {
@@ -138,7 +37,7 @@ interface Rule {
           <div class="field">
             <label for="new-pw">New password</label>
             <div class="pw">
-              <input id="new-pw" class="ui-control" [type]="show() ? 'text' : 'password'" autocomplete="new-password"
+              <input id="new-pw" class="ui-control ui-control-lg" [type]="show() ? 'text' : 'password'" autocomplete="new-password"
                      aria-describedby="pw-rules" [value]="pw()" (input)="pw.set($any($event.target).value)" />
               <button type="button" class="reveal" (click)="show.set(!show())"
                       [attr.aria-label]="show() ? 'Hide passwords' : 'Show passwords'" [attr.aria-pressed]="show()">
@@ -149,7 +48,7 @@ interface Rule {
 
           <div class="field">
             <label for="confirm-pw">Confirm new password</label>
-            <input id="confirm-pw" class="ui-control" [type]="show() ? 'text' : 'password'" autocomplete="new-password"
+            <input id="confirm-pw" class="ui-control ui-control-lg" [type]="show() ? 'text' : 'password'" autocomplete="new-password"
                    [class.invalid]="mismatch()" [value]="confirm()" (input)="confirm.set($any($event.target).value)" />
             @if (mismatch()) {
               <span class="error">The two passwords don't match yet.</span>
@@ -180,7 +79,7 @@ interface Rule {
         <div class="done" role="status">
           <span class="t-success-check" aria-hidden="true">
             <svg width="48" height="48" viewBox="0 0 48 48">
-              <circle cx="24" cy="24" r="23" fill="var(--positive-bg)" />
+              <circle class="check-bg" cx="24" cy="24" r="23" />
               <path d="M15 24.5 21 30.5 33 18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
           </span>

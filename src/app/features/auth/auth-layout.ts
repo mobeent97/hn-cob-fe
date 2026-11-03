@@ -2,97 +2,45 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { BrandMark } from '../../core/layout/brand-mark';
 
 /**
- * The frame every signed-out screen shares: the form on the white sheet (left) and a
- * --frame tinted panel (right) for the one supporting thing. Below 900px the panel goes
- * and the form centres on its own.
+ * The frame every signed-out screen shares, after IoTility's auth layout (projects/iotility/src/app/auth/auth-layout):
+ * a black brand panel with soft purple glows on the left (logo, the one supporting visual, a tagline) and the form
+ * card on the canvas to the right. Below 1024px the brand panel goes and the form centres on its own.
  */
 @Component({
   selector: 'app-auth-layout',
   imports: [BrandMark],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="form-side">
-      <header class="brand">
-        <app-brand-mark [size]="24" />
-        <span class="wordmark">HyperNym</span>
-      </header>
-      <div class="form-slot">
-        <ng-content />
+    <section class="auth-brand-panel" [attr.aria-label]="asideLabel() || null">
+      <div class="auth-backdrop" aria-hidden="true"></div>
+      <div class="auth-brand-row">
+        <img src="assets/hypernym-loader-full.svg" alt="HyperNym" />
+        <span aria-hidden="true"></span>
+        <strong>Customer onboarding</strong>
       </div>
-      <footer class="foot">{{ foot() }}</footer>
+      <div class="auth-visual">
+        <ng-content select="[aside]" />
+      </div>
+      <div class="auth-tagline">
+        <h1>Customers, devices and orders<br /><span>for every HyperNym fleet</span></h1>
+        <p>Part of the IoTility platform.</p>
+      </div>
     </section>
-    <aside class="aside" [attr.aria-label]="asideLabel()">
-      <ng-content select="[aside]" />
-    </aside>
+
+    <section class="auth-content-panel">
+      <div class="auth-content">
+        <header class="mobile-brand">
+          <app-brand-mark [size]="24" />
+          <span>HyperNym</span>
+        </header>
+        <div class="auth-card">
+          <ng-content />
+        </div>
+        <footer class="foot">{{ foot() }}</footer>
+      </div>
+    </section>
   `,
-  styles: `
-    :host {
-      display: grid;
-      grid-template-columns: minmax(440px, 5fr) 7fr;
-      min-height: 100dvh;
-      background: var(--frame);
-    }
-    .form-side {
-      display: flex;
-      flex-direction: column;
-      background: var(--surface);
-      border-right: 1px solid var(--border);
-      padding: 0 48px;
-      min-width: 0;
-    }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      height: 72px;
-      flex: none;
-    }
-    .wordmark {
-      font-weight: 600;
-      font-size: 16px;
-      letter-spacing: -0.01em;
-    }
-    .form-slot {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      width: 100%;
-      max-width: 360px;
-      margin: 0 auto;
-      padding: 32px 0;
-    }
-    .foot {
-      height: 64px;
-      display: flex;
-      align-items: center;
-      color: var(--muted);
-      font-size: var(--fs-small);
-      flex: none;
-    }
-    .aside {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 48px;
-      min-width: 0;
-      position: relative;
-    }
-    @media (max-width: 899px) {
-      :host {
-        grid-template-columns: minmax(0, 1fr);
-        background: var(--surface);
-      }
-      .form-side {
-        border-right: 0;
-        padding: 0 24px;
-      }
-      .aside {
-        display: none;
-      }
-    }
-  `,
+  styleUrl: './auth-layout.css',
 })
 export class AuthLayout {
   readonly foot = input('Need an account? Ask a HyperNym super admin to invite you.');

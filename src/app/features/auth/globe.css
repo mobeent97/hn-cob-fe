@@ -1,0 +1,22 @@
+@reference "../../../styles.css";
+
+/* The globe sits on the auth layout's black brand panel. */
+:host {
+  @apply flex w-full flex-col items-center gap-5;
+}
+.stage {
+  @apply relative aspect-square;
+  width: min(520px, 100%, calc(100dvh - 340px));
+}
+.stage.fallback {
+  @apply rounded-full border border-white/10 bg-dark-surface;
+}
+canvas {
+  @apply block size-full cursor-grab touch-none rounded-full;
+}
+canvas:active {
+  @apply cursor-grabbing;
+}
+.caption {
+  @apply text-center text-xs text-brand-300;
+}

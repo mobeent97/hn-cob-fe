@@ -33,13 +33,13 @@ import { ChangeDetectionStrategy, Component, ElementRef, input, model, output, v
     .otp {
       display: grid;
       grid-template-columns: repeat(6, minmax(0, 1fr));
-      gap: 8px;
+      gap: 0.5rem;
     }
     .box {
-      height: 48px;
+      height: var(--control-height-lg);
       padding: 0;
       text-align: center;
-      font-size: 20px;
+      font-size: 1.25rem;
       font-weight: 600;
     }
   `,

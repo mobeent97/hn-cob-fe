@@ -24,12 +24,7 @@ import { Icon } from '../../shared/ui/icon';
       </section>
     </div>
   `,
-  styles: `
-    .denied { display: flex; gap: 16px; padding: 28px; max-width: 640px; }
-    .ic { color: var(--muted); margin-top: 4px; }
-    p { margin: 8px 0 20px; line-height: 22px; }
-    .actions { display: flex; gap: 8px; }
-  `,
+  styleUrl: './forbidden.css',
 })
 export class Forbidden {
   private readonly access = inject(Access);

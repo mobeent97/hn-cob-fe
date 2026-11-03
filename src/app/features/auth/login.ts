@@ -19,7 +19,7 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   selector: 'app-login',
   imports: [RouterLink, Icon, AuthLayout, Globe],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: './auth-form.scss',
+  styleUrl: './auth-form.css',
   template: `
     <app-auth-layout asideLabel="Fleet activity">
       <form class="auth-form t-shake" #form novalidate (submit)="submit($event)">
@@ -30,7 +30,7 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
         <div class="field">
           <label for="email">Email</label>
-          <input id="email" class="ui-control" type="email" autocomplete="username" inputmode="email" spellcheck="false"
+          <input id="email" class="ui-control ui-control-lg" type="email" autocomplete="username" inputmode="email" spellcheck="false"
                  [class.invalid]="tried() && emailError()" [attr.aria-invalid]="tried() && !!emailError()"
                  [attr.aria-describedby]="tried() && emailError() ? 'email-err' : null"
                  [value]="email()" (input)="email.set($any($event.target).value); error.set(false)" />
@@ -42,7 +42,7 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         <div class="field">
           <label for="password">Password</label>
           <div class="pw">
-            <input id="password" class="ui-control" [type]="show() ? 'text' : 'password'" autocomplete="current-password"
+            <input id="password" class="ui-control ui-control-lg" [type]="show() ? 'text' : 'password'" autocomplete="current-password"
                    [class.invalid]="tried() && !password()" [attr.aria-invalid]="tried() && !password()"
                    [value]="password()" (input)="password.set($any($event.target).value); error.set(false)" />
             <button type="button" class="reveal" (click)="show.set(!show())"

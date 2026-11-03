@@ -1,0 +1,14 @@
+@reference "../../../styles.css";
+
+.denied {
+  @apply flex max-w-160 gap-4 p-7;
+}
+.ic {
+  @apply mt-1 text-muted dark:text-brand-300;
+}
+p {
+  @apply mt-2 mb-5 leading-[22px];
+}
+.actions {
+  @apply flex gap-2;
+}

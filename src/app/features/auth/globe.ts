@@ -5,19 +5,25 @@ import {
 import type * as ThreeNS from 'three';
 import { Store } from '../../core/data/store';
 import { Theme } from '../../core/theme/theme';
+import { cssColor } from '../../shared/ui/css-color';
 
 type Three = typeof ThreeNS;
 type Rgb = [number, number, number];
 /** Which token colours a dot: the grey land, a live device / city, or an offline device. */
 type Tone = 0 | 1 | 2;
 
-/** The globe's colours, read from the theme tokens. */
+/**
+ * The globe's colours. It always sits on the auth layout's black brand panel, so they are fixed to that panel
+ * (a dark-surface ball, dim purple land, bright brand dots) rather than following the light/dark theme.
+ */
 function palette() {
-  const css = getComputedStyle(document.documentElement);
-  const v = (name: string, fb: string) => hex(css.getPropertyValue(name), fb);
   return {
-    tones: [v('--chart-3', '#8a96a0'), v('--accent', '#0a6f96'), v('--chart-4', '#c9d1d7')] as Rgb[],
-    surface: v('--surface', '#ffffff'),
+    tones: [
+      rgb('color-mix(in srgb, var(--color-brand-400) 30%, var(--color-dark-surface))'),
+      rgb('var(--color-brand-300)'),
+      rgb('color-mix(in srgb, var(--color-white) 30%, var(--color-dark-surface))'),
+    ] as Rgb[],
+    surface: rgb('var(--color-dark-surface)'),
   };
 }
 
@@ -62,10 +68,10 @@ const FRAG = /* glsl */ `
   }
 `;
 
-const hex = (css: string, fallback: string): [number, number, number] => {
-  const m = /^#?([0-9a-f]{6})$/i.exec(css.trim()) ?? /^#?([0-9a-f]{6})$/i.exec(fallback)!;
-  const n = parseInt(m[1], 16);
-  return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
+/** A CSS colour (tokens included) as 0–1 channels for three.js. */
+const rgb = (css: string): Rgb => {
+  const [r = 0, g = 0, b = 0] = cssColor(css).match(/[\d.]+/g)?.map(Number) ?? [];
+  return [r / 255, g / 255, b / 255];
 };
 
 const toXYZ = (lat: number, lng: number, r: number): [number, number, number] => [
@@ -76,7 +82,7 @@ const toXYZ = (lat: number, lng: number, r: number): [number, number, number] =>
 
 /**
  * The login screen's one live thing: a flat dotted globe with a dot at every tracked device.
- * three.js loads only on wide screens (the panel is hidden below 900px), renders only while
+ * three.js loads only on wide screens (the brand panel is hidden below 1024px), renders only while
  * the canvas is on screen and the tab is visible, and frees every GPU resource on destroy.
  */
 @Component({
@@ -100,40 +106,7 @@ const toXYZ = (lat: number, lng: number, r: number): [number, number, number] =>
     </div>
     <p class="caption num">{{ caption() }}</p>
   `,
-  styles: `
-    :host {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
-      width: 100%;
-    }
-    .stage {
-      width: min(560px, 100%, calc(100dvh - 200px));
-      aspect-ratio: 1;
-      position: relative;
-    }
-    .stage.fallback {
-      border-radius: 50%;
-      background: var(--surface);
-      border: 1px solid var(--border);
-    }
-    canvas {
-      display: block;
-      width: 100%;
-      height: 100%;
-      cursor: grab;
-      touch-action: none;
-      border-radius: 50%;
-    }
-    canvas:active {
-      cursor: grabbing;
-    }
-    .caption {
-      color: var(--muted);
-      text-align: center;
-    }
-  `,
+  styleUrl: './globe.css',
 })
 export class Globe {
   private readonly store = inject(Store);
@@ -188,7 +161,7 @@ export class Globe {
     });
 
     afterNextRender(() => {
-      const wide = matchMedia('(min-width: 900px)');
+      const wide = matchMedia('(min-width: 1024px)');
       const motion = matchMedia('(prefers-reduced-motion: reduce)');
       this.reduced = motion.matches;
       const onMotion = () => {

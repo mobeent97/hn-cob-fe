@@ -1,0 +1,45 @@
+@reference "../../../styles.css";
+
+/* Sample users grouped by organisation, as dropdown-style rows. */
+section + section {
+  @apply mt-4;
+}
+h3 {
+  @apply mb-1.5 flex items-center gap-2 text-xs font-semibold text-ink dark:text-white;
+}
+.sw {
+  @apply size-2.5 rounded-[3px];
+}
+ul {
+  @apply m-0 list-none p-0;
+}
+li + li {
+  @apply mt-0.5;
+}
+button {
+  @apply flex w-full cursor-pointer items-center gap-2.5 rounded-lg border-0 bg-transparent px-3 py-2 text-left text-ink dark:text-white;
+  transition: background-color var(--duration-hover) ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  button:hover {
+    @apply bg-brand-50 dark:bg-brand-600/15;
+  }
+}
+button.current {
+  @apply bg-brand-50 dark:bg-brand-600/15;
+}
+button app-icon {
+  @apply ml-auto text-muted dark:text-brand-300;
+}
+.pill {
+  @apply ml-auto;
+}
+.who {
+  @apply flex flex-col;
+}
+.who strong {
+  @apply text-xs font-semibold;
+}
+.who small {
+  @apply text-[11px] text-muted dark:text-brand-300;
+}
