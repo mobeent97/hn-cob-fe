@@ -14,7 +14,7 @@ sync the copied files below instead of restyling the COB by hand.
 | `shared-ui/src/lib/*` (dropdown, tooltip, tab-indicator, skeleton, status-badge, blocking-loader, smooth-height, spotlight-border, motion, plural, charts) | `src/app/shared/iotility-ui/` (imported as `@iotility/shared-ui`) | See its `README.md` |
 | `fleetpoint/src/app/shared/maps/maplibre.ts` (part) | `src/app/shared/maps/maplibre.ts` | Only the helpers the COB uses |
 | `fleetpoint/src/app/layout/*` | `src/app/core/layout/shell.*` | Rebuilt with the COB's nav and header pieces |
-| `iotility/src/app/auth/auth-layout`, `login` | `src/app/features/auth/auth-layout.*`, `auth-form.css` | Look ported; COB forms and globe kept |
+| `iotility/src/app/auth/auth-layout`, `login` | `src/app/features/auth/auth-layout.*`, `auth-form.css` | Look and proportions ported (63% brand panel, full-width form card); COB forms kept, the brand panel shows the MapLibre globe |
 | Boot screen in `iotility/src/index.html` | `src/index.html`, `src/main.ts` | HyperNym logo and copy |
 | Inter (`public/assets/fonts/`), HyperNym logos, a few FleetPoint icons | `public/assets/` | No |
 
@@ -59,7 +59,7 @@ All from `theme.css`. Use the Tailwind names in templates and `@apply`, the CSS 
   `<html>`. Nothing saved means **dark**, as in IoTility. The pre-paint script in `index.html` does the same
   before Angular boots; those are the only two places that touch the theme.
 - A switch cross-fades the window once (View Transitions). `Theme.version()` bumps after every switch.
-- **Canvas and WebGL code** (ECharts, MapLibre, the globe) can't read tokens or oklch: resolve colours with
+- **Canvas and WebGL code** (ECharts, MapLibre) can't read tokens or oklch: resolve colours with
   `cssColor('var(--color-…)')` (`shared/ui/css-color.ts`) and resolve again when the theme changes.
 
 ## Type and icons
@@ -153,6 +153,12 @@ file), through `shared/maps/maplibre.ts`:
   offline `muted`.
 - Controls, popups and labels are styled after FleetPoint's map overlays; `::ng-deep` is used for
   MapLibre's own DOM only.
+- **Sign-in globe** (`features/auth/globe.ts`): MapLibre's globe projection with its own minimal style on the
+  same OpenFreeMap vector tiles (`mapVectorTilesUrl`): land and sea in dark brand tones and thin country borders,
+  no labels. It always sits on the black brand panel, so it doesn't follow the theme. Its zoom is solved from
+  MapLibre's camera so the visible disc fills the stage. Customer cities and vehicles are circle layers; it turns
+  slowly (paused while the user drags or uses the arrow keys, still under reduced motion) and loads MapLibre only
+  on screens wide enough to show the panel.
 
 ## Motion
 

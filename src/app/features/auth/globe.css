@@ -6,17 +6,44 @@
 }
 .stage {
   @apply relative aspect-square;
-  width: min(520px, 100%, calc(100dvh - 340px));
+  width: min(760px, 100%, calc(100dvh - 300px));
+}
+/* Fades in once the first style has drawn, so the empty canvas never flashes. */
+.map {
+  @apply absolute inset-0 cursor-grab opacity-0 active:cursor-grabbing;
+  transition: opacity 600ms var(--ease-out);
+}
+.stage.ready .map {
+  @apply opacity-100;
 }
 .stage.fallback {
   @apply rounded-full border border-white/10 bg-dark-surface;
 }
-canvas {
-  @apply block size-full cursor-grab touch-none rounded-full;
-}
-canvas:active {
-  @apply cursor-grabbing;
-}
 .caption {
   @apply text-center text-xs text-brand-300;
+}
+
+/* MapLibre's own DOM: a transparent canvas around the planet and a quiet attribution button. */
+:host ::ng-deep .maplibregl-map {
+  @apply bg-transparent font-sans;
+}
+:host ::ng-deep .maplibregl-canvas:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 4px;
+  @apply rounded-full;
+}
+:host ::ng-deep .maplibregl-ctrl-attrib.maplibregl-compact {
+  @apply bg-white/10 text-brand-200;
+}
+:host ::ng-deep .maplibregl-ctrl-attrib.maplibregl-compact a {
+  @apply text-brand-200;
+}
+:host ::ng-deep .maplibregl-ctrl-attrib-button {
+  filter: invert(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map {
+    transition: none;
+  }
 }

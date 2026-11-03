@@ -5,4 +5,6 @@ export const environment = {
   // OpenFreeMap vector styles, the same IoTility uses (light / dark follow the .dark class).
   mapLightStyleUrl: 'https://tiles.openfreemap.org/styles/liberty',
   mapDarkStyleUrl: 'https://tiles.openfreemap.org/styles/dark',
+  // The same vector tiles, for maps that draw their own minimal style (the sign-in globe).
+  mapVectorTilesUrl: 'https://tiles.openfreemap.org/planet',
 };

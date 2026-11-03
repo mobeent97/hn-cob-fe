@@ -17,8 +17,16 @@ export type LayerWithoutSource<T = maplibregl.LayerSpecification> = T extends { 
 /**
  * A map on the OpenFreeMap style for the current theme. A light/dark switch swaps the style, which drops every
  * custom source and layer: re-add yours on the map's 'style.load' event (it also fires for the first style).
+ * `theme: 'dark'` pins the dark style for maps that always sit on a dark surface (the sign-in globe).
  */
-export function createIotMap(container: HTMLElement, center: LatLng, zoom: number, options: Partial<MapOptions> = {}): Map {
+export function createIotMap(
+  container: HTMLElement,
+  center: LatLng,
+  zoom: number,
+  options: Partial<MapOptions> = {},
+  theme: 'follow' | 'dark' = 'follow',
+): Map {
+  const dark = () => theme === 'dark' || isDark();
   const map = new maplibregl.Map({
     container,
     center: [center[1], center[0]],
@@ -27,7 +35,7 @@ export function createIotMap(container: HTMLElement, center: LatLng, zoom: numbe
     bearing: 0,
     attributionControl: false,
     canvasContextAttributes: { antialias: true },
-    style: isDark() ? environment.mapDarkStyleUrl : environment.mapLightStyleUrl,
+    style: dark() ? environment.mapDarkStyleUrl : environment.mapLightStyleUrl,
     ...options,
   });
   map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
@@ -44,8 +52,9 @@ export function createIotMap(container: HTMLElement, center: LatLng, zoom: numbe
 
   map.on('style.load', () => {
     applyEnglishLabels(map);
-    applyFleetMapStyle(map, isDark());
+    applyFleetMapStyle(map, dark());
   });
+  if (theme === 'dark') return map;
 
   let darkTheme = isDark();
   const themeObserver = new MutationObserver(() => {

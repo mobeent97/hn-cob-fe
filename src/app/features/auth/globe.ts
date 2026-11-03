@@ -1,31 +1,12 @@
 import {
-  ChangeDetectionStrategy, Component, DestroyRef, ElementRef, afterNextRender, computed, effect, inject, signal, untracked,
+  ChangeDetectionStrategy, Component, DestroyRef, ElementRef, afterNextRender, computed, effect, inject, signal,
   viewChild,
 } from '@angular/core';
-import type * as ThreeNS from 'three';
+import type { FeatureCollection } from 'geojson';
+import type { Map as MapLibreMap, StyleSpecification } from 'maplibre-gl';
 import { Store } from '../../core/data/store';
-import { Theme } from '../../core/theme/theme';
 import { cssColor } from '../../shared/ui/css-color';
-
-type Three = typeof ThreeNS;
-type Rgb = [number, number, number];
-/** Which token colours a dot: the grey land, a live device / city, or an offline device. */
-type Tone = 0 | 1 | 2;
-
-/**
- * The globe's colours. It always sits on the auth layout's black brand panel, so they are fixed to that panel
- * (a dark-surface ball, dim purple land, bright brand dots) rather than following the light/dark theme.
- */
-function palette() {
-  return {
-    tones: [
-      rgb('color-mix(in srgb, var(--color-brand-400) 30%, var(--color-dark-surface))'),
-      rgb('var(--color-brand-300)'),
-      rgb('color-mix(in srgb, var(--color-white) 30%, var(--color-dark-surface))'),
-    ] as Rgb[],
-    surface: rgb('var(--color-dark-surface)'),
-  };
-}
+import { environment } from '../../../environments/environment';
 
 /** City centres for the customer zones in the sample data (lat, lng). */
 const CITIES: Record<string, [number, number]> = {
@@ -36,72 +17,33 @@ const CITIES: Record<string, [number, number]> = {
   Manchester: [53.48, -2.24], Beirut: [33.89, 35.5],
 };
 
-/** The Gulf: where the globe starts facing. */
+/** The Gulf: where the globe starts facing (lat, lng). */
 const START: [number, number] = [24, 53];
-const DOTS = 2600;
-const DEG = Math.PI / 180;
-
-const VERT = /* glsl */ `
-  attribute float aSize;
-  attribute vec3 aColor;
-  uniform float uDpr;
-  varying vec3 vColor;
-  varying float vFace;
-  void main() {
-    vec3 n = normalize(normalMatrix * position);
-    vFace = smoothstep(0.0, 0.5, n.z);
-    vColor = aColor;
-    gl_PointSize = aSize * uDpr;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`;
-// Flat round dots. Near the limb a dot fades into the sheet colour instead of glowing.
-const FRAG = /* glsl */ `
-  uniform vec3 uBg;
-  varying vec3 vColor;
-  varying float vFace;
-  void main() {
-    float d = length(gl_PointCoord - 0.5);
-    if (d > 0.5) discard;
-    float a = 1.0 - smoothstep(0.4, 0.5, d);
-    gl_FragColor = vec4(mix(uBg, vColor, vFace), a);
-  }
-`;
-
-/** A CSS colour (tokens included) as 0–1 channels for three.js. */
-const rgb = (css: string): Rgb => {
-  const [r = 0, g = 0, b = 0] = cssColor(css).match(/[\d.]+/g)?.map(Number) ?? [];
-  return [r / 255, g / 255, b / 255];
-};
-
-const toXYZ = (lat: number, lng: number, r: number): [number, number, number] => [
-  r * Math.cos(lat * DEG) * Math.sin(lng * DEG),
-  r * Math.sin(lat * DEG),
-  r * Math.cos(lat * DEG) * Math.cos(lng * DEG),
-];
+/** One turn every ~105 s. */
+const SPIN_DEG_PER_S = 360 / 105;
+/** After the user turns the globe, it rests this long before spinning again. */
+const RESUME_AFTER_MS = 3000;
+/** Share of the stage the globe's visible disc fills. */
+const FILL = 0.96;
+/** MapLibre's default vertical field of view, in degrees. */
+const FOV = 36.87;
+const SOURCE = 'globe-points';
 
 /**
- * The login screen's one live thing: a flat dotted globe with a dot at every tracked device.
- * three.js loads only on wide screens (the brand panel is hidden below 1024px), renders only while
- * the canvas is on screen and the tab is visible, and frees every GPU resource on destroy.
+ * The sign-in screen's one live thing: a map on a globe (MapLibre's globe projection on the OpenFreeMap vector
+ * tiles) drawn deliberately quiet — land and sea in the brand's dark tones and thin country borders, no labels —
+ * with a dot at every tracked vehicle and a soft marker on each customer city. It turns slowly; drag it or use
+ * the arrow keys to look around.
+ * MapLibre loads only on wide screens (the brand panel is hidden below 1024px), the spin runs only while the
+ * globe is on screen and the tab is visible, and reduced motion keeps it still.
  */
 @Component({
   selector: 'app-globe',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="stage" #stage [class.fallback]="fallback()">
+    <div class="stage" [class.fallback]="fallback()" [class.ready]="ready()">
       @if (!fallback()) {
-        <canvas
-          #canvas
-          tabindex="0"
-          role="img"
-          [attr.aria-label]="'Globe showing ' + caption() + '. Drag or use the arrow keys to turn it.'"
-          (pointerdown)="down($event)"
-          (pointermove)="move($event)"
-          (pointerup)="up($event)"
-          (pointercancel)="up($event)"
-          (keydown)="key($event)"
-        ></canvas>
+        <div class="map" #map></div>
       }
     </div>
     <p class="caption num">{{ caption() }}</p>
@@ -110,8 +52,9 @@ const toXYZ = (lat: number, lng: number, r: number): [number, number, number] =>
 })
 export class Globe {
   private readonly store = inject(Store);
-  private readonly stage = viewChild.required<ElementRef<HTMLDivElement>>('stage');
+  private readonly mapEl = viewChild<ElementRef<HTMLDivElement>>('map');
   protected readonly fallback = signal(false);
+  protected readonly ready = signal(false);
 
   private readonly reporting = computed(() => this.store.vehicles().filter((v) => v.state !== 'Offline'));
   protected readonly caption = computed(() => {
@@ -121,43 +64,23 @@ export class Globe {
     return `${n} ${n === 1 ? 'vehicle' : 'vehicles'} reporting now across ${m} ${m === 1 ? 'city' : 'cities'}`;
   });
 
-  // Scene state (outside Angular's change detection: nothing here touches the template).
-  private three?: Three;
-  private renderer?: ThreeNS.WebGLRenderer;
-  private scene?: ThreeNS.Scene;
-  private camera?: ThreeNS.PerspectiveCamera;
-  private tilt?: ThreeNS.Group;
-  private spin?: ThreeNS.Group;
-  private disposables: { dispose(): void }[] = [];
+  private map?: MapLibreMap;
   private raf = 0;
   private running = false;
   private destroyed = false;
   private inView = false;
   private reduced = false;
-  private rotY = 0;
-  private rotX = 0;
-  private velY = 0;
-  private velX = 0;
-  private dragging = false;
-  private lastX = 0;
-  private lastY = 0;
-  private lastMoveAt = 0;
+  private pausedUntil = 0;
   private lastFrame = 0;
   private teardown: (() => void)[] = [];
-  private tones: Tone[] = [];
-  private ballMat?: ThreeNS.MeshBasicMaterial;
-  private dotMat?: ThreeNS.ShaderMaterial;
-  private dotGeo?: ThreeNS.BufferGeometry;
 
   constructor() {
-    const destroyRef = inject(DestroyRef);
-    destroyRef.onDestroy(() => this.dispose());
+    inject(DestroyRef).onDestroy(() => this.dispose());
 
-    // Theme switch: re-read the tokens into the ball, the limb fade and every dot.
-    const theme = inject(Theme);
+    // The canvas carries the description screen readers hear.
     effect(() => {
-      theme.version();
-      untracked(() => this.recolour());
+      const label = `Globe showing ${this.caption()}. Drag or use the arrow keys to turn it.`;
+      this.map?.getCanvas().setAttribute('aria-label', label);
     });
 
     afterNextRender(() => {
@@ -170,12 +93,11 @@ export class Globe {
       };
       motion.addEventListener('change', onMotion);
       this.teardown.push(() => motion.removeEventListener('change', onMotion));
-
-      // Don't download three.js for a panel the phone never shows.
+      // Don't download MapLibre for a panel the phone never shows.
       if (wide.matches) void this.init();
       else {
         const onWide = () => {
-          if (!wide.matches || this.three) return;
+          if (!wide.matches || this.map) return;
           wide.removeEventListener('change', onWide);
           void this.init();
         };
@@ -186,245 +108,224 @@ export class Globe {
   }
 
   private async init() {
-    let THREE: Three;
+    const container = this.mapEl()?.nativeElement;
+    if (!container) return;
+    let maps: typeof import('../../shared/maps/maplibre');
     try {
-      THREE = await import('three');
+      maps = await import('../../shared/maps/maplibre');
     } catch {
       this.fallback.set(true);
       return;
     }
     if (this.destroyed) return;
-    const stage = this.stage().nativeElement;
-    const canvas = stage.querySelector('canvas');
-    if (!canvas) return;
 
-    let renderer: ThreeNS.WebGLRenderer;
+    let map: MapLibreMap;
     try {
-      const probe = canvas.getContext('webgl2') ?? canvas.getContext('webgl');
-      if (!probe) throw new Error('no webgl');
-      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'low-power' });
+      const zoom = this.fitZoom(container, START[0]);
+      map = maps.createIotMap(
+        container,
+        START,
+        zoom,
+        {
+          style: this.styleSpec(),
+          minZoom: zoom - 1,
+          maxZoom: zoom + 1,
+          dragRotate: false,
+          pitchWithRotate: false,
+          touchPitch: false,
+          touchZoomRotate: false,
+          scrollZoom: false,
+          boxZoom: false,
+          doubleClickZoom: false,
+          keyboard: true,
+        },
+        'dark',
+      );
     } catch {
+      // No WebGL: the plain disc stands in.
       this.fallback.set(true);
       return;
     }
-    this.three = THREE;
-    this.renderer = renderer;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setClearColor(0x000000, 0);
+    this.map = map;
+    map.getCanvas().setAttribute('aria-label', `Globe showing ${this.caption()}. Drag or use the arrow keys to turn it.`);
 
-    const { tones, surface } = palette();
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 10);
-    camera.position.set(0, 0, 4.25);
-    this.scene = scene;
-    this.camera = camera;
-
-    // tilt (x) holds the spin group (y) so dragging feels like turning a ball on a stand.
-    const tilt = new THREE.Group();
-    const spin = new THREE.Group();
-    tilt.rotation.x = START[0] * DEG;
-    spin.rotation.y = -START[1] * DEG;
-    tilt.add(spin);
-    scene.add(tilt);
-    this.tilt = tilt;
-    this.spin = spin;
-
-    // A flat sheet-coloured ball hides the far side's dots.
-    const ballGeo = new THREE.SphereGeometry(0.985, 64, 48);
-    const ballMat = new THREE.MeshBasicMaterial({ color: new THREE.Color().setRGB(...surface, THREE.SRGBColorSpace) });
-    spin.add(new THREE.Mesh(ballGeo, ballMat));
-
-    // Every dot in one buffer → one draw call: grey Fibonacci sphere, then cities, then vehicles.
-    const pos: number[] = [];
-    const col: number[] = [];
-    const size: number[] = [];
-    const push = (xyz: Rgb, tone: Tone, s: number) => {
-      pos.push(...xyz);
-      col.push(...tones[tone]);
-      size.push(s);
-      this.tones.push(tone);
-    };
-    const golden = Math.PI * (3 - Math.sqrt(5));
-    for (let i = 0; i < DOTS; i++) {
-      const y = 1 - (i / (DOTS - 1)) * 2;
-      const r = Math.sqrt(1 - y * y);
-      const t = golden * i;
-      push([Math.cos(t) * r, y, Math.sin(t) * r], 0, 2);
-    }
-    const perCity = new Map<string, number>();
-    for (const c of this.store.customers()) if (CITIES[c.zone]) perCity.set(c.zone, (perCity.get(c.zone) ?? 0) + 1);
-    for (const [zone, n] of perCity) {
-      const [lat, lng] = CITIES[zone];
-      push(toXYZ(lat, lng, 1.004), 1, Math.min(10, 4 + Math.sqrt(n) * 1.4));
-    }
-    for (const veh of this.store.vehicles()) {
-      push(toXYZ(veh.lat, veh.lng, 1.006), veh.state === 'Offline' ? 2 : 1, 4);
-    }
-    const dotGeo = new THREE.BufferGeometry();
-    dotGeo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-    dotGeo.setAttribute('aColor', new THREE.Float32BufferAttribute(col, 3));
-    dotGeo.setAttribute('aSize', new THREE.Float32BufferAttribute(size, 1));
-    const dotMat = new THREE.ShaderMaterial({
-      vertexShader: VERT,
-      fragmentShader: FRAG,
-      uniforms: { uDpr: { value: renderer.getPixelRatio() }, uBg: { value: new THREE.Vector3(...surface) } },
-      transparent: true,
-      depthWrite: false,
+    map.on('style.load', () => {
+      maps.upsertGeoJson(map, SOURCE, this.points(), [
+        {
+          id: 'globe-cities',
+          type: 'circle',
+          filter: ['==', ['get', 'kind'], 'city'],
+          paint: {
+            'circle-radius': ['get', 'r'],
+            'circle-color': cssColor('var(--color-brand-400)'),
+            'circle-opacity': 0.22,
+            'circle-stroke-width': 1,
+            'circle-stroke-color': cssColor('var(--color-brand-300)'),
+            'circle-stroke-opacity': 0.6,
+          },
+        },
+        {
+          id: 'globe-vehicles',
+          type: 'circle',
+          filter: ['!=', ['get', 'kind'], 'city'],
+          paint: {
+            'circle-radius': 2.5,
+            'circle-color': ['get', 'color'],
+            'circle-stroke-width': 0.5,
+            'circle-stroke-color': cssColor('var(--color-dark-surface)'),
+          },
+        },
+      ]);
     });
-    spin.add(new THREE.Points(dotGeo, dotMat));
-    this.disposables.push(ballGeo, ballMat, dotGeo, dotMat);
-    this.ballMat = ballMat;
-    this.dotMat = dotMat;
-    this.dotGeo = dotGeo;
+    map.once('load', () => this.ready.set(true));
 
-    // Size to the stage; observers gate rendering.
-    const resize = () => {
-      const w = stage.clientWidth;
-      if (!w) return;
-      renderer.setSize(w, w, false);
-      this.renderOnce();
-    };
-    const ro = new ResizeObserver(resize);
-    ro.observe(stage);
-    const io = new IntersectionObserver(([e]) => {
-      this.inView = e.isIntersecting;
+    // Turning the globe pauses the spin for a moment.
+    const pause = () => (this.pausedUntil = performance.now() + RESUME_AFTER_MS);
+    for (const type of ['pointerdown', 'keydown', 'touchstart'] as const) {
+      container.addEventListener(type, pause, { passive: true });
+      this.teardown.push(() => container.removeEventListener(type, pause));
+    }
+
+    // The globe always fills the stage: the zoom follows the stage's size. (Turning it north or south keeps its
+    // size by itself: MapLibre adjusts the zoom for latitude while panning.)
+    const ro = new ResizeObserver(() => {
+      map.resize();
+      const zoom = this.fitZoom(container, map.getCenter().lat);
+      map.setMinZoom(null);
+      map.setMaxZoom(null);
+      map.setZoom(zoom);
+      map.setMinZoom(zoom - 1);
+      map.setMaxZoom(zoom + 1);
+    });
+    ro.observe(container);
+    const io = new IntersectionObserver(([entry]) => {
+      this.inView = entry.isIntersecting;
       this.kick();
     });
-    io.observe(stage);
-    const onVis = () => this.kick();
-    document.addEventListener('visibilitychange', onVis);
+    io.observe(container);
+    const onVisibility = () => this.kick();
+    document.addEventListener('visibilitychange', onVisibility);
     this.teardown.push(() => {
       ro.disconnect();
       io.disconnect();
-      document.removeEventListener('visibilitychange', onVis);
+      document.removeEventListener('visibilitychange', onVisibility);
     });
-    resize();
   }
 
-  private recolour() {
-    const THREE = this.three;
-    if (!THREE || !this.ballMat || !this.dotMat || !this.dotGeo) return;
-    const { tones, surface } = palette();
-    this.ballMat.color.setRGB(...surface, THREE.SRGBColorSpace);
-    (this.dotMat.uniforms['uBg'].value as ThreeNS.Vector3).set(...surface);
-    const attr = this.dotGeo.getAttribute('aColor') as ThreeNS.BufferAttribute;
-    this.tones.forEach((t, i) => attr.setXYZ(i, ...tones[t]));
-    attr.needsUpdate = true;
-    this.renderOnce();
+  /**
+   * The planet itself: sea, land and country borders from the vector tiles, in the brand's dark tones (the panel
+   * is always dark). No labels, roads or places, and no atmosphere: globe.css draws a brand glow at the rim.
+   */
+  private styleSpec(): StyleSpecification {
+    return {
+      version: 8,
+      projection: { type: 'globe' },
+      sources: { openmaptiles: { type: 'vector', url: environment.mapVectorTilesUrl } },
+      sky: { 'atmosphere-blend': 0 },
+      layers: [
+        {
+          id: 'globe-land',
+          type: 'background',
+          paint: { 'background-color': cssColor('color-mix(in srgb, var(--color-brand-500) 30%, var(--color-dark-surface))') },
+        },
+        {
+          id: 'globe-sea',
+          type: 'fill',
+          source: 'openmaptiles',
+          'source-layer': 'water',
+          filter: ['all', ['match', ['geometry-type'], ['MultiPolygon', 'Polygon'], true, false], ['!=', ['get', 'brunnel'], 'tunnel']],
+          paint: { 'fill-color': cssColor('color-mix(in srgb, var(--color-brand-950) 60%, var(--color-dark-canvas))') },
+        },
+        {
+          id: 'globe-borders',
+          type: 'line',
+          source: 'openmaptiles',
+          'source-layer': 'boundary',
+          filter: ['all', ['==', ['get', 'admin_level'], 2], ['!', ['has', 'claimed_by']], ['!=', ['get', 'maritime'], 1]],
+          layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint: {
+            'line-color': cssColor('var(--color-brand-200)'),
+            'line-opacity': 0.35,
+            'line-width': 0.6,
+          },
+        },
+      ],
+    };
+  }
+
+  /** Customer cities sized by how many customers they have, then every vehicle. */
+  private points(): FeatureCollection {
+    const live = cssColor('var(--color-brand-300)');
+    const offline = cssColor('color-mix(in srgb, var(--color-white) 35%, var(--color-dark-surface))');
+    const perCity = new Map<string, number>();
+    for (const c of this.store.customers()) if (CITIES[c.zone]) perCity.set(c.zone, (perCity.get(c.zone) ?? 0) + 1);
+    return {
+      type: 'FeatureCollection',
+      features: [
+        ...[...perCity].map(([zone, n]) => {
+          const [lat, lng] = CITIES[zone];
+          return {
+            type: 'Feature' as const,
+            properties: { kind: 'city', r: Math.min(12, 4 + Math.sqrt(n) * 1.8) },
+            geometry: { type: 'Point' as const, coordinates: [lng, lat] },
+          };
+        }),
+        ...this.store.vehicles().map((v) => ({
+          type: 'Feature' as const,
+          properties: { kind: v.state === 'Offline' ? 'offline' : 'live', color: v.state === 'Offline' ? offline : live },
+          geometry: { type: 'Point' as const, coordinates: [v.lng, v.lat] },
+        })),
+      ],
+    };
+  }
+
+  /**
+   * The zoom at which the globe's visible disc is FILL of the stage. MapLibre views the globe in perspective from
+   * a camera `d` px in front of the map centre (d = height / 2 / tan(fov / 2)), so the disc's edge is where the
+   * line of sight grazes the sphere: on-screen radius r = d · tan θ with sin θ = R / (d + R). Solving for the
+   * sphere radius R, then R = worldSize / (2π · cos lat) (MapLibre scales the globe with the centre's latitude)
+   * and worldSize = 512 · 2^zoom.
+   */
+  private fitZoom(container: HTMLElement, lat: number) {
+    const size = Math.max(160, container.clientWidth);
+    const d = size / 2 / Math.tan(((FOV / 2) * Math.PI) / 180);
+    const tanTheta = (size * FILL) / 2 / d;
+    const sinTheta = tanTheta / Math.sqrt(1 + tanTheta * tanTheta);
+    const radius = (sinTheta * d) / (1 - sinTheta);
+    return Math.log2((radius * 2 * Math.PI * Math.cos((lat * Math.PI) / 180)) / 512);
   }
 
   private get visible() {
     return this.inView && document.visibilityState === 'visible';
   }
 
-  private get moving() {
-    return this.dragging || Math.abs(this.velY) > 1e-5 || Math.abs(this.velX) > 1e-5 || !this.reduced;
-  }
-
-  /** Start the loop if it should run; it stops itself when hidden or at rest. */
+  /** Start the spin if it should run; it stops itself when hidden, and never runs under reduced motion. */
   private kick() {
-    if (!this.renderer || this.running || !this.visible) return;
+    if (!this.map || this.running || !this.visible || this.reduced) return;
     this.running = true;
     this.lastFrame = performance.now();
     this.raf = requestAnimationFrame(this.frame);
   }
 
   private readonly frame = (now: number) => {
+    const map = this.map;
     const dt = Math.min(64, now - this.lastFrame) / 1000;
     this.lastFrame = now;
-    if (!this.dragging) {
-      const decay = Math.pow(0.9, dt * 60);
-      if (Math.abs(this.velY) > 1e-5 || Math.abs(this.velX) > 1e-5) {
-        this.rotY += this.velY * dt * 60;
-        this.rotX = this.clampX(this.rotX + this.velX * dt * 60);
-        this.velY *= decay;
-        this.velX *= decay;
-      } else if (!this.reduced) {
-        this.rotY += 0.06 * dt; // one turn every ~105 s
-      }
+    if (map && now > this.pausedUntil && !map.isMoving()) {
+      const center = map.getCenter();
+      map.jumpTo({ center: [center.lng + SPIN_DEG_PER_S * dt, center.lat] });
     }
-    this.renderOnce();
-    if (this.visible && this.moving && !this.destroyed) this.raf = requestAnimationFrame(this.frame);
+    if (map && this.visible && !this.reduced && !this.destroyed) this.raf = requestAnimationFrame(this.frame);
     else this.running = false;
   };
-
-  private renderOnce() {
-    if (!this.renderer || !this.scene || !this.camera) return;
-    this.spin!.rotation.y = -START[1] * DEG + this.rotY;
-    this.tilt!.rotation.x = START[0] * DEG + this.rotX;
-    this.renderer.render(this.scene, this.camera);
-  }
-
-  private clampX(x: number) {
-    return Math.max(-0.6, Math.min(0.6, x));
-  }
-
-  private perPx() {
-    return Math.PI / Math.max(1, this.stage().nativeElement.clientWidth);
-  }
-
-  protected down(e: PointerEvent) {
-    if (!this.renderer) return;
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    this.dragging = true;
-    this.velX = this.velY = 0;
-    this.lastX = e.clientX;
-    this.lastY = e.clientY;
-    this.lastMoveAt = performance.now();
-    this.kick();
-  }
-
-  protected move(e: PointerEvent) {
-    if (!this.dragging) return;
-    const k = this.perPx();
-    const dx = (e.clientX - this.lastX) * k;
-    const dy = (e.clientY - this.lastY) * k;
-    this.lastX = e.clientX;
-    this.lastY = e.clientY;
-    this.lastMoveAt = performance.now();
-    this.rotY += dx;
-    this.rotX = this.clampX(this.rotX + dy);
-    this.velY = dx;
-    this.velX = dy;
-  }
-
-  protected up(e: PointerEvent) {
-    if (!this.dragging) return;
-    this.dragging = false;
-    (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
-    // A pause before release means "put it down", not "throw it"; reduced motion never coasts.
-    if (this.reduced || performance.now() - this.lastMoveAt > 80) this.velX = this.velY = 0;
-    this.kick();
-  }
-
-  /** Arrow keys turn the globe in steps, without animation (keyboard actions don't animate). */
-  protected key(e: KeyboardEvent) {
-    const step = 12 * DEG;
-    const moves: Record<string, () => void> = {
-      ArrowLeft: () => (this.rotY -= step),
-      ArrowRight: () => (this.rotY += step),
-      ArrowUp: () => (this.rotX = this.clampX(this.rotX - step)),
-      ArrowDown: () => (this.rotX = this.clampX(this.rotX + step)),
-    };
-    if (!moves[e.key]) return;
-    e.preventDefault();
-    moves[e.key]();
-    this.renderOnce();
-  }
 
   private dispose() {
     this.destroyed = true;
     cancelAnimationFrame(this.raf);
     this.running = false;
     for (const t of this.teardown) t();
-    for (const d of this.disposables) d.dispose();
-    this.disposables = [];
-    if (this.renderer) {
-      this.renderer.dispose();
-      this.renderer.forceContextLoss();
-    }
-    this.renderer = this.scene = this.camera = this.tilt = this.spin = undefined;
-    this.ballMat = this.dotMat = this.dotGeo = undefined;
+    this.teardown = [];
+    this.map?.remove();
+    this.map = undefined;
   }
 }

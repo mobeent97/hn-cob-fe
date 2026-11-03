@@ -5,8 +5,9 @@
   @apply flex min-h-dvh bg-canvas dark:bg-dark-canvas;
 }
 
+/* IoTility's proportions: the brand panel takes 63%, the form panel the rest. */
 .auth-brand-panel {
-  @apply relative hidden w-[58%] flex-col justify-between overflow-hidden p-10 text-white lg:flex;
+  @apply relative hidden w-[63%] flex-col justify-between overflow-hidden p-10 text-white lg:flex;
 }
 /* Deep black base with a glow behind the visual and another under the tagline. */
 .auth-backdrop {
@@ -56,11 +57,12 @@
   }
 }
 
+/* The form card fills the panel's width, as IoTility's login card does. */
 .auth-content-panel {
-  @apply flex min-w-0 flex-1 flex-col items-center justify-center px-5 py-10 sm:px-8;
+  @apply flex min-w-0 flex-1 flex-col items-stretch justify-center px-5 py-10 sm:px-8;
 }
 .auth-content {
-  @apply flex w-full max-w-[26rem] flex-col gap-6;
+  @apply flex w-full flex-col gap-6;
 }
 .mobile-brand {
   @apply flex items-center justify-center gap-2 text-base font-semibold text-ink lg:hidden dark:text-white;
