@@ -1,0 +1,39 @@
+@reference "../../../styles.css";
+
+/* Shared data-table pagination (data-table-pagination.css): range on the left, round steps on the right. */
+.table-pagination {
+  @apply flex min-w-0 items-center justify-between gap-3 border-t border-line pt-3 text-xs text-muted dark:border-dark-line dark:text-brand-300;
+}
+.pagination-range {
+  @apply shrink-0;
+}
+.pagination-controls {
+  @apply flex min-w-0 items-center gap-2;
+}
+.page-step {
+  @apply grid h-8 min-w-8 shrink-0 cursor-pointer place-items-center rounded-full border border-line bg-transparent px-3.5 text-[11px] font-medium text-muted dark:border-dark-line dark:text-brand-300;
+  transition:
+    border-color var(--duration-hover) ease,
+    background-color var(--duration-hover) ease,
+    color var(--duration-hover) ease,
+    scale var(--duration-press) var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .page-step:not(:disabled):hover {
+    @apply border-brand-500 bg-brand-50 text-brand-600 dark:border-brand-500 dark:bg-brand-500/10 dark:text-white;
+  }
+}
+.page-step:disabled {
+  @apply cursor-not-allowed opacity-40;
+}
+.page-of {
+  @apply px-1 whitespace-nowrap;
+}
+@media (max-width: 560px) {
+  .table-pagination {
+    @apply flex-wrap;
+  }
+  .pagination-controls {
+    @apply ml-auto;
+  }
+}

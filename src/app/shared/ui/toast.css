@@ -1,0 +1,68 @@
+@reference "../../../styles.css";
+
+/* Toast layer of the z-index scale (3000), above dialogs. */
+.stack {
+  @apply fixed right-5 bottom-5 z-[3000] m-0 flex w-[min(380px,calc(100vw-2rem))] list-none flex-col gap-2 p-0;
+}
+.toast {
+  @apply relative flex items-start gap-3 overflow-hidden rounded-2xl border border-line bg-white py-3 pr-3 pl-4 dark:border-dark-line dark:bg-dark-surface;
+  box-shadow: var(--shadow-popover);
+  transition:
+    opacity var(--duration-popover) var(--ease-out),
+    transform var(--duration-spring) var(--ease-spring),
+    filter var(--duration-popover) ease;
+}
+@starting-style {
+  .toast {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+    filter: blur(2px);
+  }
+}
+.toast.leaving {
+  opacity: 0;
+  transform: translateY(6px) scale(0.98);
+  transition-duration: var(--duration-hover);
+  transition-timing-function: var(--ease-out);
+}
+/* Tone bar on the leading edge. */
+.toast::before {
+  content: '';
+  @apply absolute inset-y-0 left-0 w-1 bg-success;
+}
+[data-tone='error']::before {
+  @apply bg-danger;
+}
+[data-tone='info']::before {
+  @apply bg-info;
+}
+.ic {
+  @apply mt-px text-success;
+}
+[data-tone='error'] .ic {
+  @apply text-danger;
+}
+[data-tone='info'] .ic {
+  @apply text-info;
+}
+.text {
+  @apply flex min-w-0 flex-1 flex-col gap-0.5;
+}
+.text strong {
+  @apply text-[13px] font-semibold text-ink dark:text-white;
+}
+.text span {
+  @apply text-xs text-muted dark:text-brand-300;
+}
+@media (max-width: 640px) {
+  .stack {
+    @apply right-4 bottom-4 left-4 w-auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .toast.leaving {
+    transform: none;
+    filter: none;
+  }
+}

@@ -1,28 +1,29 @@
 import { ChangeDetectionStrategy, Component, computed, input, model } from '@angular/core';
-import { Icon } from './icon';
 
-/** "Showing 11–20 of 312" with previous / next. Pages are 1-based. */
+/**
+ * "Showing 11–20 of 312" with Prev / Next, in the shared data-table pagination style. Pages are 1-based.
+ */
 @Component({
   selector: 'app-pager',
-  imports: [Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="table-foot">
-      <span class="num">
+    <nav class="table-pagination" aria-label="Table pages">
+      <span class="pagination-range num">
         @if (total() === 0) { No results }
         @else { Showing {{ from() }}–{{ to() }} of {{ total() }} {{ noun() }} }
       </span>
-      <div class="pager">
-        <span class="num muted">Page {{ page() }} of {{ pages() }}</span>
-        <button class="btn icon sm" aria-label="Previous page" [disabled]="page() <= 1" (click)="page.set(page() - 1)">
-          <app-icon name="chevron-left" />
+      <div class="pagination-controls">
+        <button type="button" class="page-step" aria-label="Previous page" [disabled]="page() <= 1" (click)="page.set(page() - 1)">
+          Prev
         </button>
-        <button class="btn icon sm" aria-label="Next page" [disabled]="page() >= pages()" (click)="page.set(page() + 1)">
-          <app-icon name="chevron-right" />
+        <span class="page-of num">Page {{ page() }} of {{ pages() }}</span>
+        <button type="button" class="page-step" aria-label="Next page" [disabled]="page() >= pages()" (click)="page.set(page() + 1)">
+          Next
         </button>
       </div>
-    </div>
+    </nav>
   `,
+  styleUrl: './pager.css',
 })
 export class Pager {
   readonly total = input.required<number>();

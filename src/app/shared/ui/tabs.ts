@@ -1,6 +1,5 @@
-import {
-  ChangeDetectionStrategy, Component, ElementRef, afterRenderEffect, input, model, signal, viewChildren,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
+import { TabIndicator } from '@iotility/shared-ui';
 
 export interface TabItem<T extends string = string> {
   id: T;
@@ -8,15 +7,19 @@ export interface TabItem<T extends string = string> {
   count?: number;
 }
 
-/** Underline tabs on a full-width rule; the 2px indicator slides between labels (transitions.dev tabs sliding). */
+/**
+ * FleetPoint underline tabs (drivers-page .driver-tabs): muted labels on a hairline, the active one in brand,
+ * and IoTility's [sharedTabIndicator] bar sliding between them.
+ */
 @Component({
   selector: 'app-tabs',
+  imports: [TabIndicator],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="tabs" role="tablist">
+    <div class="tabs" role="tablist" sharedTabIndicator>
       @for (t of tabs(); track t.id) {
         <button
-          #tab
+          type="button"
           role="tab"
           [attr.aria-selected]="t.id === value()"
           [class.active]="t.id === value()"
@@ -26,40 +29,11 @@ export interface TabItem<T extends string = string> {
           @if (t.count !== undefined) { <span class="count num">{{ t.count }}</span> }
         </button>
       }
-      <span class="indicator" [style.transform]="'translateX(' + x() + 'px)'" [style.width.px]="w()" [class.ready]="ready()"></span>
     </div>
   `,
-  styles: `
-    .tabs { position: relative; display: flex; gap: 24px; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
-    button {
-      border: 0; background: none; padding: 0 0 11px; color: var(--muted); font-weight: 500; white-space: nowrap;
-      display: inline-flex; gap: 6px; align-items: center; transition: color var(--duration-quick) ease;
-    }
-    button:hover, button.active { color: var(--text); }
-    .count { color: var(--muted); font-weight: 400; }
-    .indicator {
-      position: absolute; left: 0; bottom: -1px; height: 2px; background: var(--text); border-radius: 2px;
-    }
-    .indicator.ready { transition: transform var(--duration-fast) var(--ease-out), width var(--duration-fast) var(--ease-out); }
-  `,
+  styleUrl: './tabs.css',
 })
 export class Tabs<T extends string = string> {
   readonly tabs = input.required<TabItem<T>[]>();
   readonly value = model.required<T>();
-  private readonly buttons = viewChildren<ElementRef<HTMLButtonElement>>('tab');
-  protected readonly x = signal(0);
-  protected readonly w = signal(0);
-  protected readonly ready = signal(false);
-
-  constructor() {
-    afterRenderEffect(() => {
-      const i = this.tabs().findIndex((t) => t.id === this.value());
-      const el = this.buttons()[i]?.nativeElement;
-      if (!el) return;
-      this.x.set(el.offsetLeft);
-      this.w.set(el.offsetWidth);
-      // Enable the slide only after the first placement, so the indicator doesn't fly in on load.
-      if (!this.ready()) requestAnimationFrame(() => this.ready.set(true));
-    });
-  }
 }

@@ -10,7 +10,7 @@ export interface Toast {
   leaving?: boolean;
 }
 
-/** Sonner-style toasts: rise in from the bottom, leave faster than they came. */
+/** Sonner-style toasts in IoTility tokens: rise in from the bottom, leave faster than they came. */
 @Injectable({ providedIn: 'root' })
 export class Toaster {
   readonly toasts = signal<Toast[]>([]);
@@ -53,29 +53,7 @@ export class Toaster {
       }
     </ol>
   `,
-  styles: `
-    .stack {
-      position: fixed; right: 20px; bottom: 20px; z-index: 1000;
-      display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none;
-      width: min(380px, calc(100vw - 32px));
-    }
-    .toast {
-      display: flex; align-items: flex-start; gap: 10px;
-      padding: 12px 12px 12px 14px;
-      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card);
-      box-shadow: var(--shadow-float);
-      transition: opacity var(--duration-quick) var(--ease-out), transform var(--duration-quick) var(--ease-out), filter var(--duration-quick) ease;
-      @starting-style { opacity: 0; transform: translateY(12px) scale(0.98); filter: blur(var(--blur-small)); }
-    }
-    .toast { transition-duration: var(--duration-fast); }
-    .toast.leaving { opacity: 0; transform: translateY(6px) scale(0.98); transition-duration: var(--duration-quick); }
-    .ic { margin-top: 1px; color: var(--positive); }
-    [data-tone='error'] .ic { color: var(--negative); }
-    [data-tone='info'] .ic { color: var(--accent); }
-    .text { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-    .text span { color: var(--muted); font-size: 13px; }
-    @media (max-width: 640px) { .stack { left: 16px; right: 16px; bottom: 16px; width: auto; } }
-  `,
+  styleUrl: './toast.css',
 })
 export class ToasterHost {
   protected readonly toaster = inject(Toaster);

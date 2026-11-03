@@ -4,8 +4,10 @@ import {
 import { Icon } from './icon';
 
 /**
- * Modal dialog (native <dialog>) or a right-hand drawer (variant="drawer").
- * Opens with a scale-up / slide, closes faster and softer (transitions.dev modal + panel reveal).
+ * Modal dialog (native <dialog>) or a right-hand drawer (variant="drawer"), drawn as FleetPoint's modal:
+ * rounded-3xl panel, blurred backdrop, title + muted line, footer with the secondary action then the primary.
+ * Uses IoTility's dialog timings: the backdrop fades, the panel glides up on --ease-dialog and exits faster.
+ * Stays a native <dialog> (top layer), so fixed dropdowns inside it are never clipped.
  * Bind [(open)]; project content, and buttons into [slot=footer].
  */
 @Component({
@@ -23,52 +25,19 @@ import { Icon } from './icon';
       [attr.aria-labelledby]="'dlg-title-' + uid"
     >
       <div class="frame">
-        <header>
+        <header class="modal-header">
           <div>
             <h2 [id]="'dlg-title-' + uid">{{ heading() }}</h2>
-            @if (subheading()) { <p class="muted">{{ subheading() }}</p> }
+            @if (subheading()) { <p>{{ subheading() }}</p> }
           </div>
-          <button class="btn ghost icon sm" aria-label="Close" (click)="close()"><app-icon name="x" /></button>
+          <button type="button" class="modal-close" aria-label="Close" (click)="close()"><app-icon name="x" [size]="18" /></button>
         </header>
-        <div class="body"><ng-content /></div>
-        <footer><ng-content select="[slot=footer]" /></footer>
+        <div class="body modal-content"><ng-content /></div>
+        <footer class="modal-footer"><ng-content select="[slot=footer]" /></footer>
       </div>
     </dialog>
   `,
-  styles: `
-    dialog {
-      padding: 0; border: 1px solid var(--border); background: var(--surface); color: var(--text);
-      box-shadow: var(--shadow-dialog); max-height: calc(100dvh - 48px); overflow: hidden;
-    }
-    dialog::backdrop { background: rgb(18 20 23 / 0%); transition: background-color var(--duration-fast) var(--ease-out), overlay var(--duration-fast) allow-discrete, display var(--duration-fast) allow-discrete; }
-    dialog[open]::backdrop { background: var(--overlay); }
-    @starting-style { dialog[open]::backdrop { background: rgb(18 20 23 / 0%); } }
-    dialog.closing::backdrop { background: rgb(18 20 23 / 0%); }
-
-    .modal {
-      width: min(var(--w, 560px), calc(100vw - 32px)); border-radius: 12px;
-      transition: opacity var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
-    }
-    .modal[open] { opacity: 1; transform: none; } /* none, not scale(1): a transform would trap fixed dropdowns inside */
-    @starting-style { .modal[open] { opacity: 0; transform: scale(var(--scale-modal)); } }
-    .modal.closing { opacity: 0; transform: scale(0.98); transition-duration: var(--duration-quick); }
-
-    .drawer {
-      margin: 0 0 0 auto; height: 100dvh; max-height: 100dvh; width: min(var(--w, 520px), 100vw);
-      border-radius: 0; border-width: 0 0 0 1px;
-      transition: transform var(--duration-medium) var(--ease-drawer);
-    }
-    .drawer[open] { transform: none; }
-    @starting-style { .drawer[open] { transform: translateX(100%); } }
-    .drawer.closing { transform: translateX(100%); transition-duration: var(--duration-fast); }
-
-    .frame { display: flex; flex-direction: column; max-height: inherit; height: 100%; }
-    header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 18px 20px 4px; }
-    header p { margin-top: 2px; }
-    .body { padding: 14px 20px 20px; overflow: auto; flex: 1; }
-    footer { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--rule); }
-    footer:empty { display: none; }
-  `,
+  styleUrl: './dialog.css',
 })
 export class Dialog {
   readonly open = model(false);
@@ -105,6 +74,7 @@ export class Dialog {
   private animateOut() {
     const el = this.dlg().nativeElement;
     this.closing.set(true);
+    // Keep in sync with --duration-dialog-out (theme.css).
     const ms = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 200;
     setTimeout(() => {
       el.close();

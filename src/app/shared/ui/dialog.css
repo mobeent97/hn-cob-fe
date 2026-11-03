@@ -1,0 +1,130 @@
+@reference "../../../styles.css";
+
+/*
+ * FleetPoint modal (iotility projects/fleetpoint/src/app/shared/modal/modal.css) on a native <dialog>.
+ * Motion uses IoTility's dialog tokens: --duration-dialog-backdrop / -in / -out, --ease-dialog / -dialog-out.
+ */
+dialog {
+  @apply m-auto overflow-hidden border border-line bg-white p-0 text-ink dark:border-dark-line dark:bg-dark-surface dark:text-white;
+  max-height: calc(100dvh - 2rem);
+  box-shadow: var(--shadow-modal);
+}
+dialog::backdrop {
+  background: transparent;
+  backdrop-filter: blur(0);
+  transition:
+    background-color var(--duration-dialog-backdrop) ease-out,
+    backdrop-filter var(--duration-dialog-backdrop) ease-out,
+    overlay var(--duration-dialog-backdrop) allow-discrete,
+    display var(--duration-dialog-backdrop) allow-discrete;
+}
+dialog[open]::backdrop {
+  background: color-mix(in srgb, var(--color-dark-canvas) 65%, transparent);
+  backdrop-filter: blur(4px);
+}
+@starting-style {
+  dialog[open]::backdrop {
+    background: transparent;
+    backdrop-filter: blur(0);
+  }
+}
+dialog.closing::backdrop {
+  background: transparent;
+  backdrop-filter: blur(0);
+  transition-duration: var(--duration-dialog-out);
+}
+
+/* Modal: the panel glides up on the sheet curve; it leaves quicker, accelerating away. */
+.modal {
+  @apply rounded-3xl;
+  width: min(var(--w, 560px), calc(100vw - 2rem));
+  transition:
+    opacity var(--duration-dialog-fade) var(--ease-dialog),
+    transform var(--duration-dialog-in) var(--ease-dialog);
+  transition-delay: var(--delay-dialog-panel);
+}
+/* none, not translate(0): a transform at rest would trap the fixed dropdowns inside. */
+.modal[open] {
+  opacity: 1;
+  transform: none;
+}
+@starting-style {
+  .modal[open] {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+.modal.closing {
+  opacity: 0;
+  transform: translateY(6px) scale(0.985);
+  transition-delay: 0ms;
+  transition-duration: var(--duration-dialog-out);
+  transition-timing-function: var(--ease-dialog-out);
+}
+
+/* Drawer: a full-height sheet from the right. */
+.drawer {
+  @apply mr-0 ml-auto h-dvh max-h-dvh rounded-none border-y-0 border-r-0;
+  width: min(var(--w, 520px), 100vw);
+  transition: transform var(--duration-dialog-in) var(--ease-drawer);
+}
+.drawer[open] {
+  transform: none;
+}
+@starting-style {
+  .drawer[open] {
+    transform: translateX(100%);
+  }
+}
+.drawer.closing {
+  transform: translateX(100%);
+  transition-duration: var(--duration-dialog-out);
+  transition-timing-function: var(--ease-dialog-out);
+}
+
+.frame {
+  @apply flex h-full flex-col;
+  max-height: inherit;
+}
+.modal-header {
+  @apply flex items-start justify-between gap-4 px-6 pt-6 pb-2;
+}
+.modal-header h2 {
+  @apply m-0 text-lg font-bold text-ink dark:text-white;
+}
+.modal-header p {
+  @apply mt-1 text-xs font-normal text-muted dark:text-brand-300;
+}
+.modal-close {
+  @apply -mt-1 -mr-1 grid size-8 shrink-0 cursor-pointer place-items-center rounded-lg border-0 bg-transparent text-muted dark:text-brand-300;
+  transition:
+    background-color var(--duration-hover) ease,
+    color var(--duration-hover) ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .modal-close:hover {
+    @apply bg-canvas text-danger dark:bg-dark-canvas dark:text-danger;
+  }
+}
+.modal-content {
+  @apply flex-1 overflow-auto px-6 py-3;
+}
+/* Footer (fields.css .form-actions): secondary then primary, equal width. */
+.modal-footer {
+  @apply flex gap-2 px-6 pt-3 pb-6;
+}
+.modal-footer:empty {
+  @apply hidden;
+}
+.modal-footer > :is(button, a) {
+  @apply min-h-10 flex-1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal,
+  .modal.closing,
+  .drawer,
+  .drawer.closing {
+    transition: opacity var(--duration-dialog-fade) ease;
+    transform: none;
+  }
+}

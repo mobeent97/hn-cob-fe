@@ -40,6 +40,10 @@ let uid = 0;
  * <app-option> children. Values are strings, exactly like a native select, so handlers keep working.
  * Keyboard: ↑ ↓ Home End, Enter/Space to choose, Esc to close, type to jump. Long lists get a search box.
  * The panel is position: fixed (never clipped by a scrolling table) and flips up near the bottom.
+ *
+ * It looks exactly like IoTility's shared-dropdown in select mode (.ui-control .ui-select trigger, the
+ * dropdown panel), but stays its own component: shared-dropdown has no forms support (ControlValueAccessor),
+ * no keyboard navigation and an absolute panel that tables and dialogs would clip.
  */
 @Component({
   selector: 'app-select',
@@ -57,7 +61,7 @@ let uid = 0;
     <button
       #trigger
       type="button"
-      class="trigger"
+      class="trigger ui-control ui-select"
       [id]="id() ?? autoId"
       role="combobox"
       aria-haspopup="listbox"
@@ -71,7 +75,7 @@ let uid = 0;
       (blur)="onTouched()"
     >
       <span class="current" [class.placeholder]="!current()">{{ current()?.text ?? placeholderText() }}</span>
-      <app-icon name="chevron-down" [size]="14" class="chev" />
+      <app-icon name="chevron-down" [size]="16" class="chev" />
     </button>
     <ng-content />
 
@@ -124,54 +128,7 @@ let uid = 0;
       </div>
     }
   `,
-  styles: `
-    :host { display: inline-flex; position: relative; width: 100%; min-width: 0; vertical-align: middle; }
-    .trigger {
-      width: 100%; height: var(--control-h); display: flex; align-items: center; gap: 8px;
-      padding: 0 10px; text-align: left; cursor: pointer;
-      border: 1px solid var(--control); border-radius: var(--radius-control);
-      background: var(--surface); color: var(--text); font: inherit;
-      transition: border-color var(--duration-quick) ease, box-shadow var(--duration-quick) ease, background-color var(--duration-quick) ease;
-    }
-    .trigger:hover:not(:disabled) { border-color: color-mix(in srgb, var(--control) 70%, var(--text)); }
-    .trigger:focus-visible, :host(.open) .trigger { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-weak); }
-    .trigger:disabled { background: var(--raised); color: var(--muted); cursor: not-allowed; }
-    :host(.invalid) .trigger { border-color: var(--negative); box-shadow: 0 0 0 3px var(--negative-bg); }
-    .current { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .placeholder { color: var(--faint); }
-    .chev { color: var(--muted); transition: transform var(--duration-fast) var(--ease-out); }
-    :host(.open) .chev { transform: rotate(180deg); }
-
-    .panel {
-      position: fixed; z-index: 1100; max-width: min(420px, calc(100vw - 16px));
-      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card);
-      box-shadow: var(--shadow-float); padding: 4px; display: flex; flex-direction: column;
-      transform-origin: top center;
-      transition: opacity var(--duration-quick) var(--ease-out), transform var(--duration-fast) var(--ease-out);
-      @starting-style { opacity: 0; transform: scale(var(--scale-menu)) translateY(-4px); }
-    }
-    .panel.up { transform-origin: bottom center; }
-    @starting-style { .panel.up { opacity: 0; transform: scale(var(--scale-menu)) translateY(4px); } }
-    .search { position: relative; display: flex; align-items: center; padding: 2px 2px 6px; border-bottom: 1px solid var(--rule); margin-bottom: 4px; }
-    .search app-icon { position: absolute; left: 10px; color: var(--muted); }
-    .search-input {
-      width: 100%; height: 30px; padding: 0 8px 0 28px; border: 1px solid var(--control); border-radius: var(--radius-control);
-      background: var(--surface); color: var(--text); font: inherit; font-size: 13px;
-    }
-    .search-input:focus { outline: none; border-color: var(--accent); }
-    .list { list-style: none; margin: 0; padding: 0; max-height: 264px; overflow-y: auto; overscroll-behavior: contain; }
-    li[role='option'] {
-      display: flex; align-items: center; gap: 8px; min-height: 32px; padding: 6px 10px; border-radius: 4px;
-      cursor: pointer; color: var(--text); white-space: nowrap;
-    }
-    li.active { background: var(--raised); }
-    li.selected { font-weight: 500; }
-    li.disabled { color: var(--faint); cursor: not-allowed; }
-    .lbl { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-    .hint { color: var(--muted); font-size: 12px; }
-    .tick { color: var(--accent); }
-    .none { padding: 10px; color: var(--muted); }
-  `,
+  styleUrl: './select.css',
 })
 export class Select implements ControlValueAccessor {
   /** Current value (string, like a native select). Two-way: [(value)]. */

@@ -1,0 +1,109 @@
+@reference "../../../styles.css";
+
+/*
+ * The trigger is the generic field (.ui-control .ui-select, controls.css); the panel is the shared dropdown
+ * panel (iotility shared-ui dropdown.css): rounded-xl, popover shadow, brand selection, springs open.
+ */
+:host {
+  @apply relative inline-flex w-full min-w-0 align-middle;
+}
+.trigger {
+  @apply w-full;
+}
+:host(.invalid) .trigger {
+  border-color: var(--color-danger);
+}
+.current {
+  @apply min-w-0 flex-1 truncate;
+}
+.placeholder {
+  color: color-mix(in srgb, var(--color-muted) 75%, transparent);
+}
+:host-context(.dark) .placeholder {
+  @apply text-brand-300;
+}
+.chev {
+  @apply text-muted dark:text-brand-300;
+  transition: transform var(--duration-popover) var(--ease-out);
+}
+:host(.open) .chev {
+  transform: rotate(180deg);
+}
+
+.panel {
+  /* Fixed, so a scrolling table or dialog never clips it. Popover layer, above dialogs it opens from. */
+  @apply fixed z-[2100] flex max-w-[min(420px,calc(100vw-16px))] flex-col rounded-xl border border-line bg-white p-2 dark:border-dark-line dark:bg-dark-surface;
+  box-shadow: var(--shadow-popover);
+  transform-origin: top center;
+  transition:
+    opacity var(--duration-popover) var(--ease-out),
+    transform var(--duration-spring) var(--ease-spring);
+}
+@starting-style {
+  .panel {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+}
+.panel.up {
+  transform-origin: bottom center;
+}
+@starting-style {
+  .panel.up {
+    opacity: 0;
+    transform: scale(0.96) translateY(4px);
+  }
+}
+
+/* Long lists: dropdown-search. */
+.search {
+  @apply relative mb-2 flex items-center gap-2 rounded-lg border border-line px-2.5 dark:border-dark-line;
+}
+.search app-icon {
+  @apply shrink-0 text-muted dark:text-brand-300;
+}
+.search-input {
+  @apply h-8 min-w-0 flex-1 border-0 bg-transparent p-0 text-xs text-ink outline-none dark:text-white;
+}
+
+.list {
+  @apply m-0 flex max-h-66 list-none flex-col gap-0.5 overflow-y-auto overscroll-contain p-0;
+}
+li[role='option'] {
+  @apply flex min-h-9 cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs whitespace-nowrap text-ink dark:text-white;
+  transition:
+    background-color var(--duration-hover) ease,
+    color var(--duration-hover) ease;
+}
+li.active {
+  @apply bg-canvas dark:bg-dark-canvas;
+}
+li.selected {
+  @apply bg-brand-50 font-semibold text-brand-700 dark:bg-brand-600/15 dark:text-brand-300;
+}
+li.selected.active {
+  @apply bg-brand-100 dark:bg-brand-600/25;
+}
+li.disabled {
+  @apply cursor-not-allowed opacity-40;
+}
+.lbl {
+  @apply min-w-0 flex-1 truncate;
+}
+.hint {
+  @apply text-[11px] font-normal text-muted dark:text-brand-300;
+}
+.tick {
+  @apply text-brand-600 dark:text-brand-300;
+}
+.none {
+  @apply px-3 py-2.5 text-xs text-muted dark:text-brand-300;
+}
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    transition: opacity var(--duration-popover) ease;
+  }
+  .chev {
+    transition: none;
+  }
+}
