@@ -10,7 +10,8 @@ It consumes the REST API exposed by the Django monolith backend
 |-------------|-----------------------------------|
 | Framework   | Angular 22 (standalone components, signals) |
 | Language    | TypeScript                        |
-| Styling     | SCSS                              |
+| Styling     | Tailwind CSS 4 + the IoTility design system (see `docs/DESIGN.md`) |
+| Charts, maps | ECharts 6 (IoTility chart components), MapLibre GL 5 |
 | HTTP        | Angular `HttpClient` + JWT interceptor |
 | Testing     | Vitest (`ng test`)                |
 
