@@ -191,7 +191,7 @@
             @for (c of customers().slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 4); track c.id) {
               <tr [class.clickable]="can.customers()" [routerLink]="can.customers() ? ['/customers', c.id] : null">
                 <td><span class="primary-cell">{{ c.company }}</span><span class="sub">{{ c.industry }}</span></td>
-                <td class="muted">{{ store.country(c.countryCode).name }}</td>
+                <td class="muted wrap">{{ store.country(c.countryCode).name }}</td>
                 <td class="num muted">{{ c.createdAt | date }}</td>
               </tr>
             }

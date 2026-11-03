@@ -109,15 +109,15 @@ dialog.closing::backdrop {
 .modal-content {
   @apply flex-1 overflow-auto px-6 py-3;
 }
-/* Footer (fields.css .form-actions): secondary then primary, equal width. */
+/*
+ * Footer (fields.css .form-actions): secondary then primary, equal width. The buttons are projected, so they
+ * don't carry this component's style scope; equal columns on the footer itself size them instead.
+ */
 .modal-footer {
-  @apply flex gap-2 px-6 pt-3 pb-6;
+  @apply grid auto-cols-fr grid-flow-col gap-2 px-6 pt-3 pb-6;
 }
 .modal-footer:empty {
   @apply hidden;
-}
-.modal-footer > :is(button, a) {
-  @apply min-h-10 flex-1;
 }
 @media (prefers-reduced-motion: reduce) {
   .modal,
