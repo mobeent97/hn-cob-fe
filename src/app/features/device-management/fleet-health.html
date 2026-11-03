@@ -1,5 +1,5 @@
 <div class="page">
-  <div class="title-row">
+  <div class="title-row smooth-reveal">
     <div class="title-block">
       <h1>Fleet health</h1>
       @if (loading()) { <span class="skeleton" style="width:420px;height:14px;margin:3px 0"></span> }
@@ -16,7 +16,7 @@
     </div>
   </div>
 
-  <section class="kpi-strip" aria-label="Key figures">
+  <section class="kpi-strip smooth-reveal" style="--reveal-delay: 40ms" aria-label="Key figures">
     <div class="kpi">
       <span class="kpi-label">Connected now</span>
       @if (loading()) { <span class="skeleton" style="width:64px;height:30px;margin:3px 0"></span> }
@@ -49,7 +49,7 @@
     </div>
   </section>
 
-  <div class="grid">
+  <div class="grid smooth-reveal" style="--reveal-delay: 80ms">
     <!-- The screen's question: is the fleet reporting? -->
     <ui-chart-card
       class="span-8"

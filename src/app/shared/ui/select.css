@@ -4,8 +4,11 @@
  * The trigger is the generic field (.ui-control .ui-select, controls.css); the panel is the shared dropdown
  * panel (iotility shared-ui dropdown.css): rounded-xl, popover shadow, brand selection, springs open.
  */
-:host {
-  @apply relative inline-flex w-full min-w-0 align-middle;
+/* Layered, so the page-level widths in the global components layer (.toolbar app-select…) can size the host. */
+@layer components {
+  :host {
+    @apply relative inline-flex w-full min-w-0 align-middle;
+  }
 }
 .trigger {
   @apply w-full;

@@ -1,0 +1,217 @@
+@reference "../../../styles.css";
+
+.small {
+  @apply text-xs;
+}
+.block {
+  @apply flex flex-col gap-4;
+}
+.block + .block {
+  @apply border-t border-line pt-6 dark:border-dark-line;
+}
+.block-head h2 {
+  @apply mb-0.5 text-sm font-semibold;
+}
+.block-head p {
+  @apply text-xs;
+}
+
+.actions-cell {
+  @apply w-10 text-right;
+}
+.table.stack td.empty-row {
+  @apply h-auto px-0 py-4;
+}
+
+/* ── Enrollment groups ── */
+.groups .alloc {
+  @apply text-muted dark:text-brand-300;
+}
+.groups .sub.warn {
+  @apply text-warning;
+}
+.tags {
+  @apply inline-flex flex-wrap gap-1;
+}
+
+/* ── Registrations ── */
+.cc-value.neg {
+  @apply text-danger;
+}
+.hint-line {
+  @apply flex max-w-[90ch] items-start gap-2 text-xs leading-5 text-muted dark:text-brand-300;
+}
+.hint-line app-icon {
+  @apply mt-0.5 flex-none;
+}
+.hint-line strong {
+  @apply font-medium text-ink dark:text-white;
+}
+.type-sel {
+  @apply w-auto;
+}
+.id-cell {
+  @apply inline-flex items-center gap-3;
+}
+.id-cell .check {
+  @apply -m-1 p-1;
+}
+.link.plain {
+  @apply font-normal;
+}
+/* Unlayered, so it wins over the global row hover without !important. */
+tr.picked {
+  @apply bg-brand-50 dark:bg-brand-600/15;
+}
+
+/*
+ * Bulk bar, same as Inventory: rises from the bottom edge of the sheet.
+ * Centred on the content beside the sidebar (--shell-sidebar-w, set by the shell: 14rem, 5rem as a rail, 0 on phones).
+ */
+.bulk-bar {
+  @apply fixed bottom-6 z-50 flex max-w-[calc(100vw-2rem)] items-center gap-3 rounded-2xl border border-line bg-white py-2 pr-2 pl-4 dark:border-dark-line dark:bg-dark-surface;
+  left: calc(var(--shell-sidebar-w, 14rem) + (100vw - var(--shell-sidebar-w, 14rem)) / 2);
+  box-shadow: var(--shadow-popover);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, 16px);
+  transition:
+    opacity var(--duration-hover) var(--ease-out),
+    transform var(--duration-hover) var(--ease-out),
+    visibility 0s linear var(--duration-hover);
+}
+.bulk-bar.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+  transition:
+    opacity var(--duration-popover) var(--ease-out),
+    transform var(--duration-popover) var(--ease-out),
+    visibility 0s;
+}
+.bulk-bar .picked-count {
+  @apply whitespace-nowrap text-muted dark:text-brand-300;
+}
+.bulk-bar .picked-count strong {
+  @apply font-semibold text-ink dark:text-white;
+}
+.bulk-bar .bulk-actions {
+  @apply flex gap-1.5;
+}
+/* Room for the bar so it never covers the pager. */
+.page:has(.bulk-bar.show) {
+  @apply pb-22;
+}
+
+/* ── Drawers and dialogs ── */
+.form {
+  @apply flex flex-col gap-5;
+}
+/* The global segmented control, kept to its own width inside the stacked field. */
+.field > .seg {
+  @apply self-start;
+}
+.tag-rows {
+  @apply flex flex-col gap-2;
+}
+.tag-rows .add {
+  @apply self-start;
+}
+.tag-row {
+  @apply grid grid-cols-[150px_minmax(0,1fr)_28px] items-center gap-2;
+}
+
+.reg-input {
+  @apply grid grid-cols-[minmax(0,1fr)_180px] gap-3;
+}
+.reg-input .ui-control {
+  @apply font-mono text-[13px];
+}
+.drop {
+  @apply flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-line p-3 text-center text-[13px] dark:border-dark-line;
+  transition:
+    border-color var(--duration-hover) ease,
+    background-color var(--duration-hover) ease,
+    box-shadow var(--duration-hover) ease;
+}
+.drop app-icon {
+  @apply text-muted dark:text-brand-300;
+}
+@media (hover: hover) and (pointer: fine) {
+  .drop:hover {
+    @apply border-brand-500 bg-brand-50 dark:bg-brand-600/15;
+  }
+}
+.drop.over {
+  @apply border-brand-500 bg-brand-50 dark:bg-brand-600/15;
+}
+/* Same focus ring as the fields (controls.css). */
+.drop:focus-within {
+  @apply border-brand-500;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand-500) 15%, transparent);
+}
+.preview-head {
+  @apply mt-4 mb-2;
+}
+.preview-head strong {
+  @apply font-semibold;
+}
+.preview {
+  @apply max-h-65 overflow-auto border-t border-line dark:border-dark-line;
+}
+.preview .table th {
+  @apply sticky top-0 bg-white pt-2 dark:bg-dark-surface;
+}
+.preview .table td {
+  @apply h-9;
+}
+.res {
+  @apply inline-flex items-center gap-1.5 text-xs text-muted dark:text-brand-300;
+}
+.res[data-r='ready'] {
+  @apply text-success;
+}
+.res[data-r='new'] {
+  @apply text-ink dark:text-white;
+}
+.res[data-r='invalid'] {
+  @apply text-danger;
+}
+
+/* The sidebar is a drawer below 768px, so the bar centres on the viewport. */
+@media (max-width: 767px) {
+  .bulk-bar {
+    @apply left-1/2;
+  }
+}
+
+@media (max-width: 640px) {
+  .toolbar .left .type-sel {
+    @apply w-full;
+  }
+  .reg-input {
+    @apply grid-cols-1;
+  }
+  /* The phone summary line lines up with the device ID, past the row checkbox. */
+  .table.stack td.phone-only {
+    @apply pl-7;
+  }
+  .groups.table.stack td.phone-only {
+    @apply pl-0;
+  }
+  .bulk-bar {
+    @apply right-4 bottom-4 left-4 flex-wrap;
+    transform: translateY(16px);
+  }
+  .bulk-bar.show {
+    transform: none;
+  }
+  .bulk-bar .bulk-actions {
+    @apply order-3 w-full flex-wrap;
+  }
+  .bulk-bar .picked-count {
+    @apply flex-1;
+  }
+}

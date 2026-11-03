@@ -1,0 +1,228 @@
+@reference "../../../styles.css";
+
+.list {
+  @apply flex flex-col gap-4;
+}
+
+.select-all {
+  @apply pl-3 text-[13px] text-muted dark:text-brand-300;
+}
+/* Some rows picked: a dash in the filled box. */
+.select-all input:indeterminate {
+  @apply border-brand-600 bg-brand-600;
+}
+.select-all input:indeterminate::after {
+  @apply h-0 w-2 border-l-0 opacity-100;
+  transform: none;
+}
+
+/* ── Day groups ── */
+.day {
+  @apply flex flex-col gap-1;
+}
+.day-h {
+  @apply pb-1 pl-3 text-xs font-medium text-muted dark:text-brand-300;
+}
+.items {
+  @apply m-0 list-none border-t border-line p-0 dark:border-dark-line;
+}
+
+/* A row collapses when deleted: height through grid rows 1fr → 0fr, with a fade. */
+.item {
+  @apply grid grid-rows-[1fr] border-b border-line dark:border-dark-line;
+  transition:
+    grid-template-rows 200ms var(--ease-out),
+    opacity var(--duration-hover) ease,
+    border-color var(--duration-hover) ease;
+}
+.item.removing {
+  @apply pointer-events-none grid-rows-[0fr] border-b-transparent opacity-0;
+}
+.inner {
+  @apply relative grid min-h-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-x-1 gap-y-0 overflow-hidden rounded-lg pl-3;
+  transition: background-color var(--duration-hover) ease;
+}
+.inner.sk {
+  @apply grid-cols-[16px_32px_minmax(0,1fr)_auto] items-center gap-3 px-3 py-3.5;
+}
+.inner.sk .text {
+  @apply flex flex-col gap-2;
+}
+@media (hover: hover) and (pointer: fine) {
+  .item:hover .inner {
+    @apply bg-canvas dark:bg-dark-canvas;
+  }
+}
+.item.selected .inner {
+  @apply bg-brand-50 dark:bg-brand-600/15;
+}
+
+.pick {
+  @apply pt-3.5 pr-2 pb-1 pl-0;
+}
+
+.main {
+  @apply grid min-w-0 grid-cols-[32px_minmax(0,1fr)_auto] items-start gap-3 rounded-lg py-3 pr-3 pl-1 text-ink dark:text-white;
+}
+.main.nolink {
+  @apply cursor-default;
+}
+.main:focus-visible {
+  outline-offset: -2px;
+}
+
+.ic {
+  @apply grid size-8 place-items-center rounded-full bg-brand-50 text-muted dark:bg-brand-600/15 dark:text-brand-300;
+}
+
+.text {
+  @apply flex min-w-0 flex-col gap-0.5 pt-px;
+}
+.title {
+  @apply text-muted dark:text-brand-300;
+  transition: color var(--duration-popover) ease;
+}
+.body {
+  @apply line-clamp-2 max-w-[72ch] text-[13px] leading-[19px] text-muted dark:text-brand-300;
+}
+.unread .title {
+  @apply font-medium text-ink dark:text-white;
+}
+
+.meta {
+  @apply flex items-center gap-2.5 pt-0.5 text-xs whitespace-nowrap text-muted dark:text-brand-300;
+  transition: opacity var(--duration-hover) ease;
+}
+/* The unread dot cross-fades with the read state. */
+.dot {
+  @apply size-2 rounded-full bg-brand-600 opacity-0 dark:bg-brand-400;
+  transform: scale(0.5);
+  transition:
+    opacity var(--duration-popover) var(--ease-out),
+    transform var(--duration-popover) var(--ease-out);
+}
+.unread .dot {
+  @apply opacity-100;
+  transform: none;
+}
+
+/* Row actions: over the time column on hover or keyboard focus. */
+.row-actions {
+  @apply pointer-events-none absolute top-2 right-2 flex gap-0.5 bg-inherit pl-3 opacity-0;
+  transition: opacity var(--duration-hover) ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .item:hover .row-actions {
+    @apply pointer-events-auto opacity-100;
+  }
+  .item:hover .meta {
+    @apply opacity-0;
+  }
+}
+.item:focus-within .row-actions {
+  @apply pointer-events-auto opacity-100;
+}
+.item:has(.row-actions:focus-within) .meta {
+  @apply opacity-0;
+}
+.item:has(.row-actions:focus-within) .inner {
+  @apply bg-canvas dark:bg-dark-canvas;
+}
+
+.load-more {
+  @apply flex items-center justify-between gap-3 pt-1 pl-3;
+}
+
+/* ── Bulk bar (same as Inventory) ── */
+.bulk-bar {
+  @apply fixed bottom-6 z-50 flex max-w-[calc(100vw-2rem)] items-center gap-3 rounded-2xl border border-line bg-white py-2 pr-2 pl-4 dark:border-dark-line dark:bg-dark-surface;
+  left: calc(var(--shell-sidebar-w, 14rem) + (100vw - var(--shell-sidebar-w, 14rem)) / 2);
+  box-shadow: var(--shadow-popover);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, 16px);
+  transition:
+    opacity var(--duration-hover) var(--ease-out),
+    transform var(--duration-hover) var(--ease-out),
+    visibility 0s linear var(--duration-hover);
+}
+.bulk-bar.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+  transition:
+    opacity var(--duration-popover) var(--ease-out),
+    transform var(--duration-popover) var(--ease-out);
+}
+.bulk-bar .picked-count {
+  @apply whitespace-nowrap text-muted dark:text-brand-300;
+}
+.bulk-bar .picked-count strong {
+  @apply font-semibold text-ink dark:text-white;
+}
+.bulk-bar .bulk-actions {
+  @apply flex gap-1.5;
+}
+.page:has(.bulk-bar.show) {
+  @apply pb-22;
+}
+
+/* Touch screens have no hover: actions sit in their own column. */
+@media (hover: none) and (pointer: coarse), (max-width: 640px) {
+  .inner {
+    @apply grid-cols-[auto_minmax(0,1fr)_auto];
+  }
+  .row-actions {
+    @apply pointer-events-auto static mt-2 self-start bg-transparent py-0 pr-1 pl-0 opacity-100;
+  }
+  .item:hover .meta {
+    @apply opacity-100;
+  }
+}
+
+@media (max-width: 640px) {
+  .select-all,
+  .day-h,
+  .inner {
+    @apply pl-1;
+  }
+  .main {
+    @apply grid-cols-[28px_minmax(0,1fr)] gap-2.5 pr-1;
+  }
+  .ic {
+    @apply size-7;
+  }
+  /* Time and dot move under the body. */
+  .meta {
+    @apply col-start-2 -mt-1.5 flex-row-reverse justify-end gap-1.5 pt-0;
+  }
+  .item:not(.unread) .dot {
+    @apply hidden;
+  }
+  .inner.sk {
+    @apply grid-cols-[16px_28px_minmax(0,1fr)];
+  }
+  .inner.sk > :last-child {
+    @apply hidden;
+  }
+  .toolbar .right {
+    @apply w-auto;
+  }
+  .toolbar {
+    @apply flex-nowrap;
+  }
+  .kind {
+    @apply max-w-50;
+  }
+  .bulk-bar {
+    @apply gap-2 pl-3;
+  }
+  .bulk-bar .lbl {
+    @apply hidden;
+  }
+  .bulk-bar .bulk-actions .btn {
+    @apply w-8 p-0;
+  }
+}

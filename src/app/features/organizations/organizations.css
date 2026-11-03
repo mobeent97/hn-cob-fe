@@ -1,0 +1,27 @@
+@reference "../../../styles.css";
+
+.org-name {
+  @apply inline-flex items-center gap-2;
+}
+/* Lines the legal name up under the name, past the swatch and its gap. */
+.legal {
+  @apply pl-5;
+}
+
+.usage {
+  @apply block;
+}
+/* Customers against the organization's limit, at true ratio. */
+.meter.cap {
+  @apply mt-1.25 ml-auto block w-18;
+}
+.meter.cap.full > span {
+  @apply bg-danger;
+}
+
+.actions-cell {
+  @apply w-10 text-right;
+}
+.confirm-body {
+  @apply leading-5.5 text-muted dark:text-brand-300;
+}

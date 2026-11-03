@@ -1,5 +1,5 @@
 <div class="page">
-  <div class="title-row">
+  <div class="title-row smooth-reveal">
     <div class="title-block">
       <nav class="breadcrumb" aria-label="Breadcrumb">
         <a routerLink="/customers">Customers</a><span aria-hidden="true">/</span>
@@ -24,12 +24,12 @@
   </div>
 
   @if (notFound()) {
-    <div class="empty">
+    <div class="empty smooth-reveal" style="--reveal-delay: 40ms">
       There's no customer with the ID “{{ id() }}”. It may have been deleted.
       <a class="btn sm" routerLink="/customers">Back to customers</a>
     </div>
   } @else if (loading()) {
-    <div class="wizard">
+    <div class="wizard smooth-reveal" style="--reveal-delay: 40ms">
       <div class="rail">
         <span class="skeleton" style="width:110px;height:14px"></span>
         <span class="skeleton" style="width:100%;height:6px;margin:10px 0 14px"></span>
@@ -49,7 +49,7 @@
       </div>
     </div>
   } @else {
-    <div class="wizard">
+    <div class="wizard smooth-reveal" style="--reveal-delay: 40ms">
       <!-- Step rail: completed sections can be revisited; later ones unlock in order -->
       <nav class="rail" aria-label="Onboarding sections">
         <div class="rail-progress">

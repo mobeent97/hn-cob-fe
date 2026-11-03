@@ -1,0 +1,61 @@
+@reference "../../../styles.css";
+
+/* Deletion audit: pending requests above the log, plus the two dialogs. */
+.list {
+  @apply flex flex-col gap-5;
+}
+.empty-row {
+  @apply h-auto px-0 py-4;
+}
+.confirm-body {
+  @apply leading-5.5 text-muted dark:text-brand-300;
+}
+
+/* Pending deletion requests. */
+.pending-row {
+  @apply flex items-center justify-between gap-4 py-3;
+}
+.pending-row + .pending-row {
+  @apply border-t border-line dark:border-dark-line;
+}
+.pending-row:first-child {
+  @apply pt-0;
+}
+.pending-row .who {
+  @apply flex min-w-0 flex-col gap-0.5;
+}
+.pending-row .primary-cell {
+  @apply font-medium text-ink dark:text-white;
+}
+.pending-row .sub {
+  @apply text-xs text-muted dark:text-brand-300;
+}
+.pending-row .row-actions {
+  @apply flex flex-none gap-2;
+}
+
+/* Device count that opens the ID list. */
+.count-btn {
+  @apply gap-0.5 pr-1 pl-2 text-brand-600 tabular-nums dark:text-brand-300;
+}
+@media (hover: hover) and (pointer: fine) {
+  .count-btn:hover {
+    @apply text-brand-700 dark:text-white;
+  }
+}
+
+.ids {
+  @apply m-0 grid list-none grid-cols-2 gap-x-4 gap-y-0 p-0;
+}
+.ids li {
+  @apply border-t border-line py-2 dark:border-dark-line;
+}
+
+@media (max-width: 640px) {
+  .pending-row {
+    @apply flex-col items-stretch;
+  }
+  .pending-row .row-actions {
+    @apply justify-end;
+  }
+}

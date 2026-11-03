@@ -1,0 +1,503 @@
+@reference "../../../styles.css";
+
+/* ── Header: the device ID with its connection and status pills ── */
+.name-row {
+  @apply flex min-w-0 flex-wrap items-center gap-2.5;
+}
+.name-row h1.mono {
+  @apply text-xl font-bold tracking-[-0.02em];
+}
+
+/* "FMC130 · Teltonika · Al Noor Logistics · DXB A 12345 · Gateway · Codec 8E" */
+.meta {
+  @apply flex flex-wrap;
+}
+.meta > span + span::before {
+  content: '·';
+  @apply mx-2 text-muted;
+}
+
+/* The one finding, computed from state. */
+.finding {
+  @apply -mt-2 flex items-start gap-2 text-ink dark:text-white;
+}
+.finding app-icon {
+  @apply mt-0.5 text-muted dark:text-brand-300;
+}
+.finding.neg app-icon {
+  @apply text-danger;
+}
+
+.list {
+  @apply flex flex-col gap-4;
+}
+.table.stack td.empty-row {
+  @apply h-auto px-0 py-4;
+}
+.confirm-body {
+  @apply leading-[22px] text-muted dark:text-brand-300;
+}
+.strong {
+  @apply font-medium;
+}
+
+/* ── KPIs: a word in the value slot sits a step below the numbers ── */
+.kpi-strip .kpi-value.text-value {
+  @apply text-lg;
+}
+.kpi-value.text-value.pos,
+.kpi-value.text-value.tone-positive {
+  @apply text-success;
+}
+.kpi-value.text-value.tone-warning {
+  @apply text-warning;
+}
+.kpi-value.text-value.tone-negative {
+  @apply text-danger;
+}
+.kpi-value.text-value.tone-info {
+  @apply text-brand-600 dark:text-brand-300;
+}
+
+/* ── Description lists ── */
+.dl.two {
+  @apply grid-cols-2;
+}
+.dl.one {
+  @apply grid-cols-1 gap-3.5;
+}
+.dl dd.warn {
+  @apply text-warning;
+}
+.dl dd.neg {
+  @apply text-danger;
+}
+.dl dd.chips {
+  @apply flex flex-wrap gap-1.5 font-normal;
+}
+/* Twin tags: bordered tokens, so they read as values rather than statuses. */
+.chip {
+  @apply inline-flex h-5.5 items-center rounded-full border border-line bg-canvas px-2 text-ink dark:border-dark-line dark:bg-dark-canvas dark:text-brand-300;
+}
+
+/* ── Recent commands (capped list, no pager) ── */
+.mini-list {
+  @apply m-0 list-none p-0;
+}
+.mini-list li {
+  @apply grid min-h-11 grid-cols-[minmax(0,1fr)_auto_220px] items-center gap-4 border-t border-line first:border-t-0 dark:border-dark-line;
+}
+.mini-list .mini-main {
+  @apply flex min-w-0 items-baseline gap-2;
+}
+.mini-list .mini-meta {
+  @apply text-right text-xs;
+}
+
+/* ── Configuration ── */
+.config-head {
+  @apply flex flex-wrap items-center justify-between gap-4;
+}
+.versions {
+  @apply flex flex-wrap items-center gap-5;
+}
+.versions .ver {
+  @apply flex items-baseline gap-2;
+}
+.versions .ver-arrow {
+  @apply text-muted dark:text-brand-300;
+}
+.versions .profile {
+  @apply border-l border-line pl-5 dark:border-dark-line;
+}
+.config-actions {
+  @apply flex gap-2;
+}
+.note {
+  @apply -mt-3 text-xs;
+}
+.error-box {
+  @apply rounded-xl border border-danger/30 bg-danger/5 px-3.5 py-2.5 text-[13px] dark:bg-danger/10;
+}
+
+.table.config-table td {
+  @apply h-14;
+}
+.config-table .val {
+  @apply inline-block;
+}
+.config-table td.differs .val {
+  @apply font-medium text-warning;
+}
+.config-table .status-cell {
+  @apply w-[1%];
+}
+.table.config-table .err-text {
+  @apply whitespace-normal text-danger;
+}
+.config-table .in-sync {
+  @apply inline-flex items-center gap-1 text-xs font-medium whitespace-nowrap text-success;
+}
+.config-table td.edit-cell {
+  @apply py-2;
+}
+.edit-cell .ui-control,
+.edit-cell app-select {
+  @apply w-45;
+}
+.edit-cell .error,
+.edit-cell .hint {
+  @apply mt-0.5 block text-[11px];
+}
+.edit-cell .error {
+  @apply font-medium text-danger;
+}
+.edit-cell .hint {
+  @apply text-muted dark:text-brand-300;
+}
+.num-input {
+  @apply inline-flex items-center gap-2;
+}
+.edit-cell .num-input .ui-control {
+  @apply w-30 text-right;
+}
+
+/*
+ * Soft text swap when a reported value or status changes live (transitions.dev text swap).
+ * Only keys that changed while the page is open carry .swap, so nothing performs on load.
+ */
+.swap {
+  @apply inline-block;
+  transition:
+    opacity var(--duration-popover) var(--ease-out),
+    filter var(--duration-popover) var(--ease-out),
+    translate var(--duration-popover) var(--ease-out);
+}
+@starting-style {
+  .swap {
+    opacity: 0;
+    filter: blur(2px);
+    translate: 0 4px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .swap {
+    transition: none;
+  }
+}
+
+.raw .code {
+  @apply m-0 max-h-105 overflow-auto rounded-xl bg-canvas px-4 py-3.5 text-xs leading-5 whitespace-pre dark:bg-dark-canvas;
+}
+
+/* ── Commands table ── */
+.response {
+  @apply max-w-70 overflow-hidden text-ellipsis;
+}
+
+/* ── Telemetry ── */
+.figs {
+  @apply grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-0;
+}
+.figs .fig {
+  @apply flex flex-col gap-1.5 border-l border-line px-5 py-1 first:border-l-0 first:pl-0 dark:border-dark-line;
+}
+.figs .fig-label {
+  @apply text-xs text-muted dark:text-brand-300;
+}
+.figs .fig-value {
+  @apply inline-flex items-baseline gap-1 text-xl leading-7 font-semibold;
+}
+.figs .fig-value .unit {
+  @apply text-xs font-normal dark:text-brand-300;
+}
+.tone-negative {
+  @apply text-danger;
+}
+.warn-text {
+  @apply text-warning;
+}
+
+/* Signal bars: a meter track with the reached bars filled. */
+.bars {
+  @apply mr-1.5 inline-flex h-5 items-end gap-0.5 self-center;
+}
+.bars i {
+  @apply w-1 rounded-xs bg-line dark:bg-dark-line;
+}
+.bars i.on {
+  @apply bg-brand-600 dark:bg-brand-400;
+}
+.bars.low i.on {
+  @apply bg-warning;
+}
+.track-link {
+  @apply mt-4;
+}
+
+/* ── History ── */
+.timeline {
+  @apply m-0 max-w-225 list-none p-0;
+}
+/* The rail between markers. */
+.timeline li {
+  @apply relative grid grid-cols-[28px_minmax(0,1fr)_auto] gap-3 pt-2.5 pb-3.5;
+}
+.timeline li::before {
+  content: '';
+  @apply absolute top-[38px] -bottom-2.5 left-[13.5px] w-px bg-line;
+}
+/* A dark: utility can't sit after ::before, so the dark rail is its own rule. */
+:host-context(.dark) .timeline li::before {
+  @apply bg-dark-line;
+}
+.timeline li:last-child::before {
+  @apply hidden;
+}
+.timeline .t-icon {
+  @apply grid size-7 place-items-center rounded-full border border-line bg-white text-muted dark:border-dark-line dark:bg-dark-surface dark:text-brand-300;
+}
+.timeline .pos .t-icon {
+  @apply text-success;
+}
+.timeline .neg .t-icon {
+  @apply text-danger;
+}
+.timeline .warn .t-icon {
+  @apply text-warning;
+}
+.timeline .t-text {
+  @apply flex min-w-0 flex-col gap-0.5 pt-1;
+}
+.timeline .t-text .muted {
+  @apply text-xs wrap-anywhere;
+}
+.timeline .t-title {
+  @apply font-medium;
+}
+.timeline .t-meta {
+  @apply flex flex-col items-end gap-0.5 pt-1 text-xs whitespace-nowrap;
+}
+/* The selected kind's count stays readable on the brand fill. */
+.seg button.on .muted {
+  @apply text-white/80;
+}
+
+/* ── Send command dialog ── */
+.form {
+  @apply flex flex-col gap-4;
+}
+.pair {
+  @apply grid grid-cols-2 gap-4;
+}
+.cmd-list {
+  @apply m-0 overflow-hidden rounded-xl border border-line p-0 dark:border-dark-line;
+}
+.cmd {
+  @apply grid cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-3.5 py-2.5;
+  transition: background-color var(--duration-hover) ease;
+}
+.cmd + .cmd {
+  @apply border-t border-line dark:border-dark-line;
+}
+@media (hover: hover) and (pointer: fine) {
+  .cmd:not(.on):hover {
+    @apply bg-brand-50/60 dark:bg-dark-canvas/70;
+  }
+}
+.cmd.on {
+  @apply bg-brand-50 dark:bg-brand-600/15;
+}
+.cmd input {
+  @apply m-0 accent-brand-600;
+}
+.cmd .cmd-text {
+  @apply flex min-w-0 flex-col;
+}
+.cmd .cmd-text .muted {
+  @apply text-xs;
+}
+.preview {
+  @apply flex flex-col gap-1 px-3.5 py-2.5 text-xs;
+}
+.preview code {
+  @apply wrap-anywhere;
+}
+.queue-offer {
+  @apply flex flex-col items-start gap-2 text-[13px];
+}
+
+/* Status line: spinner, then a drawn check (transitions.dev success check), or a state icon. */
+.status-line {
+  @apply flex items-center gap-3 rounded-xl border border-line px-3.5 py-3 dark:border-dark-line;
+  transition:
+    border-color var(--duration-popover) ease,
+    background-color var(--duration-popover) ease;
+}
+.status-line[data-phase='Succeeded'] {
+  @apply border-success/30 bg-success/5 dark:bg-success/10;
+}
+.status-line[data-phase='Timed out'],
+.status-line[data-phase='Failed'] {
+  @apply border-warning/40 bg-warning/5 dark:bg-warning/10;
+}
+.status-line[data-phase='Queued'] {
+  @apply border-info/30 bg-info/5 dark:bg-info/10;
+}
+.ic-warn {
+  @apply text-warning;
+}
+.ic-info {
+  @apply text-info;
+}
+.status-text {
+  @apply flex min-w-0 flex-col gap-0.5 text-[13px] wrap-anywhere;
+}
+.status-icon {
+  @apply grid size-5 flex-none place-items-center;
+}
+.spinner {
+  @apply size-4.5 rounded-full border-2 border-brand-100 border-t-brand-600 dark:border-brand-600/25 dark:border-t-brand-400;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to {
+    rotate: 360deg;
+  }
+}
+.t-success-check {
+  @apply inline-block origin-center opacity-0;
+}
+.t-success-check svg {
+  @apply block overflow-visible;
+}
+.t-success-check circle {
+  @apply fill-success;
+}
+.t-success-check svg path {
+  @apply stroke-white;
+  stroke-dasharray: 16;
+  stroke-dashoffset: 16;
+}
+.t-success-check[data-state='in'] {
+  animation:
+    check-fade 500ms var(--ease-out) forwards,
+    check-rotate 500ms var(--ease-out) forwards,
+    check-blur 500ms var(--ease-out) forwards,
+    check-bob 500ms var(--ease-overshoot) forwards;
+}
+.t-success-check[data-state='in'] svg path {
+  animation: check-draw 500ms var(--ease-out) 80ms forwards;
+}
+@keyframes check-fade {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes check-rotate {
+  from {
+    transform: rotate(80deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+@keyframes check-blur {
+  from {
+    filter: blur(6px);
+  }
+  to {
+    filter: blur(0);
+  }
+}
+@keyframes check-bob {
+  from {
+    translate: 0 8px;
+  }
+  to {
+    translate: 0 0;
+  }
+}
+@keyframes check-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .t-success-check[data-state='in'] {
+    animation: none;
+    opacity: 1;
+  }
+  .t-success-check[data-state='in'] svg path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .spinner {
+    animation: none;
+  }
+}
+
+/* External voltage chart (ui-line-chart fills its box). */
+.volt-chart {
+  @apply block h-50;
+}
+
+/* ── Narrow screens ── */
+@media (max-width: 900px) {
+  .versions .profile {
+    @apply border-l-0 pl-0;
+  }
+}
+
+@media (max-width: 640px) {
+  .title-row .actions {
+    @apply w-full;
+  }
+  .title-row .actions .btn:first-child {
+    @apply flex-1;
+  }
+  .dl.two {
+    @apply grid-cols-1;
+  }
+  .mini-list li {
+    @apply grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-0.5 py-2.5;
+  }
+  .mini-list .mini-meta {
+    @apply col-span-full text-left;
+  }
+  .figs {
+    @apply grid-cols-2 gap-y-4;
+  }
+  .figs .fig {
+    @apply border-l-0 p-0;
+  }
+  .config-actions {
+    @apply w-full;
+  }
+  .config-actions .btn {
+    @apply flex-1;
+  }
+  .versions {
+    @apply flex-col items-start gap-1.5;
+  }
+  /* The arrow only makes sense with the versions side by side. */
+  .versions .ver-arrow {
+    @apply hidden;
+  }
+  /* Editing on a phone: the field spans the row and keeps the normal text colour, not the stacked-row muted one. */
+  .table.stack.config-table tbody tr td.edit-cell {
+    @apply col-span-full text-ink dark:text-white;
+  }
+  .toolbar .seg {
+    @apply max-w-full overflow-x-auto;
+  }
+  .pair {
+    @apply grid-cols-1;
+  }
+  .timeline li {
+    @apply grid-cols-[28px_minmax(0,1fr)];
+  }
+  .timeline .t-meta {
+    @apply col-start-2 flex-row items-start gap-2 pt-0;
+  }
+}

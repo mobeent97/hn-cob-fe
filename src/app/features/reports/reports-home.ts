@@ -21,7 +21,7 @@ import { ReadOnlyNote, writeAccess } from '../tenancy';
   imports: [ReadOnlyNote, RouterLink, Icon, Menu, ScheduleDialog],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './reports-home.html',
-  styleUrl: './reports-home.scss',
+  styleUrl: './reports-home.css',
 })
 export class ReportsHome {
   protected readonly store = inject(Store);

@@ -30,7 +30,7 @@ const toInputDate = (iso: string | null) => (iso ? iso.slice(0, 10) : '');
   imports: [RouterLink, Icon, Tabs, Pager, Menu, Dialog, DatePipe, TonePipe, OrgTag, OrgFilter, ReadOnlyNote],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './orders.html',
-  styleUrl: './orders.scss',
+  styleUrl: './orders.css',
 })
 export class Orders {
   protected readonly store = inject(Store);

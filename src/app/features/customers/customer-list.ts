@@ -28,7 +28,7 @@ type Confirm = { kind: 'deactivate' | 'activate' | 'delete' | 'cancel-delete'; c
   imports: [Select, SelectOption, RouterLink, Icon, Tabs, Pager, Menu, Dialog, CountUp, DatePipe, TonePipe, OrgTag, OrgFilter, ReadOnlyNote],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './customer-list.html',
-  styleUrl: './customer-list.scss',
+  styleUrl: './customer-list.css',
 })
 export class CustomerList {
   protected readonly store = inject(Store);

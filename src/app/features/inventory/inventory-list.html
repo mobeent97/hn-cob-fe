@@ -1,5 +1,5 @@
 <div class="page">
-  <div class="title-row">
+  <div class="title-row smooth-reveal">
     <div class="title-block">
       <h1>Inventory</h1>
       <p class="subline num">{{ subline() }}</p>
@@ -15,7 +15,7 @@
   </div>
 
   <!-- Count cards are the status filter -->
-  <div class="count-cards" role="group" aria-label="Filter by status">
+  <div class="count-cards smooth-reveal" style="--reveal-delay: 40ms" role="group" aria-label="Filter by status">
     <button class="count-card" [class.selected]="status() === 'all'" (click)="status.set('all')" [attr.aria-pressed]="status() === 'all'">
       <span class="cc-label">All devices</span>
       <span class="cc-value">@if (loading()) { <span class="skeleton" style="width:40px;height:18px"></span> } @else { <span class="num" [uiCountUp]="counts().all"></span> }</span>
@@ -28,7 +28,7 @@
     }
   </div>
 
-  <div class="list">
+  <div class="list smooth-reveal" style="--reveal-delay: 80ms">
     <div class="toolbar">
       <div class="left">
         <label class="search">

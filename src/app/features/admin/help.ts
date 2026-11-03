@@ -16,7 +16,7 @@ import { Faq, Topic, TOPICS, buildFaqs } from './faqs';
   imports: [Icon, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './help.html',
-  styleUrl: './help.scss',
+  styleUrl: './help.css',
 })
 export class Help {
   private readonly store = inject(Store);

@@ -47,7 +47,7 @@
         <p class="finding">{{ r.finding }}</p>
       }
 
-      <section class="kpi-strip" aria-label="Key figures">
+      <section class="kpi-strip smooth-reveal" aria-label="Key figures">
         @for (k of r.kpis; track k.label) {
           <div class="kpi">
             <span class="kpi-label">{{ k.label }}</span>
@@ -78,7 +78,8 @@
       <!-- The block that answers the report's question -->
       @if (chartView(); as cv) {
         <ui-chart-card
-          class="main-chart"
+          class="main-chart smooth-reveal"
+          style="--reveal-delay: 40ms"
           [title]="r.chartTitle"
           [subtitle]="r.chartSub"
           [legend]="cv.legend"
@@ -104,7 +105,7 @@
             @case ('ring') {
               @if (r.chart.kind === 'ring') {
                 <div class="ring-wrap">
-                  <ui-donut-chart class="ring" [slices]="cv.slices ?? []" [legend]="false" [showTotal]="false" [valueFormatter]="cv.format" [attr.aria-label]="r.chartTitle" />
+                  <ui-donut-chart class="donut" [slices]="cv.slices ?? []" [legend]="false" [showTotal]="false" [valueFormatter]="cv.format" [attr.aria-label]="r.chartTitle" />
                   <div class="table-wrap">
                     <table class="table legend-table">
                       <thead>
@@ -131,7 +132,7 @@
 
       <!-- Breakdown: totals are summed from the rows shown -->
       @if (table(); as t) {
-        <section class="card">
+        <section class="card smooth-reveal" style="--reveal-delay: 80ms">
           @if (r.tables.length > 1) {
             <div class="tabs-head no-print"><app-tabs [tabs]="tabs()" [value]="t.id" (valueChange)="tableId.set($event)" /></div>
           }

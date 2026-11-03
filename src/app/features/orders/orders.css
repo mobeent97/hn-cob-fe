@@ -1,0 +1,38 @@
+@reference "../../../styles.css";
+
+.list {
+  @apply flex flex-col gap-5;
+}
+
+.actions-cell {
+  @apply w-10 text-right;
+}
+
+.cust {
+  transition: color var(--duration-hover) ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .cust:hover {
+    @apply text-brand-600 underline underline-offset-3 dark:text-brand-300;
+  }
+}
+
+.by {
+  @apply max-w-55 overflow-hidden text-ellipsis text-muted dark:text-brand-300;
+}
+
+td.warn {
+  @apply text-warning;
+}
+
+.table td.empty-row {
+  @apply h-auto px-0 py-4;
+}
+
+.confirm-body {
+  @apply leading-[22px] text-muted dark:text-brand-300;
+}
+
+.form {
+  @apply flex flex-col gap-4;
+}

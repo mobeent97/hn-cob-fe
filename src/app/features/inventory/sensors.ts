@@ -22,7 +22,7 @@ const KEY_RE = /^has_[a-z0-9]+(_[a-z0-9]+)*$/;
   imports: [ReadOnlyNote, Icon, Pager, Menu, Dialog],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sensors.html',
-  styleUrl: './sensors.scss',
+  styleUrl: './sensors.css',
 })
 export class Sensors {
   protected readonly store = inject(Store);

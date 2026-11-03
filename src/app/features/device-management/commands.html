@@ -1,5 +1,5 @@
 <div class="page">
-  <div class="title-row">
+  <div class="title-row smooth-reveal">
     <div class="title-block">
       <h1>Commands</h1>
       @if (loading()) { <span class="skeleton" style="width:380px;height:14px;margin:3px 0"></span> }
@@ -11,7 +11,7 @@
     </div>
   </div>
 
-  <div class="list">
+  <div class="list smooth-reveal" style="--reveal-delay: 40ms">
     <app-tabs [tabs]="tabs()" [value]="tab()" (valueChange)="setTab($event)" />
 
     <div class="toolbar">

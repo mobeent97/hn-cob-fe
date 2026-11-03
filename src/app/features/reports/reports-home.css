@@ -1,0 +1,79 @@
+@reference "../../../styles.css";
+
+/* Reports grouped by area: one row per report, carrying its live headline figure. */
+.report-list {
+  @apply m-0 list-none px-0 pt-1 pb-1.5;
+}
+
+.report-row {
+  @apply grid grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto] items-center gap-6 border-t border-line px-5 py-3 dark:border-dark-line;
+  transition: background-color var(--duration-hover) ease;
+}
+li:first-child .report-row {
+  @apply border-t-0;
+}
+@media (hover: hover) and (pointer: fine) {
+  .report-row:hover {
+    @apply bg-canvas dark:bg-dark-canvas;
+  }
+  .report-row:hover .open {
+    @apply text-brand-600 dark:text-white;
+  }
+}
+.report-row:focus-visible {
+  outline-offset: -2px;
+}
+
+.report-row .what,
+.report-row .figure {
+  @apply flex min-w-0 flex-col gap-0.5;
+}
+.report-row .name,
+.report-row .headline {
+  @apply font-medium text-ink dark:text-white;
+}
+.report-row .q,
+.report-row .sub {
+  @apply text-xs text-muted dark:text-brand-300;
+}
+.report-row .open {
+  @apply inline-flex items-center gap-1 font-medium text-muted dark:text-brand-300;
+  transition: color var(--duration-hover) ease;
+}
+
+/* Scheduled reports table. */
+@media (hover: hover) and (pointer: fine) {
+  .name-link:hover {
+    @apply text-brand-600 dark:text-brand-300;
+  }
+}
+.recipients {
+  @apply max-w-70 overflow-hidden text-ellipsis;
+}
+.actions-cell {
+  @apply w-10 text-right;
+}
+
+@media (max-width: 760px) {
+  .report-row {
+    @apply grid-cols-[minmax(0,1fr)_auto] gap-y-1.5;
+  }
+  .report-row .figure {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .report-row .open {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+}
+@media (max-width: 640px) {
+  .report-row {
+    @apply px-4 py-3;
+  }
+  /* Only the arrow stays; the row itself is the link. */
+  .report-row .open {
+    gap: 0;
+    font-size: 0;
+  }
+}

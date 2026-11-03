@@ -30,7 +30,7 @@ const DAY = 86400000;
   imports: [RouterLink, Icon, Tabs, Pager, Menu, Dialog, CountUp, DatePipe, DateTimePipe, RelativePipe, TonePipe, OrgTag, ReadOnlyNote],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './customer-detail.html',
-  styleUrl: './customer-detail.scss',
+  styleUrl: './customer-detail.css',
 })
 export class CustomerDetail {
   protected readonly store = inject(Store);

@@ -1,5 +1,5 @@
 <div class="page">
-  <div class="title-row">
+  <div class="title-row smooth-reveal">
     <div class="title-block">
       <h1>Notifications</h1>
       @if (loading()) {
@@ -18,7 +18,7 @@
     </div>
   </div>
 
-  <div class="list">
+  <div class="list smooth-reveal" style="--reveal-delay: 40ms">
     <app-tabs [tabs]="tabs()" [(value)]="view" />
 
     <div class="toolbar">

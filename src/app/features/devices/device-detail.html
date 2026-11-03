@@ -1,6 +1,6 @@
 <div class="page">
   @if (device(); as d) {
-    <div class="title-row">
+    <div class="title-row smooth-reveal">
       <div class="title-block">
         <nav class="breadcrumb" aria-label="Breadcrumb">
           <a routerLink="/inventory">Inventory</a><span aria-hidden="true">/</span><span class="mono crumb-current">{{ d.id }}</span>
@@ -37,17 +37,17 @@
       </div>
     </div>
 
-    <p class="finding" [class.neg]="sync() === 'Error' || iot()?.registration === 'Attestation failed'">
+    <p class="finding smooth-reveal" style="--reveal-delay: 40ms" [class.neg]="sync() === 'Error' || iot()?.registration === 'Attestation failed'">
       <app-icon [name]="sync() === 'Error' || iot()?.registration === 'Attestation failed' ? 'alert' : connected() ? 'wifi' : 'info'" [size]="15" />
       <span>{{ finding() }}</span>
     </p>
 
-    <app-tabs [tabs]="tabs()" [(value)]="tab" />
+    <app-tabs class="smooth-reveal" style="--reveal-delay: 40ms" [tabs]="tabs()" [(value)]="tab" />
 
     @switch (tab()) {
       <!-- Overview ──────────────────────────────────────────── -->
       @case ('overview') {
-        <section class="kpi-strip" aria-label="Device health">
+        <section class="kpi-strip smooth-reveal" style="--reveal-delay: 80ms" aria-label="Device health">
           <div class="kpi">
             <span class="kpi-label">Connection</span>
             @if (loading()) { <span class="skeleton" style="width:120px;height:30px;margin:3px 0"></span> }
@@ -83,7 +83,7 @@
           </div>
         </section>
 
-        <div class="grid">
+        <div class="grid smooth-reveal" style="--reveal-delay: 120ms">
           <section class="card span-7">
             @if (hubView()) {
               <div class="card-head"><div><h2>IoT Hub identity</h2><p class="card-sub">How the device connects and authenticates</p></div></div>
@@ -381,7 +381,7 @@
 
       <!-- Commands ──────────────────────────────────────────── -->
       @case ('commands') {
-        <div class="list">
+        <div class="list smooth-reveal" style="--reveal-delay: 80ms">
           <div class="toolbar">
             <div class="left"><span class="count num">{{ commands().length }} {{ commands().length === 1 ? 'command' : 'commands' }} in the last 14 days</span></div>
             @if (canCommand()) { <div class="right"><button class="btn" (click)="openSend()" [disabled]="iot()?.registration === 'Disabled'"><app-icon name="zap" />Send command</button></div> }
@@ -442,7 +442,7 @@
             @if (hubWrite()) { <a class="btn sm" routerLink="/provisioning">Open provisioning</a> }
           </div>
         } @else {
-          <section class="card">
+          <section class="card smooth-reveal" style="--reveal-delay: 80ms">
             <div class="card-head">
               <div>
                 <h2>Latest readings</h2>
@@ -505,7 +505,7 @@
             </div>
           </section>
 
-          <div class="grid">
+          <div class="grid smooth-reveal" style="--reveal-delay: 120ms">
             @if (!isDashcam()) {
               <section class="card span-8">
                 <div class="card-head">
@@ -555,11 +555,11 @@
 
       <!-- History ───────────────────────────────────────────── -->
       @case ('history') {
-        <div class="list">
+        <div class="list smooth-reveal" style="--reveal-delay: 80ms">
           <div class="toolbar">
-            <div class="left segmented" role="group" aria-label="Filter by kind">
+            <div class="seg" role="group" aria-label="Filter by kind">
               @for (k of historyKinds; track k.id) {
-                <button class="btn sm" [class.on]="historyKind() === k.id" [attr.aria-pressed]="historyKind() === k.id" (click)="historyKind.set(k.id)">
+                <button type="button" [class.on]="historyKind() === k.id" [attr.aria-pressed]="historyKind() === k.id" (click)="historyKind.set(k.id)">
                   {{ k.label }} <span class="num muted">{{ historyCounts()[k.id] }}</span>
                 </button>
               }
@@ -659,8 +659,8 @@
                 @case ('Succeeded') {
                   <span class="t-success-check" data-state="in" aria-hidden="true">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
-                      <circle cx="12" cy="12" r="10" fill="var(--positive)" />
-                      <path d="M7.5 12.5l3 3 6-6.5" stroke="var(--on-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M7.5 12.5l3 3 6-6.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
                   </span>
                 }

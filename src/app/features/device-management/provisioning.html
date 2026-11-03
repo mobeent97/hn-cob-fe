@@ -1,5 +1,5 @@
 <div class="page">
-  <div class="title-row">
+  <div class="title-row smooth-reveal">
     <div class="title-block">
       <h1>Provisioning</h1>
       <p class="subline num">
@@ -13,7 +13,7 @@
   </div>
 
   <!-- Enrollment groups -->
-  <section class="block">
+  <section class="block smooth-reveal" style="--reveal-delay: 40ms">
     <div class="block-head">
       <h2>Enrollment groups</h2>
       <p class="muted">Device Provisioning Service lets a device of each type register itself on first power-up and gives it these starting tags.</p>
@@ -55,7 +55,7 @@
                 <td class="desk-only">{{ g.attestation }}</td>
                 <td class="desk-only alloc">{{ g.allocation }}</td>
                 <td class="desk-only">
-                  <span class="tags">@for (t of g.tags; track t[0]) { <span class="tag mono">{{ t[0] }}={{ t[1] }}</span> }</span>
+                  <span class="tags">@for (t of g.tags; track t[0]) { <span class="pill mono">{{ t[0] }}={{ t[1] }}</span> }</span>
                 </td>
                 <td class="desk-only num">
                   <span class="num" [uiCountUp]="g.enrolled"></span>
@@ -84,7 +84,7 @@
   </section>
 
   <!-- Registrations -->
-  <section class="block">
+  <section class="block smooth-reveal" style="--reveal-delay: 80ms">
     <div class="block-head">
       <h2>Device registrations</h2>
       <p class="muted">Every device identity on {{ store.hub().hubName }}, by registration state.</p>

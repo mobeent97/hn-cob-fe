@@ -1,6 +1,6 @@
 <div class="page">
   @if (customer(); as c) {
-    <div class="title-row">
+    <div class="title-row smooth-reveal">
       <div class="title-block">
         <nav class="breadcrumb" aria-label="Breadcrumb">
           <a routerLink="/customers">Customers</a><span aria-hidden="true">/</span><span class="crumb-current">{{ c.company }}</span>
@@ -33,7 +33,7 @@
       <!-- Overview ──────────────────────────────────────────── -->
       @case ('overview') {
         @if (c.stepsDone < 9 && c.status === 'Active') {
-          <section class="card progress-card" aria-label="Onboarding progress">
+          <section class="card progress-card smooth-reveal" style="--reveal-delay: 40ms" aria-label="Onboarding progress">
             <div class="card-body progress-body">
               <div class="progress-text">
                 <h2 class="num">{{ c.stepsDone }} of 9 sections complete</h2>
@@ -47,7 +47,7 @@
           </section>
         }
 
-        <section class="kpi-strip" aria-label="Devices">
+        <section class="kpi-strip smooth-reveal" style="--reveal-delay: 80ms" aria-label="Devices">
           <div class="kpi">
             <span class="kpi-label">In service</span>
             @if (loading()) { <span class="skeleton" style="width:48px;height:30px;margin:3px 0"></span> }
@@ -74,7 +74,7 @@
           </div>
         </section>
 
-        <div class="grid">
+        <div class="grid smooth-reveal" style="--reveal-delay: 120ms">
           <section class="card span-8">
             <div class="card-head"><h2>General details</h2></div>
             <div class="card-body">
@@ -138,7 +138,7 @@
 
       <!-- Devices ───────────────────────────────────────────── -->
       @case ('devices') {
-        <div class="list">
+        <div class="list smooth-reveal" style="--reveal-delay: 40ms">
           <div class="toolbar">
             <div class="left">
               <label class="search">
@@ -203,7 +203,7 @@
       <!-- Documents ─────────────────────────────────────────── -->
       @case ('documents') {
         @if (c.documents.length) {
-          <div class="table-wrap">
+          <div class="table-wrap smooth-reveal" style="--reveal-delay: 40ms">
             <table class="table stack">
               <thead><tr><th>File</th><th>Kind</th><th class="num">Size</th><th class="num">Uploaded</th></tr></thead>
               <tbody>
@@ -220,14 +220,14 @@
             </table>
           </div>
         } @else {
-          <div class="empty">No documents uploaded yet. @if (access.rw()) { <button class="btn sm" (click)="edit(2)">Upload documents</button> }</div>
+          <div class="empty smooth-reveal" style="--reveal-delay: 40ms">No documents uploaded yet. @if (access.rw()) { <button class="btn sm" (click)="edit(2)">Upload documents</button> }</div>
         }
       }
 
       <!-- Admins ────────────────────────────────────────────── -->
       @case ('admins') {
         @if (c.admins.length) {
-          <div class="table-wrap">
+          <div class="table-wrap smooth-reveal" style="--reveal-delay: 40ms">
             <table class="table stack">
               <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th></tr></thead>
               <tbody>
@@ -244,13 +244,13 @@
             </table>
           </div>
         } @else {
-          <div class="empty">No admins yet: they're added in section 6 of onboarding. @if (access.rw()) { <button class="btn sm" (click)="edit(6)">Add admins</button> }</div>
+          <div class="empty smooth-reveal" style="--reveal-delay: 40ms">No admins yet: they're added in section 6 of onboarding. @if (access.rw()) { <button class="btn sm" (click)="edit(6)">Add admins</button> }</div>
         }
       }
 
       <!-- Activity ──────────────────────────────────────────── -->
       @case ('activity') {
-        <ol class="timeline">
+        <ol class="timeline smooth-reveal" style="--reveal-delay: 40ms">
           @for (e of activity(); track $index) {
             <li [class.neg]="e.tone === 'neg'" [class.pos]="e.tone === 'pos'">
               <span class="t-icon"><app-icon [name]="e.icon" [size]="14" /></span>
@@ -268,13 +268,13 @@
       }
     }
   } @else {
-    <div class="title-row">
+    <div class="title-row smooth-reveal">
       <div class="title-block">
         <nav class="breadcrumb" aria-label="Breadcrumb"><a routerLink="/customers">Customers</a><span aria-hidden="true">/</span><span>Not found</span></nav>
         <h1>Customer not found</h1>
       </div>
     </div>
-    <div class="empty">
+    <div class="empty smooth-reveal" style="--reveal-delay: 40ms">
       There's no customer with the ID “{{ id() }}”. It may have been deleted, or the link is out of date.
       <a class="btn sm" routerLink="/customers">Back to customers</a>
     </div>

@@ -53,7 +53,7 @@ const minutes = (t: string) => {
   imports: [Select, SelectOption, ReadOnlyNote],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './settings.html',
-  styleUrl: './settings.scss',
+  styleUrls: ['./settings-layout.css', './settings.css'],
 })
 export class Settings {
   protected readonly store = inject(Store);

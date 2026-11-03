@@ -1,5 +1,5 @@
 <div class="page">
-  <div class="title-row">
+  <div class="title-row smooth-reveal">
     <div class="title-block">
       <h1>Hardware orders</h1>
       <p class="subline num">{{ finding() }} · {{ inTransit() }} in transit</p>
@@ -10,7 +10,7 @@
     </div>
   </div>
 
-  <div class="list">
+  <div class="list smooth-reveal" style="--reveal-delay: 40ms">
     <app-tabs [tabs]="tabs()" [(value)]="view" />
 
     <div class="toolbar">

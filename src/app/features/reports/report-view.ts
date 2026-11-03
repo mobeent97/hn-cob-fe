@@ -28,7 +28,7 @@ import { Select, SelectOption } from '../../shared/ui/select';
   imports: [Select, SelectOption, RouterLink, Icon, Tabs, CountUp, DecimalPipe, BarChart, ChartCard, DonutChart, LineChart, ScheduleDialog],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './report-view.html',
-  styleUrl: './report-view.scss',
+  styleUrl: './report-view.css',
 })
 export class ReportView {
   protected readonly store = inject(Store);

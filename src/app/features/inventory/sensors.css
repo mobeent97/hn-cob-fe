@@ -1,0 +1,25 @@
+@reference "../../../styles.css";
+
+.list {
+  @apply flex flex-col gap-5;
+}
+
+.actions-cell {
+  @apply w-10 text-right;
+}
+
+.used {
+  @apply min-w-55 text-muted dark:text-brand-300;
+}
+
+.table td.empty-row {
+  @apply h-auto px-0 py-4;
+}
+
+.confirm-body {
+  @apply leading-[22px] text-muted dark:text-brand-300;
+}
+
+.form {
+  @apply flex flex-col gap-4;
+}

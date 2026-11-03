@@ -20,7 +20,7 @@ import { OrgFilter, OrgTag, ReadOnlyNote, orgContext, writeAccess } from '../ten
   imports: [Icon, Pager, Dialog, DatePipe, RelativePipe, OrgTag, OrgFilter, ReadOnlyNote],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './audit.html',
-  styleUrl: './audit.scss',
+  styleUrl: './audit.css',
 })
 export class Audit {
   protected readonly store = inject(Store);

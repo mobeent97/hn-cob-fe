@@ -1,5 +1,5 @@
 <div class="page">
-  <div class="title-row">
+  <div class="title-row smooth-reveal">
     <div class="title-block">
       <h1>Configuration profiles</h1>
       <p class="subline num">
@@ -12,7 +12,7 @@
     </div>
   </div>
 
-  <div class="table-wrap">
+  <div class="table-wrap smooth-reveal" style="--reveal-delay: 40ms">
     <table class="table stack profiles">
       <thead>
         <tr>
@@ -103,7 +103,7 @@
   </div>
 
   @if (!loading()) {
-    <section class="coverage" aria-label="Coverage">
+    <section class="coverage smooth-reveal" style="--reveal-delay: 80ms" aria-label="Coverage">
       <div class="cov-block">
         <h2>Coverage</h2>
         <p class="num">

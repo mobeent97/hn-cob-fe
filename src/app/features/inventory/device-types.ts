@@ -29,7 +29,7 @@ const blank = (): Draft => ({
   imports: [Select, SelectOption, Icon, Pager, Menu, Dialog, ReadOnlyNote],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './device-types.html',
-  styleUrl: './device-types.scss',
+  styleUrl: './device-types.css',
 })
 export class DeviceTypes {
   protected readonly store = inject(Store);

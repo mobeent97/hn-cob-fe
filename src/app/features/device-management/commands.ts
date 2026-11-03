@@ -30,7 +30,7 @@ const retryable = (c: CommandRecord) => c.status === 'Failed' || c.status === 'T
   imports: [Select, SelectOption, ReadOnlyNote, RouterLink, Icon, Tabs, Pager, Dialog, DateTimePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './commands.html',
-  styleUrl: './commands.scss',
+  styleUrl: './commands.css',
 })
 export class Commands {
   protected readonly store = inject(Store);

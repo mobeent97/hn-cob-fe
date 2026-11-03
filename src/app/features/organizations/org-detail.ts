@@ -36,7 +36,7 @@ interface ProfileDraft {
   imports: [Icon, Menu, Dialog, Tabs, CountUp, DatePipe, DateTimePipe, RelativePipe, TonePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './org-detail.html',
-  styleUrl: './org-detail.scss',
+  styleUrls: ['./org-shared.css', './org-detail.css'],
 })
 export class OrgDetail {
   protected readonly store = inject(Store);

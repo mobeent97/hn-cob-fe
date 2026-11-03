@@ -68,30 +68,7 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
       </ng-container>
     </app-dialog>
   `,
-  styles: `
-    .form { display: flex; flex-direction: column; gap: 16px; }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .chips {
-      height: auto; min-height: var(--control-h); display: flex; flex-wrap: wrap; align-items: center;
-      gap: 6px; padding: 5px 8px; cursor: text;
-    }
-    .chips:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-weak); }
-    .chips.invalid:focus-within { border-color: var(--negative); box-shadow: 0 0 0 3px var(--negative-bg); }
-    .chips input { flex: 1; min-width: 160px; border: 0; outline: none; background: none; color: var(--text); height: 24px; padding: 0 2px; }
-    .chips input::placeholder { color: var(--faint); }
-    .chip {
-      display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 4px 0 8px;
-      border-radius: var(--radius-chip); background: var(--neutral-bg); color: var(--neutral-ink); font-size: 13px;
-      max-width: 100%; overflow: hidden; text-overflow: ellipsis;
-    }
-    .chip button {
-      display: inline-flex; border: 0; background: none; color: var(--muted); padding: 2px; border-radius: 3px;
-    }
-    .chip button:hover { background: var(--active); color: var(--text); }
-    .summary { color: var(--muted); line-height: 20px; }
-    .summary strong { color: var(--text); font-weight: 500; }
-    @media (max-width: 480px) { .row { grid-template-columns: 1fr; } }
-  `,
+  styleUrl: './schedule-dialog.css',
 })
 export class ScheduleDialog {
   private readonly store = inject(Store);

@@ -23,7 +23,7 @@ const PER_SHEET = 21;
   imports: [Select, SelectOption, Icon, Pager, DatePipe, TonePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './qr-codes.html',
-  styleUrl: './qr-codes.scss',
+  styleUrl: './qr-codes.css',
 })
 export class QrCodes {
   protected readonly store = inject(Store);

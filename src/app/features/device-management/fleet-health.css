@@ -1,0 +1,120 @@
+@reference "../../../styles.css";
+
+/* The hub name beside the page actions, drawn like a read-only field. */
+.hub-line {
+  @apply inline-flex h-(--control-height) items-center gap-1.5 rounded-(--control-radius) border border-line bg-white px-3 text-xs whitespace-nowrap text-ink dark:border-dark-line dark:bg-dark-surface dark:text-white;
+}
+.hub-line app-icon {
+  @apply text-muted dark:text-brand-300;
+}
+
+/* ── Quota card ── */
+.quota .ratio {
+  @apply mb-2.5 text-sm;
+}
+.quota .ratio strong {
+  @apply text-xl font-bold text-ink dark:text-white;
+}
+.quota .meter {
+  @apply h-2;
+}
+.quota .meter-ends {
+  @apply mt-1 flex justify-between text-xs;
+}
+.quota .facts {
+  @apply mt-5 flex flex-col gap-3.5;
+}
+.quota .facts dt {
+  @apply mb-0.5 text-[11px] text-muted dark:text-brand-300;
+}
+.quota .facts dd {
+  @apply font-medium;
+}
+.quota .facts dd.small {
+  @apply font-normal;
+}
+.quota .size-link {
+  @apply mt-4.5;
+}
+
+.small {
+  @apply text-xs;
+}
+
+/* ── Needs a look ── */
+.table.look td {
+  @apply h-auto py-2.5;
+}
+.table.look td.dev {
+  @apply w-28 pt-[11px] align-top;
+}
+.look .what .neg {
+  @apply text-danger;
+}
+.look .act {
+  @apply w-[1%] text-right;
+}
+
+.look-skel {
+  @apply flex flex-col gap-1.5 border-t border-line py-2.5 first:border-t-0 dark:border-dark-line;
+}
+.look-skel.row {
+  @apply py-3.25;
+}
+
+/* ── Transport ── */
+.transport tfoot td {
+  @apply border-t border-b-0 border-line font-semibold dark:border-dark-line;
+}
+
+/* ── Routes ── */
+.table.routes td {
+  @apply h-auto py-2.5;
+}
+.routes .cond {
+  @apply inline-block max-w-85 overflow-hidden rounded-full border border-line bg-canvas px-2 py-px align-middle text-ellipsis dark:border-dark-line dark:bg-dark-canvas;
+}
+/* An unhealthy route's impact line joins the route row above it. */
+.routes tr:has(+ tr.impact) td {
+  @apply border-b-0;
+}
+.routes tr.impact td {
+  @apply pt-0 text-xs text-ink dark:text-white;
+}
+.routes tr.impact app-icon {
+  @apply mr-1.5 align-[-3px] text-danger;
+}
+
+/* ── Events ── */
+.events .time {
+  @apply w-30 text-left;
+}
+.table-wrap.scroll {
+  @apply max-h-120 overflow-y-auto;
+}
+
+/* ── Size dialog ── */
+.dlg-p {
+  @apply mb-3.5 leading-[22px];
+}
+.size-table {
+  @apply mb-3.5;
+}
+
+@media (max-width: 640px) {
+  .hub-line {
+    @apply max-w-full overflow-hidden text-ellipsis;
+  }
+  .table.look td.dev {
+    @apply w-auto pt-0;
+  }
+  .table.stack.routes tr:has(+ tr.impact) {
+    @apply border-b-0;
+  }
+  .table.stack.routes tr.impact {
+    @apply pt-0;
+  }
+  .events .time {
+    @apply w-auto;
+  }
+}

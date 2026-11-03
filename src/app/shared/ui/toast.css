@@ -66,3 +66,8 @@
     filter: none;
   }
 }
+@media print {
+  .stack {
+    @apply hidden;
+  }
+}

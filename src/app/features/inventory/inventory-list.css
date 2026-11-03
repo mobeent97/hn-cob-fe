@@ -1,0 +1,213 @@
+@reference "../../../styles.css";
+
+.list {
+  @apply flex flex-col gap-5;
+}
+
+.id-cell {
+  @apply inline-flex items-center gap-3;
+}
+.id-cell .check {
+  @apply -m-1 p-1;
+}
+
+/* Unlayered, so it wins over the global row hover without !important. */
+tr.picked {
+  @apply bg-brand-50 dark:bg-brand-600/15;
+}
+
+.owner .link {
+  @apply font-normal;
+}
+
+.actions-cell {
+  @apply w-10 text-right;
+}
+
+.table td.empty-row {
+  @apply h-auto px-0 py-4;
+}
+
+/* ── Bulk action bar: rises from the bottom edge of the sheet (transitions.dev panel reveal) ── */
+.bulk-bar {
+  @apply fixed bottom-6 z-50 flex max-w-[calc(100vw-2rem)] items-center gap-3 rounded-2xl border border-line bg-white py-2 pr-2 pl-4 dark:border-dark-line dark:bg-dark-surface;
+  left: calc(var(--shell-sidebar-w, 14rem) + (100vw - var(--shell-sidebar-w, 14rem)) / 2);
+  box-shadow: var(--shadow-popover);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, 16px);
+  transition:
+    opacity var(--duration-hover) var(--ease-out),
+    transform var(--duration-hover) var(--ease-out),
+    visibility 0s linear var(--duration-hover);
+}
+.bulk-bar.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+  transition:
+    opacity var(--duration-popover) var(--ease-out),
+    transform var(--duration-popover) var(--ease-out),
+    visibility 0s;
+}
+.bulk-bar .picked-count {
+  @apply whitespace-nowrap text-muted dark:text-brand-300;
+}
+.bulk-bar .picked-count strong {
+  @apply font-semibold text-ink dark:text-white;
+}
+.bulk-bar .bulk-actions {
+  @apply flex gap-1.5;
+}
+
+/* Room for the bar so it never covers the pager. */
+.page:has(.bulk-bar.show) {
+  @apply pb-22;
+}
+
+
+/* ── Drawer ── */
+.drawer-dl {
+  @apply mb-7 grid-cols-2;
+}
+
+.section-h {
+  @apply mb-3.5 text-sm font-semibold text-ink dark:text-white;
+}
+
+.timeline {
+  @apply m-0 list-none p-0;
+}
+.timeline li {
+  @apply relative grid grid-cols-[16px_1fr] gap-3 pb-5;
+}
+/* The rail between markers. */
+.timeline li:not(:last-child)::before {
+  content: '';
+  @apply absolute top-3.5 -bottom-0.5 left-[7px] w-px bg-line;
+}
+/* A dark: utility can't sit after ::before, so the dark rail is its own rule. */
+:host-context(.dark) .timeline li:not(:last-child)::before {
+  @apply bg-dark-line;
+}
+.timeline .marker {
+  @apply mt-1.5 ml-[3px] size-[9px] rounded-full border-[1.5px] border-line bg-white dark:border-dark-line dark:bg-dark-surface;
+}
+.timeline li.now .marker {
+  @apply border-brand-600 bg-brand-600 dark:border-brand-400 dark:bg-brand-400;
+}
+.timeline .ev-head {
+  @apply mb-1 flex items-center gap-2.5 text-xs;
+}
+.timeline p {
+  @apply leading-5;
+}
+.timeline .by {
+  @apply text-xs;
+}
+
+/* ── Forms ── */
+.two-col {
+  @apply grid grid-cols-2 gap-x-5 gap-y-4;
+}
+.two-col .full {
+  @apply col-span-full;
+}
+
+.stack-form {
+  @apply flex flex-col gap-4;
+}
+
+/* ── Bulk upload ── */
+.drop {
+  @apply flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border border-dashed border-line px-4 py-7 text-center text-ink dark:border-dark-line dark:text-white;
+  transition:
+    border-color var(--duration-hover) ease,
+    background-color var(--duration-hover) ease,
+    box-shadow var(--duration-hover) ease;
+}
+.drop app-icon {
+  @apply text-muted dark:text-brand-300;
+}
+@media (hover: hover) and (pointer: fine) {
+  .drop:hover {
+    @apply border-brand-500 bg-brand-50 dark:border-brand-400 dark:bg-brand-600/15;
+  }
+}
+.drop.over {
+  @apply border-brand-500 bg-brand-50 dark:border-brand-400 dark:bg-brand-600/15;
+}
+.drop:focus-within {
+  @apply border-brand-500 dark:border-brand-400;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand-500) 15%, transparent);
+}
+.drop .small {
+  @apply text-xs;
+}
+
+.drop-foot {
+  @apply mt-2 -ml-2.5 flex items-center justify-between gap-3 text-xs;
+}
+
+.file-error {
+  @apply mt-3;
+}
+
+.preview-head {
+  @apply mt-4 mb-2 flex min-h-7 items-center justify-between;
+}
+.preview-head .neg {
+  @apply text-danger;
+}
+
+.preview {
+  @apply max-h-75 overflow-auto border-t border-line dark:border-dark-line;
+}
+.preview .table {
+  @apply text-[13px];
+}
+.preview .table th {
+  @apply sticky top-0 bg-white pt-2 dark:bg-dark-surface;
+}
+.preview .table td {
+  @apply h-10 py-1.5;
+}
+.preview .check-cell {
+  @apply w-2/5;
+}
+.preview .err-list {
+  @apply m-0 list-none p-0 text-xs leading-4 text-danger;
+}
+.preview .ok {
+  @apply inline-flex items-center gap-1 text-xs text-success;
+}
+
+@media (max-width: 640px) {
+  .toolbar .left .pkg {
+    @apply w-full;
+  }
+  .two-col {
+    @apply grid-cols-1;
+  }
+  .drawer-dl .sim {
+    @apply col-span-full;
+  }
+  .bulk-bar {
+    @apply right-4 bottom-4 left-4 flex-wrap;
+    transform: translateY(16px);
+  }
+  .bulk-bar.show {
+    transform: none;
+  }
+  .bulk-bar .bulk-actions {
+    @apply order-3 w-full flex-wrap;
+  }
+  .bulk-bar .picked-count {
+    @apply flex-1;
+  }
+  .table.stack td.phone-only {
+    @apply pl-7;
+  }
+}

@@ -42,7 +42,7 @@ export function permissionSummary(p: Record<string, Permission>, features: strin
   imports: [Icon, Menu, Dialog, TonePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './groups.html',
-  styleUrl: './groups.scss',
+  styleUrl: './groups.css',
 })
 export class Groups {
   protected readonly store = inject(Store);

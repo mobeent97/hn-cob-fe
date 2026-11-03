@@ -61,7 +61,7 @@ const TAG_KEYS = ['deviceType', 'package', 'customerId', 'country', 'useCase'];
   imports: [Select, SelectOption, ReadOnlyNote, RouterLink, Icon, Menu, Dialog, Pager, CountUp, RelativePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './provisioning.html',
-  styleUrl: './provisioning.scss',
+  styleUrl: './provisioning.css',
 })
 export class Provisioning {
   protected readonly store = inject(Store);

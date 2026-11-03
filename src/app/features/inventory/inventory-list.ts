@@ -46,7 +46,7 @@ const FROM: Record<BulkAction | 'allocate', DeviceStatus[]> = {
   imports: [Select, SelectOption, RouterLink, Icon, Pager, Menu, Dialog, CountUp, DatePipe, DateTimePipe, RelativePipe, TonePipe, OrgTag, OrgFilter, ReadOnlyNote],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './inventory-list.html',
-  styleUrl: './inventory-list.scss',
+  styleUrl: './inventory-list.css',
 })
 export class InventoryList {
   protected readonly store = inject(Store);

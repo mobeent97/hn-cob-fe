@@ -1,0 +1,155 @@
+@reference "../../../styles.css";
+
+/*
+ * One frame for every report: scope filters, the one-sentence finding, the KPI strip, the chart card
+ * (ui-chart-card draws its own title and legend) and the breakdown table.
+ */
+
+/* Scope: date range and filters on the left, freshness on the right. */
+.filters {
+  @apply -mt-2 flex flex-wrap items-center justify-between gap-3;
+}
+.filters .left {
+  @apply flex flex-wrap items-center gap-2;
+}
+.filters app-select {
+  @apply w-auto;
+}
+.filters .fresh {
+  @apply inline-flex items-center gap-1.5 text-xs text-muted dark:text-brand-300;
+}
+
+.finding {
+  @apply -mb-2 text-base leading-6 font-medium text-ink dark:text-white;
+}
+
+/* KPI values: units and the empty dash sit quieter than the figure. */
+.kpi-value .unit {
+  @apply ml-0.5 text-[13px] text-muted dark:text-brand-300;
+}
+.kpi-value .unit.pre {
+  @apply mr-1 ml-0;
+}
+.kpi-value .dash {
+  @apply text-muted dark:text-brand-300;
+}
+.kpi-caption .delta {
+  @apply font-medium;
+}
+.kpi-caption .delta.good {
+  @apply text-success;
+}
+.kpi-caption .delta.bad {
+  @apply text-danger;
+}
+.kpi-caption .delta.flat {
+  @apply text-muted dark:text-brand-300;
+}
+
+.card-head {
+  @apply flex-wrap;
+}
+
+/* Ring chart beside its value table. */
+.ring-wrap {
+  @apply flex items-center gap-8;
+}
+.ring-wrap .donut {
+  @apply size-42 flex-none;
+}
+.ring-wrap .table-wrap {
+  @apply flex-1;
+}
+.ring-wrap .legend-table td {
+  @apply h-10;
+}
+.ring-wrap .sw {
+  @apply mr-2 inline-block size-2 rounded-full;
+}
+
+.tabs-head {
+  @apply px-5 pt-2;
+}
+
+/* Breakdown: the totals row is summed from the rows shown. */
+.breakdown tfoot td {
+  @apply border-t border-line font-semibold text-ink dark:border-dark-line dark:text-white;
+}
+@media (hover: hover) and (pointer: fine) {
+  .breakdown .name-link:hover {
+    @apply text-brand-600 dark:text-brand-300;
+  }
+}
+.breakdown td.dash {
+  @apply text-muted dark:text-brand-300;
+}
+
+.footnote {
+  @apply flex max-w-205 items-start gap-2 text-xs leading-4.5 text-muted dark:text-brand-300;
+}
+.footnote app-icon {
+  @apply mt-0.5;
+}
+
+.print-only {
+  @apply hidden;
+}
+
+@media (max-width: 640px) {
+  .filters .left {
+    @apply w-full;
+  }
+  .filters .left app-select {
+    @apply flex-[1_1_140px];
+  }
+  .ring-wrap {
+    @apply flex-col items-stretch;
+  }
+  .ring-wrap .donut {
+    @apply self-center;
+  }
+  /* Price and share drop out; the MRR column carries the share's magnitude. */
+  .ring-wrap .legend-table th:nth-child(3),
+  .ring-wrap .legend-table td:nth-child(3),
+  .ring-wrap .legend-table th:nth-child(5),
+  .ring-wrap .legend-table td:nth-child(5) {
+    @apply hidden;
+  }
+  .breakdown tfoot tr {
+    @apply border-t border-line dark:border-dark-line;
+  }
+  .breakdown tfoot td {
+    @apply border-t-0;
+  }
+  .breakdown tfoot td.phone-only {
+    @apply font-normal;
+  }
+}
+
+/* ── Print / PDF: the report alone, no app chrome ── */
+@media print {
+  :host {
+    @apply block;
+  }
+  .no-print,
+  .filters .no-print,
+  .tabs-head {
+    @apply hidden;
+  }
+  .print-only {
+    @apply block;
+  }
+  .scope {
+    @apply text-muted;
+  }
+  .card,
+  .kpi-strip {
+    break-inside: avoid;
+  }
+  .rv-page {
+    @apply p-0;
+  }
+  app-schedule-dialog {
+    @apply hidden;
+  }
+}

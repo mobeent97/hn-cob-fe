@@ -7,7 +7,18 @@
 
 /* ── Layout ── */
 .layout-shell {
+  /* The sidebar's current width, for page elements fixed to the viewport (bulk action bars) to centre on the content. */
+  --shell-sidebar-w: 14rem;
   @apply flex h-dvh w-screen overflow-hidden bg-canvas dark:bg-dark-canvas;
+}
+.layout-shell.railed {
+  --shell-sidebar-w: 5rem;
+}
+@media (max-width: 767px) {
+  .layout-shell,
+  .layout-shell.railed {
+    --shell-sidebar-w: 0px;
+  }
 }
 .sidebar-region {
   @apply h-full shrink-0;
@@ -371,5 +382,21 @@ nav em {
   }
   .theme-label {
     @apply sr-only;
+  }
+}
+
+/* Print / PDF (report pages print through the browser): the page alone, without the app chrome. */
+@media print {
+  .sidebar-region,
+  .mobile-sidebar-backdrop,
+  .topbar {
+    @apply hidden;
+  }
+  .layout-shell,
+  .layout-content {
+    @apply block h-auto w-auto overflow-visible bg-transparent;
+  }
+  .content {
+    @apply overflow-visible;
   }
 }

@@ -1,5 +1,5 @@
 <div class="page">
-  <div class="title-row">
+  <div class="title-row smooth-reveal">
     <div class="title-block">
       <h1>Device actions</h1>
       <p class="subline num">{{ store.actions().length }} commands support can send to a device in service</p>
@@ -10,7 +10,7 @@
     </div>
   </div>
 
-  <div class="list">
+  <div class="list smooth-reveal" style="--reveal-delay: 40ms">
     <div class="toolbar">
       <div class="left">
         <label class="search">
@@ -169,8 +169,8 @@
               <span class="spinner" aria-hidden="true"></span>
               <span class="t-success-check" [attr.data-state]="phase() === 'done' ? 'in' : 'out'" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
-                  <circle cx="12" cy="12" r="10" fill="var(--positive)" />
-                  <path d="M7.5 12.5l3 3 6-6.5" stroke="var(--on-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  <circle cx="12" cy="12" r="10" fill="var(--color-success)" />
+                  <path d="M7.5 12.5l3 3 6-6.5" stroke="var(--color-white)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
               </span>
             </span>

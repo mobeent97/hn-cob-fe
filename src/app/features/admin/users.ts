@@ -34,7 +34,7 @@ export const isAdminRole = (g: Group) => g.permissions['Users'] === 'RW' && g.st
   imports: [Select, SelectOption, Icon, Tabs, Pager, Menu, Dialog, RelativePipe, TonePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './users.html',
-  styleUrl: './users.scss',
+  styleUrl: './users.css',
 })
 export class Users {
   protected readonly store = inject(Store);

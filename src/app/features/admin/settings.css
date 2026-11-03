@@ -1,0 +1,101 @@
+@reference "../../../styles.css";
+
+/* Settings. The row / panel layout comes from settings-layout.css. */
+
+/* Number fields with a unit after them ("12 characters"); the joined look comes from the global .input-group. */
+.input-group .ui-control {
+  @apply min-w-0 flex-1;
+}
+
+/* ── Notifications ── */
+/* Arriving from ?section=notifications: a tint behind the row that fades out. */
+.settings {
+  isolation: isolate;
+}
+.notif-row {
+  @apply relative scroll-mt-4;
+}
+.notif-row::before {
+  content: '';
+  @apply pointer-events-none absolute -inset-x-4 inset-y-2 z-0 rounded-2xl bg-brand-50 opacity-0;
+  transition: opacity 900ms ease;
+}
+:host-context(.dark) .notif-row::before {
+  @apply bg-brand-600/15;
+}
+.notif-row.flash::before {
+  @apply opacity-100;
+  transition-duration: var(--duration-popover);
+}
+.notif-row > * {
+  @apply relative;
+}
+
+.kinds {
+  @apply w-full border-collapse;
+}
+.kinds th,
+.kinds td {
+  @apply border-t border-line px-0 py-2.5 text-left align-top dark:border-dark-line;
+}
+.kinds thead th {
+  @apply border-t-0 pt-0 text-xs font-medium text-muted dark:text-brand-300;
+}
+.kinds tbody th {
+  @apply pr-4 font-normal;
+}
+.kinds .kind-cell {
+  @apply flex flex-col gap-0.5;
+}
+.kinds .switch-title {
+  @apply font-medium text-ink dark:text-white;
+}
+.kinds .switch-desc {
+  @apply text-[13px] text-muted dark:text-brand-300;
+}
+.kinds .ch {
+  @apply w-26 text-center;
+}
+.kinds td.ch {
+  @apply pt-3;
+}
+
+.digest {
+  @apply border-t border-line pt-3.5 dark:border-dark-line;
+}
+.digest .narrow-wide {
+  @apply max-w-65;
+}
+
+.quiet {
+  @apply -mt-1 grid grid-cols-[140px_140px_minmax(0,1fr)] items-start gap-4;
+}
+.quiet .quiet-span {
+  @apply self-end pb-2.25;
+}
+
+@media (max-width: 640px) {
+  .kinds .ch {
+    @apply w-16;
+  }
+  .kinds thead .ch {
+    @apply leading-4 whitespace-normal;
+  }
+  .digest .narrow-wide {
+    @apply max-w-none;
+  }
+  .quiet {
+    @apply grid-cols-2;
+  }
+  .quiet .quiet-span {
+    @apply col-span-full pb-0;
+  }
+  .notif-row::before {
+    @apply -inset-x-2 inset-y-1;
+  }
+}
+
+/* Read-only wrapper for policy panels (Settings R): keeps the layout, disables every control. */
+.ro-fieldset {
+  @apply contents m-0 min-w-0 border-0 p-0;
+}

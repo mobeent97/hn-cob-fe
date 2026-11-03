@@ -1,0 +1,233 @@
+@reference "../../../styles.css";
+
+.small {
+  @apply text-xs;
+}
+.actions-cell {
+  @apply w-10 text-right;
+}
+.table.stack td.empty-row {
+  @apply h-auto px-0 py-4;
+}
+
+/* ── Profiles table ── */
+.table.profiles td {
+  @apply py-2.5;
+}
+.profiles .name-cell {
+  @apply max-w-70 min-w-50;
+}
+.profiles .cond-cell {
+  @apply max-w-80 min-w-55;
+}
+.profiles .cond {
+  @apply text-xs leading-[18px] wrap-anywhere text-muted dark:text-brand-300;
+}
+.profiles tr.inactive .primary-cell {
+  @apply text-muted dark:text-brand-300;
+}
+.profiles td.neg {
+  @apply font-medium text-danger;
+}
+.profiles .sub[title] {
+  @apply cursor-help;
+}
+
+.rollout {
+  @apply flex items-center gap-2.5;
+}
+.rollout .meter {
+  @apply w-24 flex-none;
+}
+.rollout span.num {
+  @apply text-xs whitespace-nowrap;
+}
+
+/* ── Coverage note ── */
+.coverage {
+  @apply grid grid-cols-2 gap-6 border-t border-line pt-5 dark:border-dark-line;
+}
+.coverage h2 {
+  @apply mb-1.5 text-[13px] font-semibold;
+}
+.coverage p {
+  @apply max-w-[62ch] leading-[22px] text-muted dark:text-brand-300;
+}
+.coverage strong {
+  @apply font-semibold text-ink dark:text-white;
+}
+.coverage .btn {
+  @apply ml-0.5 align-baseline;
+}
+.coverage .inline-error {
+  @apply mt-2;
+}
+
+/* ── Editor ── */
+.form {
+  @apply flex flex-col gap-4.5;
+}
+.pair {
+  @apply grid grid-cols-2 gap-4;
+}
+.pair .prio {
+  @apply max-w-45;
+}
+.hint-line {
+  @apply -mt-2 flex items-center gap-1.5 text-xs text-muted dark:text-brand-300;
+}
+.section {
+  @apply flex flex-col gap-2.5 border-t border-line pt-4.5 dark:border-dark-line;
+}
+.section-head {
+  @apply flex items-center justify-between gap-3;
+}
+.section-head h3 {
+  @apply text-sm font-semibold;
+}
+
+.clauses {
+  @apply flex flex-col gap-2;
+}
+.clause {
+  @apply grid grid-cols-[44px_130px_110px_minmax(0,1fr)_28px] items-start gap-2;
+}
+.clause .join {
+  @apply text-[13px] leading-(--control-height);
+}
+/* The small icon button, centred on the full-height controls beside it. */
+.clause > .btn {
+  @apply mt-[3px];
+}
+
+/* Multi-value box: chips plus an "Add…" select, drawn as one field. */
+.multi {
+  @apply flex min-h-(--control-height) flex-wrap items-center gap-1.5 rounded-(--control-radius) border border-line bg-white p-[3px] dark:border-dark-line dark:bg-dark-canvas;
+}
+.multi.invalid {
+  @apply border-danger;
+}
+.multi .add-val {
+  @apply h-6.5 w-auto min-w-30 flex-1 border-0 bg-transparent;
+}
+.chip {
+  @apply inline-flex h-6 items-center gap-0.5 rounded-full bg-muted/10 pr-0.5 pl-2 text-xs whitespace-nowrap text-muted dark:text-brand-300;
+}
+.chip button {
+  @apply grid size-5 place-items-center rounded-full border-0 bg-transparent text-muted dark:text-brand-300;
+  transition:
+    background-color var(--duration-hover) ease,
+    color var(--duration-hover) ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .chip button:hover {
+    @apply bg-brand-50/60 text-ink dark:bg-dark-canvas/70 dark:text-white;
+  }
+}
+.add-row {
+  @apply self-start;
+}
+.generated {
+  @apply block rounded-(--control-radius) bg-canvas px-2.5 py-2 text-xs leading-[18px] wrap-anywhere text-ink dark:bg-dark-canvas dark:text-white;
+}
+.ui-control.mono {
+  @apply font-mono text-[13px];
+}
+
+.preview {
+  @apply flex flex-col gap-1.5 rounded-xl border border-line px-3.5 py-3 leading-5 dark:border-dark-line;
+}
+.preview strong {
+  @apply font-semibold;
+}
+.preview .muted {
+  @apply text-xs;
+}
+.preview .notice {
+  @apply mt-1;
+}
+
+.settings {
+  @apply flex flex-col gap-2;
+}
+.setting {
+  @apply grid grid-cols-[210px_minmax(0,1fr)_150px_28px] items-start gap-2.5;
+}
+.setting .val {
+  @apply flex min-h-(--control-height) flex-col justify-center gap-1;
+}
+.setting .val .hint,
+.setting .val .error {
+  @apply text-[11px];
+}
+.setting .val .hint {
+  @apply text-muted dark:text-brand-300;
+}
+.setting .val .error {
+  @apply font-medium text-danger;
+}
+.setting .toggle {
+  @apply h-(--control-height);
+}
+.setting .key {
+  @apply truncate text-[11px] leading-(--control-height);
+}
+.setting > .btn {
+  @apply mt-[3px];
+}
+.input-unit {
+  @apply flex items-center gap-2;
+}
+.input-unit .ui-control {
+  @apply w-30;
+}
+.input-unit .unit {
+  @apply text-xs dark:text-brand-300;
+}
+
+.footer-note {
+  @apply mr-auto self-center text-xs font-medium text-danger;
+}
+
+.gap-why {
+  @apply mb-3 text-xs;
+}
+
+@media (max-width: 900px) {
+  .coverage {
+    @apply grid-cols-1;
+  }
+}
+
+@media (max-width: 640px) {
+  .profiles .name-cell {
+    @apply max-w-none min-w-0;
+  }
+  .pair {
+    @apply grid-cols-1;
+  }
+  .pair .prio {
+    @apply max-w-none;
+  }
+  .clause {
+    @apply grid-cols-[1fr_1fr_28px] border-b border-line pb-2 dark:border-dark-line;
+  }
+  .clause .join {
+    @apply col-span-full leading-4;
+  }
+  .clause > .btn {
+    @apply col-start-3 row-start-2;
+  }
+  .clause > :nth-child(4) {
+    @apply col-start-1 col-end-3;
+  }
+  .setting {
+    @apply grid-cols-[1fr_28px];
+  }
+  .setting .val {
+    @apply col-start-1;
+  }
+  .setting > .btn {
+    @apply col-start-2 row-start-1;
+  }
+}

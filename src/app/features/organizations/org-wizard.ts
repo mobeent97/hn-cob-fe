@@ -16,7 +16,7 @@ const STEPS = ['Profile', 'Features', 'Administrator'] as const;
   imports: [Icon, Dialog],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './org-wizard.html',
-  styleUrl: './org-wizard.scss',
+  styleUrls: ['./org-shared.css', './org-wizard.css'],
 })
 export class OrgWizard {
   protected readonly store = inject(Store);

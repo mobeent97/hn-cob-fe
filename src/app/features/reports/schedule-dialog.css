@@ -1,0 +1,52 @@
+@reference "../../../styles.css";
+
+/* Schedule dialog: cadence fields, the recipients chip input and a one-line summary. */
+.form {
+  @apply flex flex-col gap-4;
+}
+.row {
+  @apply grid grid-cols-2 gap-4;
+}
+
+/* Recipients: a .ui-control box that grows with its chips (the focus ring comes from .ui-control). */
+.chips {
+  @apply flex h-auto min-h-(--control-height) cursor-text flex-wrap items-center gap-1.5 px-2 py-1.25;
+}
+.chips.invalid:focus-within {
+  @apply border-danger;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger) 15%, transparent);
+}
+.chips input {
+  @apply h-6 min-w-40 flex-1 border-0 bg-transparent px-0.5 text-ink outline-none dark:text-white;
+}
+.chips input::placeholder {
+  @apply text-muted/75 dark:text-brand-300;
+}
+
+.chip {
+  @apply inline-flex h-6 max-w-full items-center gap-1 overflow-hidden rounded-full bg-muted/10 pr-1 pl-2.5 text-[13px] text-ellipsis text-muted dark:text-brand-300;
+}
+.chip button {
+  @apply inline-flex rounded-full border-0 bg-transparent p-0.5 text-muted dark:text-brand-300;
+  transition:
+    background-color var(--duration-hover) ease,
+    color var(--duration-hover) ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .chip button:hover {
+    @apply bg-brand-50 text-ink dark:bg-brand-600/15 dark:text-white;
+  }
+}
+
+.summary {
+  @apply leading-5 text-muted dark:text-brand-300;
+}
+.summary strong {
+  @apply font-medium text-ink dark:text-white;
+}
+
+@media (max-width: 480px) {
+  .row {
+    @apply grid-cols-1;
+  }
+}

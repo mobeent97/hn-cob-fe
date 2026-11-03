@@ -1,0 +1,105 @@
+@reference "../../../styles.css";
+
+/*
+ * Shared by Settings and My profile (listed first in their styleUrls).
+ * Two-column settings rows: a label column beside a panel drawn as a FleetPoint setting card,
+ * rows split by a full-width rule.
+ */
+.settings {
+  @apply flex flex-col;
+}
+.row {
+  @apply grid grid-cols-[minmax(220px,360px)_minmax(0,720px)] gap-x-12 gap-y-6 border-t border-line py-8 dark:border-dark-line;
+}
+.row:first-child {
+  @apply border-t-0 pt-2;
+}
+
+.label-col {
+  @apply flex flex-col gap-1.5 pt-2;
+}
+.label-col h2 {
+  @apply m-0 text-sm font-semibold text-ink dark:text-white;
+}
+.label-col .desc {
+  @apply text-muted dark:text-brand-300;
+}
+
+/* The policy as people will read it, one dot per rule. */
+.rules {
+  @apply mt-2.5 mb-0 flex list-none flex-col gap-1 p-0 text-[13px] text-muted dark:text-brand-300;
+}
+.rules li {
+  @apply flex items-baseline gap-2;
+}
+.rules li::before {
+  content: '';
+  @apply size-1 flex-none rounded-full bg-muted;
+  transform: translateY(-2px);
+}
+/* A dark: utility can't sit after ::before, so the dark dot is its own rule. */
+:host-context(.dark) .rules li::before {
+  @apply bg-brand-300;
+}
+.summary {
+  @apply mt-2.5 text-[13px] text-muted dark:text-brand-300;
+}
+
+/* Panel: FleetPoint .setting-card. */
+.panel {
+  @apply flex min-w-0 flex-col gap-4 rounded-2xl border border-line bg-white p-5 dark:border-dark-line dark:bg-dark-surface;
+  box-shadow: var(--shadow-card);
+}
+.fields {
+  @apply flex flex-col gap-4;
+}
+.fields.three {
+  @apply grid grid-cols-3;
+}
+.fields .narrow {
+  @apply max-w-45;
+}
+.preview {
+  @apply text-[13px] text-muted dark:text-brand-300;
+}
+
+/* A setting with its toggle on the right (FleetPoint .toggle-row). */
+.switch-row {
+  @apply flex items-start justify-between gap-4 border-t border-line pt-3.5 dark:border-dark-line;
+}
+.switch-row > div {
+  @apply flex flex-col gap-0.5;
+}
+.switch-row .switch-title {
+  @apply font-medium text-ink dark:text-white;
+}
+.switch-row .switch-desc {
+  @apply text-muted dark:text-brand-300;
+}
+.switch-row .toggle {
+  @apply mt-px;
+}
+
+.panel-foot {
+  @apply flex justify-end gap-2;
+}
+
+@media (max-width: 1100px) {
+  .row {
+    @apply grid-cols-1 gap-3;
+  }
+  .label-col {
+    @apply pt-0;
+  }
+}
+@media (max-width: 640px) {
+  .fields.three {
+    @apply grid-cols-1;
+  }
+  .fields .narrow {
+    @apply max-w-none;
+  }
+  .row {
+    @apply py-6;
+  }
+}

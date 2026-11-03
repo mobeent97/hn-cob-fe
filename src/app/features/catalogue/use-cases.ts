@@ -20,7 +20,7 @@ type Draft = { id: number | null; name: string; packages: PackageName[]; modules
   imports: [ReadOnlyNote, Icon, Menu, Dialog],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './use-cases.html',
-  styleUrl: './use-cases.scss',
+  styleUrl: './use-cases.css',
 })
 export class UseCases {
   protected readonly store = inject(Store);

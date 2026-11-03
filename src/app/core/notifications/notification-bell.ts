@@ -25,7 +25,7 @@ import { KIND_META, NotificationFeed } from './notification-feed';
       [attr.aria-expanded]="open()"
       (click)="$event.stopPropagation(); open.set(!open())"
     >
-      <app-icon name="bell" [size]="18" [stroke]="1.7" [class.ring]="pop()" />
+      <app-icon name="bell" [size]="18" [stroke]="1.7" [class.swing]="pop()" />
       @if (unread()) {
         <span class="badge num" [class.pop]="pop()">{{ unread() > 9 ? '9+' : unread() }}</span>
       }

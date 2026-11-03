@@ -1,0 +1,68 @@
+@reference "../../../styles.css";
+
+/* Users: tabs, toolbar and table, and the user dialog. */
+.list {
+  @apply flex flex-col gap-5;
+}
+/* Toolbar selects size to their text (app-select's host is full width by default). */
+app-select.auto {
+  @apply w-auto;
+}
+.actions-cell {
+  @apply w-10 text-right;
+}
+.chips {
+  @apply inline-flex flex-wrap gap-1;
+}
+.you {
+  @apply ml-1.5 text-xs text-muted dark:text-brand-300;
+}
+.empty-row {
+  @apply h-auto px-0 py-4;
+}
+.email {
+  @apply wrap-anywhere;
+}
+
+.blocked {
+  @apply max-w-80 text-right text-xs leading-4;
+}
+.ro-hint {
+  @apply -mt-2 mb-0 flex items-center gap-2 text-[13px] text-muted dark:text-brand-300;
+}
+.phone-inline {
+  @apply hidden;
+}
+
+/* ── User dialog ── */
+.form-grid.two {
+  @apply grid-cols-2;
+}
+legend {
+  @apply mb-1.5 p-0;
+}
+.group-list {
+  @apply grid grid-cols-2 gap-x-4 gap-y-1;
+}
+.group-opt {
+  @apply items-start py-1.5;
+}
+.group-opt input {
+  @apply mt-0.5;
+}
+.group-opt .sub {
+  @apply block text-xs leading-4 text-muted dark:text-brand-300;
+}
+
+@media (max-width: 640px) {
+  .form-grid.two,
+  .group-list {
+    @apply grid-cols-1;
+  }
+  .phone-inline {
+    @apply inline;
+  }
+  .blocked {
+    @apply hidden;
+  }
+}

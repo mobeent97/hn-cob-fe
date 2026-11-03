@@ -9,7 +9,7 @@
 
   <div class="settings">
     <!-- Password policy -->
-    <section class="row" aria-labelledby="s-pw">
+    <section class="row smooth-reveal" aria-labelledby="s-pw">
       <div class="label-col">
         <h2 id="s-pw">Password policy</h2>
         <p class="desc">What a new password must contain, how long it lasts and how many old ones are remembered.</p>
@@ -79,7 +79,7 @@
     </section>
 
     <!-- Pagination -->
-    <section class="row" aria-labelledby="s-pg">
+    <section class="row smooth-reveal" style="--reveal-delay: 40ms" aria-labelledby="s-pg">
       <div class="label-col">
         <h2 id="s-pg">Pagination</h2>
         <p class="desc">How many rows every list shows before it pages: customers, devices, users, vouchers and the audit.</p>
@@ -114,7 +114,7 @@
     </section>
 
     <!-- Login & session -->
-    <section class="row" aria-labelledby="s-login">
+    <section class="row smooth-reveal" style="--reveal-delay: 80ms" aria-labelledby="s-login">
       <div class="label-col">
         <h2 id="s-login">Sign-in and session</h2>
         <p class="desc">When idle sessions end, and what happens after repeated wrong passwords.</p>
@@ -176,7 +176,7 @@
     </section>
 
     <!-- Notifications -->
-    <section class="row notif-row" id="notifications" #notifSection [class.flash]="flash()" aria-labelledby="s-notif">
+    <section class="row notif-row smooth-reveal" style="--reveal-delay: 120ms" id="notifications" #notifSection [class.flash]="flash()" aria-labelledby="s-notif">
       <div class="label-col">
         <h2 id="s-notif">Notifications</h2>
         <p class="desc">What reaches you in the portal and by email. These choices are yours; other staff set their own.</p>

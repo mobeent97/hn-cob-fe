@@ -24,7 +24,7 @@ import { ReadOnlyNote } from '../tenancy';
   imports: [Icon, Menu, Dialog, DatePipe, OrgDetail, OrgWizard, ReadOnlyNote],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './organizations.html',
-  styleUrl: './organizations.scss',
+  styleUrls: ['./org-shared.css', './organizations.css'],
 })
 export class Organizations {
   protected readonly store = inject(Store);

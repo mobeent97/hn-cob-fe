@@ -1,0 +1,37 @@
+@reference "../../../styles.css";
+
+.list {
+  @apply flex flex-col gap-5;
+}
+.actions-cell {
+  @apply w-10 text-right;
+}
+.warn {
+  @apply text-warning;
+}
+.phone-sub {
+  @apply hidden;
+}
+.table td.empty-row {
+  @apply h-auto px-0 py-4;
+}
+
+.form-grid.two {
+  @apply grid-cols-2;
+}
+.code-row {
+  @apply flex gap-2;
+}
+.code-row .ui-control {
+  @apply flex-1;
+}
+
+
+@media (max-width: 640px) {
+  .phone-sub {
+    @apply block;
+  }
+  .form-grid.two {
+    @apply grid-cols-1;
+  }
+}

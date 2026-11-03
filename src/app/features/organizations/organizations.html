@@ -3,7 +3,7 @@
                   (back)="close()" (viewAs)="viewAs($event)" (resend)="resend($event)" (status)="ask($event.kind, $event.org)" />
 } @else {
   <div class="page">
-    <div class="title-row">
+    <div class="title-row smooth-reveal">
       <div class="title-block">
         <h1>Organizations</h1>
         <p class="subline num">
@@ -21,7 +21,7 @@
       <app-ro-note noun="every organization" />
     }
 
-    <div class="table-wrap">
+    <div class="table-wrap smooth-reveal" style="--reveal-delay: 40ms">
       <table class="table stack orgs">
         <thead>
           <tr>

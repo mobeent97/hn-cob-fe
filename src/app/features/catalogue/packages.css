@@ -1,0 +1,85 @@
+@reference "../../../styles.css";
+
+.list {
+  @apply flex flex-col gap-5;
+}
+
+/* ── Feature matrix ── */
+.matrix th.pkg-col,
+.matrix td.cell {
+  @apply w-40 text-center;
+}
+.matrix .pkg-name {
+  @apply block text-[13px] font-semibold text-ink dark:text-white;
+}
+.matrix .pkg-price {
+  @apply block font-normal;
+}
+.matrix .group-row th {
+  @apply border-t border-line px-0 pt-5 pb-2 text-left text-xs font-semibold text-ink dark:border-dark-line dark:text-white;
+}
+.matrix tbody:first-of-type .group-row th {
+  @apply pt-2;
+}
+.matrix td {
+  @apply h-10;
+}
+.matrix td.cell .check {
+  @apply justify-center p-2;
+}
+/* A staged cell carries a quiet marker until it is saved or discarded. */
+.matrix td.cell.changed {
+  @apply bg-brand-50 dark:bg-brand-600/15;
+}
+.matrix tfoot td {
+  @apply h-11 border-t border-line text-[13px] dark:border-dark-line;
+}
+
+.save-bar {
+  @apply sticky bottom-4 z-50 flex items-center gap-6 self-center rounded-2xl border border-line bg-white py-2 pr-2 pl-4 dark:border-dark-line dark:bg-dark-surface;
+  box-shadow: var(--shadow-popover);
+  transition:
+    opacity var(--duration-popover) var(--ease-out),
+    transform var(--duration-popover) var(--ease-out);
+}
+@starting-style {
+  .save-bar {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+.save-bar .save-actions {
+  @apply flex gap-2;
+}
+
+/* ── Packages table ── */
+.desc {
+  @apply max-w-105 text-muted dark:text-brand-300;
+}
+.actions-cell {
+  @apply w-10 text-right;
+}
+.table td.empty-row {
+  @apply h-auto px-0 py-4;
+}
+
+/* ── Dialog ── */
+.form {
+  @apply flex flex-col gap-4;
+}
+
+@media (max-width: 640px) {
+  .matrix-wrap {
+    @apply -mr-4;
+  }
+  .matrix th.pkg-col,
+  .matrix td.cell {
+    @apply w-26 min-w-26;
+  }
+  .matrix .feature-col {
+    @apply sticky left-0 z-1 min-w-35 whitespace-normal bg-white dark:bg-dark-surface;
+  }
+  .save-bar {
+    @apply gap-3 self-stretch justify-between;
+  }
+}

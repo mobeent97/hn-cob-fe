@@ -36,7 +36,7 @@ const CODE_RE = /^[A-Z0-9]{4,16}$/;
   imports: [Select, SelectOption, ReadOnlyNote, Icon, Tabs, Pager, Menu, Dialog, DatePipe, NumPipe, TonePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './vouchers.html',
-  styleUrl: './vouchers.scss',
+  styleUrl: './vouchers.css',
 })
 export class Vouchers {
   protected readonly store = inject(Store);

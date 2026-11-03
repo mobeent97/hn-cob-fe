@@ -1,0 +1,133 @@
+@reference "../../../styles.css";
+
+.list {
+  @apply flex flex-col gap-5;
+}
+
+/* Filter selects size to their content. */
+app-select.auto {
+  @apply w-auto;
+}
+
+.id-cell {
+  @apply inline-flex items-center gap-3;
+}
+.id-cell .check {
+  @apply -m-1 p-1;
+}
+
+/* Unlayered, so it wins over the global row hover without !important. */
+tr.picked {
+  @apply bg-brand-50 dark:bg-brand-600/15;
+}
+
+.cmds .payload {
+  @apply inline-block max-w-35 overflow-hidden align-middle text-ellipsis text-muted dark:text-brand-300;
+}
+.cmds .resp {
+  @apply max-w-57.5;
+}
+.cmds .resp .code {
+  @apply mr-1.5 inline-block min-w-7 font-medium;
+}
+.cmds .resp .resp-text {
+  @apply inline-block max-w-42.5 overflow-hidden align-bottom text-ellipsis text-muted dark:text-brand-300;
+}
+
+.table.stack td.empty-row {
+  @apply h-auto px-0 py-4;
+}
+
+/*
+ * Bulk action bar (same pattern as Inventory): rises from the bottom edge of the sheet.
+ * Centred on the content beside the sidebar (--shell-sidebar-w, set by the shell: 14rem, 5rem as a rail, 0 on phones).
+ */
+.bulk-bar {
+  @apply fixed bottom-6 z-50 flex max-w-[calc(100vw-2rem)] items-center gap-3 rounded-2xl border border-line bg-white py-2 pr-2 pl-4 dark:border-dark-line dark:bg-dark-surface;
+  left: calc(var(--shell-sidebar-w, 14rem) + (100vw - var(--shell-sidebar-w, 14rem)) / 2);
+  box-shadow: var(--shadow-popover);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, 16px);
+  transition:
+    opacity var(--duration-hover) var(--ease-out),
+    transform var(--duration-hover) var(--ease-out),
+    visibility 0s linear var(--duration-hover);
+}
+.bulk-bar.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+  transition:
+    opacity var(--duration-popover) var(--ease-out),
+    transform var(--duration-popover) var(--ease-out),
+    visibility 0s;
+}
+.bulk-bar .picked-count {
+  @apply whitespace-nowrap text-muted dark:text-brand-300;
+}
+.bulk-bar .picked-count strong {
+  @apply font-semibold text-ink dark:text-white;
+}
+.bulk-bar .skip-note {
+  @apply text-xs whitespace-nowrap empty:hidden;
+}
+/* Room for the bar so it never covers the pager. */
+.page:has(.bulk-bar.show) {
+  @apply pb-22;
+}
+
+/* ── Drawer ── */
+.drawer-dl {
+  @apply mb-6 grid-cols-2;
+}
+.code-head {
+  @apply mb-2 flex items-center justify-between;
+}
+pre.code {
+  @apply mb-5 rounded-xl border border-line bg-canvas px-3.5 py-3 leading-5 whitespace-pre-wrap wrap-anywhere text-ink dark:border-dark-line dark:bg-dark-canvas dark:text-white;
+}
+.waiting {
+  @apply mb-5;
+}
+.waiting > span {
+  @apply inline-flex items-center gap-2;
+}
+.waiting .dot {
+  @apply text-brand-600 dark:text-brand-400;
+}
+.waiting .pulse {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .waiting .pulse {
+    animation: none;
+  }
+}
+
+/* The sidebar is a drawer below 768px, so the bar centres on the viewport. */
+@media (max-width: 767px) {
+  .bulk-bar {
+    @apply left-1/2;
+  }
+}
+
+@media (max-width: 640px) {
+  .toolbar .left app-select.auto {
+    @apply min-w-0 flex-1;
+  }
+  .bulk-bar {
+    @apply right-4 bottom-4 left-4 flex-wrap;
+    transform: translateY(16px);
+  }
+  .bulk-bar.show {
+    transform: none;
+  }
+}

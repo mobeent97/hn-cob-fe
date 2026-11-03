@@ -178,19 +178,31 @@
     grid-column: 1 / -1;
   }
 
-  /* A prefix select joined to an input. */
+  /* A field joined to a prefix (dial-code select, "AED") or a suffix unit ("%", "days"). */
   .input-group {
     @apply flex;
-  }
-  .input-group > .ui-control:first-child,
-  .input-group > app-select .trigger {
-    @apply w-auto rounded-r-none border-r-0 bg-canvas dark:bg-dark-surface;
   }
   .input-group > app-select {
     @apply w-auto flex-none;
   }
-  .input-group > .ui-control:last-child {
+  .input-group > app-select:first-child .trigger {
+    @apply rounded-r-none border-r-0 bg-canvas dark:bg-dark-surface;
+  }
+  .input-group > .ui-control:not(:first-child) {
     @apply rounded-l-none;
+  }
+  .input-group > .ui-control:not(:last-child) {
+    @apply rounded-r-none;
+  }
+  .input-group .prefix,
+  .input-group .suffix {
+    @apply inline-flex shrink-0 items-center border border-line bg-canvas px-2.5 text-xs whitespace-nowrap text-muted dark:border-dark-line dark:bg-dark-surface dark:text-brand-300;
+  }
+  .input-group .prefix {
+    @apply rounded-l-(--control-radius) border-r-0;
+  }
+  .input-group .suffix {
+    @apply rounded-r-(--control-radius) border-l-0;
   }
 
   .toolbar app-select,
@@ -221,6 +233,10 @@
   }
   .seg button:disabled {
     @apply cursor-not-allowed opacity-50;
+  }
+  /* A locked choice still reads as the choice. */
+  .seg button.on:disabled {
+    @apply opacity-100;
   }
 
   /* Search box: icon inside the control. */
@@ -466,6 +482,12 @@
   }
   .notice > app-icon {
     @apply text-warning;
+  }
+  .notice.info {
+    @apply border-info/30 bg-info/5 dark:bg-info/10;
+  }
+  .notice.info > app-icon {
+    @apply text-info;
   }
 
   .inline-error {

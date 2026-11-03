@@ -1,0 +1,27 @@
+@reference "../../../styles.css";
+
+/* The sort select is sized by the global `.toolbar app-select`. */
+.list {
+  @apply flex flex-col gap-5;
+}
+
+.actions-cell {
+  @apply w-10 text-right;
+}
+
+/* Contract ending within 60 days / already ended. */
+td.warn {
+  @apply text-warning;
+}
+td.neg {
+  @apply text-danger;
+}
+
+/* The empty state sits in one full-width cell, not a 48px row. */
+.empty-row {
+  @apply h-auto px-0 py-4;
+}
+
+.confirm-body {
+  @apply leading-5.5 text-muted dark:text-brand-300;
+}

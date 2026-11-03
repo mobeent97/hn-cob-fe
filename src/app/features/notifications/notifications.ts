@@ -31,7 +31,7 @@ const KINDS = Object.keys(KIND_META) as NotificationKind[];
   imports: [Select, SelectOption, RouterLink, Icon, Tabs, RelativePipe, DateTimePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './notifications.html',
-  styleUrl: './notifications.scss',
+  styleUrl: './notifications.css',
 })
 export class Notifications {
   protected readonly store = inject(Store);

@@ -1,0 +1,151 @@
+@reference "../../../styles.css";
+
+.name-row {
+  @apply flex min-w-0 flex-wrap items-center gap-2.5;
+}
+.crumb-current {
+  @apply truncate;
+}
+.meta {
+  @apply flex flex-wrap;
+}
+.meta span + span {
+  @apply before:mx-2 before:text-muted before:content-['·'] dark:before:text-brand-300;
+}
+
+.sw.lg {
+  @apply size-4 rounded-sm;
+}
+
+.notice {
+  @apply items-center;
+}
+.notice app-icon {
+  @apply flex-none;
+}
+.notice .grow {
+  @apply flex-1;
+}
+/* Information, not a warning: the platform note and pending invitations. */
+.info-notice {
+  @apply border-info/30 bg-info/5 dark:bg-info/10;
+}
+.info-notice app-icon {
+  @apply text-info;
+}
+
+.dl.one {
+  @apply grid-cols-1 gap-3.5;
+}
+.brand-dd {
+  @apply flex items-center gap-2;
+}
+
+.ro-hint {
+  @apply flex items-center gap-2 text-[13px];
+}
+.small {
+  @apply text-xs;
+}
+
+/* ── Features ── */
+.feat-head p {
+  @apply max-w-190;
+}
+.areas {
+  @apply grid grid-cols-2 items-start gap-x-10 gap-y-2;
+}
+.area h3 {
+  @apply pt-3 pb-2 text-xs font-medium text-muted dark:text-brand-300;
+}
+.feat-list {
+  @apply m-0 list-none p-0;
+}
+.feat-list li {
+  @apply flex items-center justify-between gap-4 border-t border-line py-2.5 dark:border-dark-line;
+  transition: background-color var(--duration-hover) ease;
+}
+/* A staged row carries a quiet marker until it is saved or discarded. */
+.feat-list li.staged {
+  @apply -mx-2.5 rounded-xl border-t-transparent bg-brand-50 p-2.5 dark:bg-brand-600/15;
+}
+.f-text {
+  @apply flex min-w-0 flex-col gap-0.5;
+}
+.f-name {
+  @apply inline-flex items-center gap-2 font-medium;
+}
+.f-name .pill {
+  @apply h-5 font-normal;
+}
+.f-desc {
+  @apply text-[13px];
+}
+.impact {
+  @apply text-[13px] text-brand-700 dark:text-brand-300;
+}
+.impact.down {
+  @apply text-warning;
+}
+.seg {
+  @apply flex-none;
+}
+
+/* ── Limits ── */
+.limit {
+  @apply flex flex-col gap-3;
+}
+.usage-line {
+  @apply flex items-baseline gap-1.5;
+}
+.usage-line .big {
+  @apply text-xl leading-none font-bold text-ink dark:text-white;
+}
+.meter.over > span {
+  @apply bg-danger;
+}
+.limit .field {
+  @apply max-w-60;
+}
+
+/* ── People / roles ── */
+.list {
+  @apply flex flex-col gap-4;
+}
+.su-note {
+  @apply flex items-center gap-2 text-[13px];
+}
+.su-note code {
+  @apply rounded-md border border-line bg-canvas px-1.25 py-px text-xs text-ink dark:border-dark-line dark:bg-dark-canvas dark:text-white;
+}
+
+/* ── Edit drawer ── */
+.pair {
+  @apply grid grid-cols-2 gap-4;
+}
+.sep {
+  @apply border-t border-line dark:border-dark-line;
+}
+
+@media (max-width: 1100px) {
+  .areas {
+    @apply grid-cols-1;
+  }
+}
+@media (max-width: 640px) {
+  .title-row .actions {
+    @apply w-full;
+  }
+  .title-row .actions .btn:first-child {
+    @apply flex-1;
+  }
+  .feat-list li {
+    @apply flex-col items-start gap-2;
+  }
+  .pair {
+    @apply grid-cols-1;
+  }
+  .limit .field {
+    @apply max-w-none;
+  }
+}

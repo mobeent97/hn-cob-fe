@@ -28,7 +28,7 @@ export const LEVEL_LABEL: Record<string, string> = { none: 'None', R: 'Read', RW
   imports: [Select, SelectOption, Icon, RelativePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './profile.html',
-  styleUrl: './profile.scss',
+  styleUrls: ['./settings-layout.css', './profile.css'],
 })
 export class Profile {
   protected readonly store = inject(Store);

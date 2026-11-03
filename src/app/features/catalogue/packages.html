@@ -1,5 +1,5 @@
 <div class="page">
-  <div class="title-row">
+  <div class="title-row smooth-reveal">
     <div class="title-block">
       <h1>Packages</h1>
       <p class="subline num">
@@ -15,7 +15,7 @@
     }
   </div>
 
-  <div class="list">
+  <div class="list smooth-reveal" style="--reveal-delay: 40ms">
     <app-tabs [tabs]="tabs()" [(value)]="view" />
 
     @if (view() === 'matrix') {

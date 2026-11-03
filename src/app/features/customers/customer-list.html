@@ -1,5 +1,5 @@
 <div class="page">
-  <div class="title-row">
+  <div class="title-row smooth-reveal">
     <div class="title-block">
       <h1>Customers</h1>
       <p class="subline num">{{ store.customers().length }} business accounts · {{ packageCounts().all }} shown</p>
@@ -14,7 +14,7 @@
   </div>
 
   <!-- Count cards are the package filter -->
-  <div class="count-cards" role="group" aria-label="Filter by package">
+  <div class="count-cards smooth-reveal" style="--reveal-delay: 40ms" role="group" aria-label="Filter by package">
     <button class="count-card" [class.selected]="pkg() === 'all'" (click)="pkg.set('all')" [attr.aria-pressed]="pkg() === 'all'">
       <span class="cc-label">All packages</span>
       <span class="cc-value"><span class="num" [uiCountUp]="packageCounts().all"></span></span>
@@ -27,7 +27,7 @@
     }
   </div>
 
-  <div class="list">
+  <div class="list smooth-reveal" style="--reveal-delay: 80ms">
     <app-tabs [tabs]="tabs()" [(value)]="view" />
 
     <div class="toolbar">

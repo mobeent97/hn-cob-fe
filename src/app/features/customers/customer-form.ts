@@ -39,7 +39,7 @@ const DOC_TYPES = /\.(pdf|jpe?g|png)$/i;
   imports: [Select, SelectOption, RouterLink, ReactiveFormsModule, Icon, DatePipe, OrgTag],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './customer-form.html',
-  styleUrl: './customer-form.scss',
+  styleUrl: './customer-form.css',
 })
 export class CustomerForm {
   protected readonly store = inject(Store);

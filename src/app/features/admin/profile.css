@@ -1,0 +1,181 @@
+@reference "../../../styles.css";
+
+/* My profile. The row / panel layout comes from settings-layout.css. */
+.small {
+  @apply text-xs;
+}
+.fields.two {
+  @apply grid grid-cols-2;
+}
+/* Dial-code prefix beside the phone number; the joined look comes from the global .input-group. */
+.input-group app-select {
+  @apply w-auto flex-none;
+}
+
+.who {
+  @apply mt-3 flex items-center gap-3;
+}
+.who > div {
+  @apply flex flex-col;
+}
+.who .strong {
+  @apply font-medium text-ink dark:text-white;
+}
+.avatar {
+  @apply grid size-10 flex-none place-items-center rounded-full bg-brand-50 font-semibold text-brand-700 dark:bg-brand-600/15 dark:text-brand-300;
+}
+
+/* ── Password ── */
+.pw {
+  @apply flex flex-col gap-4;
+}
+.label-row {
+  @apply flex items-center justify-between;
+}
+.label-row label {
+  @apply text-xs font-medium text-ink dark:text-brand-300;
+}
+.show-btn {
+  @apply -my-0.5 -mr-1.5 h-6;
+}
+
+/* Eye / eye-off icon swap: cross-fade with scale and blur. */
+.swap {
+  @apply grid;
+}
+.swap > * {
+  grid-area: 1 / 1;
+  transition:
+    opacity var(--duration-hover) var(--ease-out),
+    transform var(--duration-hover) var(--ease-out),
+    filter var(--duration-hover) var(--ease-out);
+}
+.swap .b,
+.swap[data-on='true'] .a {
+  opacity: 0;
+  transform: scale(0.6);
+  filter: blur(2px);
+}
+.swap[data-on='true'] .b {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+/* Live rule checklist: the ring fills and the tick draws as each rule passes. */
+.checklist {
+  @apply m-0 grid list-none grid-cols-2 gap-x-4 gap-y-2 border-t border-line p-0 pt-3.5 text-[13px] dark:border-dark-line;
+}
+.checklist li {
+  @apply flex items-center gap-2 text-muted dark:text-brand-300;
+  transition: color var(--duration-hover) ease;
+}
+.checklist li.ok {
+  @apply text-ink dark:text-white;
+}
+.checklist li.bad {
+  @apply text-danger dark:text-danger;
+}
+.checklist .mark {
+  @apply inline-flex flex-none;
+  transition: transform var(--duration-popover) var(--ease-overshoot);
+}
+.checklist li.ok .mark {
+  transform: scale(1.08);
+}
+.checklist .ring {
+  @apply fill-transparent stroke-line stroke-[1.2] dark:stroke-dark-line;
+  transition:
+    fill var(--duration-hover) var(--ease-out),
+    stroke var(--duration-hover) var(--ease-out);
+}
+.checklist .tick {
+  @apply stroke-white stroke-[1.8];
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 10;
+  stroke-dashoffset: 10;
+  transition: stroke-dashoffset var(--duration-popover) var(--ease-out);
+}
+.checklist li.ok .ring {
+  @apply fill-success stroke-success dark:stroke-success;
+}
+.checklist li.ok .tick {
+  stroke-dashoffset: 0;
+  transition-delay: 60ms;
+}
+.checklist li.bad .ring {
+  @apply stroke-danger dark:stroke-danger;
+}
+.meet {
+  @apply mr-auto self-center;
+}
+
+/* ── Organization & access ── */
+.org-dl {
+  @apply mb-5 grid-cols-[1fr_2fr];
+}
+.org-dl .span-2 {
+  @apply min-w-0;
+}
+.org-dl dd {
+  @apply flex flex-wrap items-center gap-2;
+}
+.chips {
+  @apply inline-flex flex-wrap gap-1;
+}
+
+/* Effective access per feature, grouped by area. */
+.access .area-row th {
+  @apply h-auto px-0 pt-4 pb-1.5 text-left text-xs font-semibold tracking-normal text-ink dark:text-white;
+}
+.access tbody:first-of-type .area-row th {
+  @apply pt-2;
+}
+.access th[scope='row'] {
+  @apply text-left text-xs font-normal tracking-normal text-ink dark:text-white;
+}
+.access tbody tr:last-child th {
+  @apply border-b-0;
+}
+.access td {
+  @apply h-10;
+}
+.access .lvl {
+  @apply font-medium;
+}
+.access .lvl[data-level='none'] {
+  @apply font-normal text-muted dark:text-brand-300;
+}
+.access .lvl[data-level='RW'] {
+  @apply text-brand-700 dark:text-brand-300;
+}
+.access .reason {
+  @apply text-xs text-muted dark:text-brand-300;
+}
+.access .reason-sm {
+  @apply hidden;
+}
+
+@media (max-width: 640px) {
+  .org-dl {
+    @apply grid-cols-1;
+  }
+  .access {
+    @apply w-full;
+  }
+  .access th[scope='row'] {
+    @apply w-[55%];
+  }
+  .access td,
+  .access th {
+    @apply whitespace-normal;
+  }
+  .access .reason-sm {
+    @apply block text-xs text-muted dark:text-brand-300;
+  }
+  .fields.two,
+  .checklist {
+    @apply grid-cols-1;
+  }
+}

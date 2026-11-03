@@ -11,7 +11,7 @@
   </div>
 
   @for (g of groups(); track g.area) {
-    <section class="card area" [attr.aria-labelledby]="'area-' + $index">
+    <section class="card area smooth-reveal" [style.--reveal-delay]="$index * 40 + 'ms'" [attr.aria-labelledby]="'area-' + $index">
       <div class="card-head"><h2 [id]="'area-' + $index">{{ g.area }}</h2></div>
       <ul class="report-list">
         @for (r of g.reports; track r.def.id) {
@@ -38,7 +38,7 @@
     </section>
   }
 
-  <section class="card">
+  <section class="card smooth-reveal" style="--reveal-delay: 120ms">
     <div class="card-head">
       <div>
         <h2>Scheduled reports</h2>

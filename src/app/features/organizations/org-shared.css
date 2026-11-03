@@ -1,0 +1,76 @@
+@reference "../../../styles.css";
+
+/*
+ * Bits shared by the organization list, the organization detail and the new-organization wizard.
+ * Listed first in each component's styleUrls.
+ */
+
+/* Brand swatch (brand colours are data; the edge adapts to the theme). */
+.sw {
+  @apply inline-block size-3 flex-none rounded-[3px] border border-ink/14 dark:border-white/14;
+}
+
+/*
+ * Entitlement switch (None / Read / Read & write) is the global .seg. A chosen level that can't be
+ * changed (platform organization, read-only access, needs B2C) stays readable but reads as neutral.
+ */
+.seg button.on:disabled {
+  @apply bg-muted/15 text-ink opacity-100 dark:bg-dark-line dark:text-white;
+}
+
+/* Unsaved changes: floats at the bottom of the page until saved or discarded. */
+.save-bar {
+  @apply sticky bottom-4 z-50 flex items-center gap-6 self-center rounded-2xl border border-line bg-white py-2 pr-2 pl-4 dark:border-dark-line dark:bg-dark-surface;
+  box-shadow: var(--shadow-popover);
+  transition:
+    opacity var(--duration-popover) var(--ease-out),
+    transform var(--duration-popover) var(--ease-out);
+}
+@starting-style {
+  .save-bar {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+.save-bar .save-actions {
+  @apply flex gap-2;
+}
+
+.form {
+  @apply flex flex-col gap-4;
+}
+fieldset.field {
+  @apply min-w-0;
+}
+fieldset.field legend {
+  @apply mb-1.5;
+}
+.checks {
+  @apply flex flex-wrap gap-x-4.5 gap-y-2.5;
+}
+
+.swatches {
+  @apply flex flex-wrap gap-2;
+}
+/* White tick on the organization's brand fill (data), the same in both themes. */
+.swatch {
+  @apply grid size-7 place-items-center rounded-md border border-ink/14 text-white dark:border-white/14;
+  transition: scale var(--duration-press) var(--ease-out);
+}
+.swatch:active {
+  scale: 0.94;
+}
+.swatch[aria-checked='true'] {
+  @apply outline-2 outline-offset-2 outline-ink dark:outline-white;
+}
+
+/* The empty state sits in one full-width cell, not a 48px row. */
+.empty-row {
+  @apply h-auto px-0 py-4;
+}
+
+@media (max-width: 640px) {
+  .save-bar {
+    @apply justify-between gap-3 self-stretch;
+  }
+}

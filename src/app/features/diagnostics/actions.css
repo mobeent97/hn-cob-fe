@@ -1,0 +1,161 @@
+@reference "../../../styles.css";
+
+.list {
+  @apply flex flex-col gap-5;
+}
+.actions-cell {
+  @apply w-10 text-right;
+}
+.send-cell {
+  @apply w-[1%] text-right;
+}
+.table td.empty-row {
+  @apply h-auto px-0 py-4;
+}
+
+.form {
+  @apply flex flex-col gap-4.5;
+}
+.pair {
+  @apply grid grid-cols-2 gap-4;
+}
+.search.wide {
+  @apply w-full;
+}
+.preview {
+  @apply flex flex-col gap-1 px-3.5 py-2.5 text-xs;
+}
+.preview code {
+  @apply wrap-anywhere;
+}
+
+.device {
+  @apply flex items-start justify-between gap-3 px-3.5 py-3;
+}
+.device > div {
+  @apply flex flex-col gap-0.5;
+}
+.device .strong {
+  @apply font-medium;
+}
+
+/* ── Status line: spinner swaps for a drawn check (transitions.dev icon swap + success check) ── */
+.status-line {
+  @apply flex items-center gap-3 rounded-xl border border-line px-3.5 py-3 dark:border-dark-line;
+  transition:
+    border-color var(--duration-popover) ease,
+    background-color var(--duration-popover) ease;
+}
+@starting-style {
+  .status-line {
+    opacity: 0;
+  }
+}
+.status-line[data-phase='done'] {
+  @apply border-success/30 bg-success/5 dark:bg-success/10;
+}
+.status-text {
+  @apply flex min-w-0 flex-col gap-0.5 text-[13px];
+}
+.status-icon {
+  @apply relative grid size-5 flex-none;
+}
+.status-icon > * {
+  grid-area: 1 / 1;
+}
+.spinner {
+  @apply m-px size-[18px] rounded-full border-2 border-brand-50 border-t-brand-600 dark:border-brand-600/15 dark:border-t-brand-400;
+  animation: spin 0.8s linear infinite;
+  transition:
+    opacity var(--duration-hover) var(--ease-out),
+    transform var(--duration-hover) var(--ease-out),
+    filter var(--duration-hover) var(--ease-out);
+}
+[data-phase='done'] .spinner {
+  opacity: 0;
+  transform: scale(0.6);
+  filter: blur(2px);
+  animation-play-state: paused;
+}
+@keyframes spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+.t-success-check {
+  @apply inline-block opacity-0;
+  transform-origin: center;
+}
+.t-success-check svg {
+  @apply block overflow-visible;
+}
+.t-success-check svg path {
+  stroke-dasharray: 16;
+  stroke-dashoffset: 16;
+}
+.t-success-check[data-state='in'] {
+  animation:
+    check-fade 500ms var(--ease-out) forwards,
+    check-rotate 500ms var(--ease-out) forwards,
+    check-blur 500ms var(--ease-out) forwards,
+    check-bob 500ms var(--ease-overshoot) forwards;
+}
+.t-success-check[data-state='in'] svg path {
+  animation: check-draw 500ms var(--ease-out) 80ms forwards;
+}
+@keyframes check-fade {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes check-rotate {
+  from {
+    transform: rotate(80deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+@keyframes check-blur {
+  from {
+    filter: blur(6px);
+  }
+  to {
+    filter: blur(0);
+  }
+}
+@keyframes check-bob {
+  from {
+    translate: 0 8px;
+  }
+  to {
+    translate: 0 0;
+  }
+}
+@keyframes check-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Same or higher specificity than the rules above, and later, so no !important is needed. */
+@media (prefers-reduced-motion: reduce) {
+  .t-success-check[data-state='in'] {
+    animation: none;
+    opacity: 1;
+  }
+  .t-success-check[data-state] svg path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .spinner {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .pair {
+    @apply grid-cols-1;
+  }
+}

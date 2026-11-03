@@ -28,7 +28,7 @@ const PLUG_AND_GO_TYPE = 2;
   imports: [Select, SelectOption, ReactiveFormsModule, Icon, Pager, Menu, Dialog, CountUp, DatePipe, RelativePipe, TonePipe, OrgTag, OrgFilter, ReadOnlyNote],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './consumer-list.html',
-  styleUrl: './consumer-list.scss',
+  styleUrl: './consumer-list.css',
 })
 export class ConsumerList {
   protected readonly store = inject(Store);

@@ -1,0 +1,36 @@
+@reference "../../../styles.css";
+
+.chips {
+  @apply inline-flex flex-wrap gap-1;
+}
+.modules {
+  @apply max-w-85;
+}
+.actions-cell {
+  @apply w-10 text-right;
+}
+.table td.empty-row {
+  @apply h-auto px-0 py-4;
+}
+.confirm-body {
+  @apply leading-[22px] text-muted dark:text-brand-300;
+}
+
+.form {
+  @apply flex flex-col gap-5;
+}
+fieldset {
+  @apply m-0 border-0 p-0;
+}
+legend {
+  @apply mb-2 p-0;
+}
+.checks {
+  @apply grid grid-cols-2 gap-x-4 gap-y-2.5;
+}
+
+@media (max-width: 640px) {
+  .checks {
+    @apply grid-cols-1;
+  }
+}

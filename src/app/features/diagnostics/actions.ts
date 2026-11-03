@@ -29,7 +29,7 @@ export const isCritical = (a: DeviceAction) => /immobil/i.test(a.name) || a.para
   imports: [Select, SelectOption, ReadOnlyNote, Icon, Menu, Dialog],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './actions.html',
-  styleUrl: './actions.scss',
+  styleUrl: './actions.css',
 })
 export class DeviceActions {
   protected readonly store = inject(Store);

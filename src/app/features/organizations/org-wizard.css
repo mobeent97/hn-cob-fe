@@ -1,0 +1,148 @@
+@reference "../../../styles.css";
+
+.small {
+  @apply text-xs;
+}
+.lead {
+  @apply text-[13px];
+}
+.pair {
+  @apply grid grid-cols-2 gap-4;
+}
+.sep {
+  @apply border-t border-line dark:border-dark-line;
+}
+.footer-note {
+  @apply mr-auto self-center;
+}
+
+/* ── Stepper ── */
+.stepper {
+  @apply mb-4.5 flex list-none gap-5;
+}
+.stepper button {
+  @apply inline-flex items-center gap-2 border-0 bg-transparent p-0 font-medium text-muted dark:text-brand-300;
+}
+.stepper button:disabled {
+  @apply cursor-default;
+}
+.stepper .marker {
+  @apply grid size-5 place-items-center rounded-full border border-line text-[11px] dark:border-dark-line;
+}
+.stepper .current button {
+  @apply text-ink dark:text-white;
+}
+.stepper .current .marker {
+  @apply border-brand-600 bg-brand-600 text-white;
+}
+.stepper .done button {
+  @apply text-ink dark:text-white;
+}
+.stepper .done .marker {
+  @apply border-brand-500 text-brand-600 dark:border-brand-400 dark:text-brand-300;
+}
+
+/* ── Stage: side-by-side slide between steps (same as the customer wizard) ── */
+.stage {
+  @apply grid min-w-0;
+}
+.stage > .panel {
+  @apply col-start-1 row-start-1 min-w-0;
+}
+.slide-out {
+  @apply pointer-events-none;
+}
+
+/* Only animated when the person allows motion, so nothing needs overriding for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .moving .slide-in {
+    animation: step-in 250ms var(--ease-out) both;
+  }
+  .moving .slide-out {
+    animation: step-out 160ms var(--ease-out) both;
+  }
+  .stage[data-dir='-1'] .slide-in {
+    animation-name: step-in-back;
+  }
+  .stage[data-dir='-1'] .slide-out {
+    animation-name: step-out-back;
+  }
+}
+
+@keyframes step-in {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+    filter: blur(3px);
+  }
+}
+@keyframes step-out {
+  to {
+    opacity: 0;
+    transform: translateX(-8px);
+    filter: blur(3px);
+  }
+}
+@keyframes step-in-back {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+    filter: blur(3px);
+  }
+}
+@keyframes step-out-back {
+  to {
+    opacity: 0;
+    transform: translateX(8px);
+    filter: blur(3px);
+  }
+}
+
+/* ── Presets ── */
+.presets {
+  @apply grid grid-cols-3 gap-2;
+}
+.preset {
+  @apply flex flex-col gap-1 rounded-xl border border-line bg-white px-3 py-2.5 text-left text-ink dark:border-dark-line dark:bg-dark-surface dark:text-white;
+  transition:
+    border-color var(--duration-hover) ease,
+    background-color var(--duration-hover) ease,
+    scale var(--duration-press) var(--ease-out);
+}
+.preset span {
+  @apply text-xs leading-[17px];
+}
+@media (hover: hover) and (pointer: fine) {
+  .preset:not(.on):hover {
+    @apply border-brand-300 dark:border-brand-500;
+  }
+}
+.preset.on {
+  @apply border-brand-500 bg-brand-50 dark:border-brand-500 dark:bg-brand-600/15;
+}
+
+.feat-list {
+  @apply flex flex-col;
+}
+.feat-list h3 {
+  @apply mt-2.5 mb-0.5 text-xs font-medium text-muted dark:text-brand-300;
+}
+.feat-list .row {
+  @apply flex items-center justify-between gap-3 border-t border-line py-1.5 dark:border-dark-line;
+}
+.feat-list .f-name {
+  @apply font-medium;
+}
+
+@media (max-width: 640px) {
+  .pair,
+  .presets {
+    @apply grid-cols-1;
+  }
+  .stepper {
+    @apply gap-3 text-[13px];
+  }
+  .feat-list .row {
+    @apply flex-col items-start gap-1.5;
+  }
+}

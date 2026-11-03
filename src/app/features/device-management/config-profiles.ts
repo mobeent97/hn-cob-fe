@@ -72,7 +72,7 @@ const blankStat = (): Stat => ({ targeted: 0, applied: 0, pending: 0, error: 0, 
   imports: [Select, SelectOption, ReadOnlyNote, RouterLink, Icon, Menu, Dialog, CountUp, RelativePipe, LowerCasePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './config-profiles.html',
-  styleUrl: './config-profiles.scss',
+  styleUrl: './config-profiles.css',
 })
 export class ConfigProfiles {
   protected readonly store = inject(Store);

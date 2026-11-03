@@ -26,11 +26,26 @@ export function orgContext() {
   selector: 'app-org-tag',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'org-tag' },
-  template: `<span class="sw" [style.background]="org()?.brandColour ?? 'var(--muted)'"></span><span class="nm">{{ org()?.name ?? (id() == null ? 'Shared' : '—') }}</span>`,
+  template: `<span class="sw" [style.background]="org()?.brandColour ?? 'var(--color-muted)'"></span><span class="nm">{{ org()?.name ?? (id() == null ? 'Shared' : '—') }}</span>`,
+  // Inline styles can't @reference Tailwind, so these use the IoTility theme variables directly.
   styles: `
-    :host { display: inline-flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; }
-    .sw { width: 8px; height: 8px; border-radius: 2px; flex: none; }
-    .nm { overflow: hidden; text-overflow: ellipsis; }
+    :host {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      min-width: 0;
+      white-space: nowrap;
+    }
+    .sw {
+      flex: none;
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 9999px;
+    }
+    .nm {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   `,
 })
 export class OrgTag {
@@ -74,8 +89,19 @@ export class OrgFilter {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<app-icon name="lock" [size]="13" />You can view {{ noun() }}. {{ ask() }}`,
   host: { class: 'ro-note', role: 'note' },
+  // Same as text-xs text-muted dark:text-brand-300, written with the theme variables (inline styles can't @apply).
   styles: `
-    :host { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: var(--fs-small); }
+    :host {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      color: var(--color-muted);
+      font-size: 0.75rem;
+      line-height: 1rem;
+    }
+    :host-context(.dark) {
+      color: var(--color-brand-300);
+    }
   `,
 })
 export class ReadOnlyNote {

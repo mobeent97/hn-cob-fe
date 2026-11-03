@@ -26,7 +26,7 @@ type Matrix = Record<number, PackageName[]>;
   imports: [ReadOnlyNote, Icon, Tabs, Menu, Dialog],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './packages.html',
-  styleUrl: './packages.scss',
+  styleUrl: './packages.css',
 })
 export class Packages {
   protected readonly store = inject(Store);

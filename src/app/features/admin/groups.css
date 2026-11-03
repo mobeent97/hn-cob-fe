@@ -1,0 +1,138 @@
+@reference "../../../styles.css";
+
+/* Roles: the list grouped by organization, and the role drawer with its permission matrix. */
+.actions-cell {
+  @apply w-10 text-right;
+}
+.empty-row {
+  @apply h-auto px-0 py-4;
+}
+.tag {
+  @apply ml-1.5;
+}
+.ro-hint {
+  @apply m-0 flex items-center gap-2 text-[13px] text-muted dark:text-brand-300;
+}
+.page > .ro-hint {
+  @apply -mt-2;
+}
+
+/* Organization group headings inside the roles table. */
+.roles .group-row th {
+  @apply h-auto px-0 pt-5.5 pb-2 text-left text-xs font-semibold tracking-normal text-ink dark:text-white;
+}
+.roles tbody:first-of-type .group-row th {
+  @apply pt-2.5;
+}
+.roles .group-sub {
+  @apply ml-1.5 font-normal;
+}
+
+/* Permission summary: one hue, three steps (read & write, read, none) at true ratio. */
+.perm-sum {
+  @apply flex items-center gap-3;
+}
+.perm-bar {
+  @apply flex h-1.5 w-30 flex-none gap-0.5 overflow-hidden rounded-full;
+}
+.perm-bar i {
+  @apply block min-w-0 basis-0;
+}
+.perm-bar .rw {
+  @apply bg-brand-600 dark:bg-brand-400;
+}
+.perm-bar .r {
+  @apply bg-brand-300 dark:bg-brand-400/45;
+}
+.perm-bar .n {
+  @apply bg-brand-50 dark:bg-brand-600/15;
+}
+
+/* ── Role drawer ── */
+.form {
+  @apply flex flex-col gap-4.5;
+}
+.pair {
+  @apply grid grid-cols-[1fr_auto] gap-4;
+}
+.status-toggle {
+  @apply h-(--control-height);
+}
+.small {
+  @apply text-xs;
+}
+.reach {
+  @apply font-medium text-ink dark:text-white;
+}
+.matrix-head {
+  @apply mt-1 flex flex-wrap items-end justify-between gap-3 border-t border-line pt-4.5 dark:border-dark-line;
+}
+.set-all {
+  @apply flex flex-wrap items-center gap-1.5;
+}
+
+.losers strong {
+  @apply font-semibold;
+}
+.losers ul {
+  @apply mt-1 mb-0 list-disc pl-4;
+}
+.losers li {
+  @apply leading-5;
+}
+.losers .who {
+  @apply font-medium;
+}
+
+/* Permission matrix: feature on the left, a .seg of levels on the right. */
+.perms .area-row th {
+  @apply h-auto px-0 pt-4.5 pb-1.5 text-left text-xs font-semibold tracking-normal text-ink dark:text-white;
+}
+.perms tbody:first-of-type .area-row th {
+  @apply pt-1;
+}
+.perms th[scope='row'] {
+  @apply py-2 pr-3 pl-0 text-left align-middle text-[13px] font-medium tracking-normal text-ink dark:text-white;
+}
+.perms tbody tr:last-child th {
+  @apply border-b-0;
+}
+.perms td {
+  @apply h-13 text-right align-middle;
+}
+.perms .f-label {
+  @apply block;
+}
+.perms .f-desc {
+  @apply block text-xs leading-4 font-normal text-muted dark:text-brand-300;
+}
+.perms .f-cap {
+  @apply mt-0.5 inline-flex items-center gap-1 text-xs font-normal text-muted dark:text-brand-300;
+}
+
+.footer-note {
+  @apply mr-auto self-center;
+}
+
+@media (max-width: 640px) {
+  .perms tr:not(.area-row) {
+    @apply flex flex-col items-start gap-1.5 border-b border-line py-2 dark:border-dark-line;
+  }
+  .perms tbody tr:last-child {
+    @apply border-b-0;
+  }
+  .perms tr:not(.area-row) th,
+  .perms tr:not(.area-row) td {
+    @apply h-auto border-0 p-0 text-left;
+  }
+
+  .roles .group-row {
+    @apply block border-b-0 p-0;
+  }
+  .roles .group-row th {
+    @apply block whitespace-normal;
+  }
+  .roles .group-sub {
+    @apply mt-0.5 ml-0 block;
+  }
+}

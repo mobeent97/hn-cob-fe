@@ -15,6 +15,7 @@ Keep the copies close to the source so IoTility fixes can be synced. The only lo
   skeletons use the `line` / `dark-line` / `canvas` tokens instead.
 - `charts/echarts-setup.ts` also registers ECharts 6's `LegacyGridContainLabel`. The charts use
   `grid.containLabel`, which ECharts 6 ignores without it (it logs a warning in IoTility too).
+- `charts/chart-card.css` stacks its header below 640px; in IoTility a long legend overflows the title on phones.
 
 Assets the components load (`assets/fleetpoint/icons/*`, `assets/blocking-loader.svg`) are
 copied into `public/assets/` from IoTility.

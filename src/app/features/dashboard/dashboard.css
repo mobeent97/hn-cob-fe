@@ -4,7 +4,7 @@
 .status {
   @apply flex items-center gap-5;
 }
-.ring {
+.donut {
   @apply size-32 shrink-0;
 }
 .legend-table {
@@ -51,7 +51,7 @@
   .status {
     @apply flex-col items-stretch;
   }
-  .ring {
+  .donut {
     @apply self-center;
   }
   .card-head {

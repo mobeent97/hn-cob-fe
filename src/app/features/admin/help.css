@@ -1,0 +1,121 @@
+@reference "../../../styles.css";
+
+/* Help & FAQs: searchable answers grouped by topic, and the support card. */
+.faq-col {
+  @apply flex flex-col gap-7;
+}
+.search.wide {
+  @apply w-full max-w-130;
+}
+.topic {
+  @apply flex flex-col gap-2;
+}
+.topic h2 {
+  @apply flex items-baseline gap-2;
+}
+.topic h2 .muted {
+  @apply text-xs font-normal dark:text-brand-300;
+}
+.sk-item {
+  @apply border-t border-line py-3.5 dark:border-dark-line;
+}
+.acc-list {
+  @apply border-b border-line dark:border-dark-line;
+}
+
+/* Accordion: grid rows 0fr → 1fr, the chevron flips with scaleY. */
+.acc {
+  @apply border-t border-line dark:border-dark-line;
+}
+.acc h3 {
+  @apply m-0;
+  font: inherit;
+}
+.acc-head {
+  @apply flex w-full items-center justify-between gap-4 border-0 bg-transparent px-0 py-3.5 text-left font-medium text-ink dark:text-white;
+}
+@media (hover: hover) and (pointer: fine) {
+  .acc-head:hover .chev {
+    @apply text-ink dark:text-white;
+  }
+}
+.chev {
+  @apply inline-flex flex-none text-muted dark:text-brand-300;
+  transition:
+    transform 250ms var(--ease-out),
+    color var(--duration-hover) ease;
+}
+.chev path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.acc[data-open='true'] .chev {
+  transform: scaleY(-1);
+}
+.acc-panel {
+  @apply grid grid-rows-[0fr];
+  transition: grid-template-rows 250ms var(--ease-out);
+}
+.acc[data-open='true'] .acc-panel {
+  @apply grid-rows-[1fr];
+}
+.acc-inner {
+  @apply max-w-170 min-h-0 overflow-hidden leading-5.5 text-muted opacity-0 dark:text-brand-300;
+  filter: blur(2px);
+  transition:
+    opacity 250ms var(--ease-out),
+    filter 250ms var(--ease-out);
+}
+.acc-inner p + p {
+  @apply mt-2;
+}
+.acc-inner .link {
+  @apply mt-2 inline-block;
+}
+.acc-inner > :last-child {
+  @apply mb-4;
+}
+.acc[data-open='true'] .acc-inner {
+  @apply opacity-100;
+  filter: blur(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .acc-panel,
+  .acc-inner,
+  .chev {
+    transition: none;
+  }
+}
+
+/* ── Support card ── */
+.support {
+  @apply sticky top-4;
+}
+.contact {
+  @apply m-0 mb-4 flex flex-col gap-3;
+}
+.contact dt {
+  @apply text-xs text-muted dark:text-brand-300;
+}
+.contact dd {
+  @apply m-0 flex items-center gap-1;
+}
+.tip {
+  @apply text-[13px];
+}
+.tip ul {
+  @apply mt-1.5 mb-0 list-disc pl-4.5 text-muted dark:text-brand-300;
+}
+.tip li + li {
+  @apply mt-0.5;
+}
+
+@media (max-width: 1100px) {
+  .support {
+    @apply static;
+  }
+}

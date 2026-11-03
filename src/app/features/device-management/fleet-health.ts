@@ -43,7 +43,7 @@ const DAY = 86_400_000;
   imports: [ReadOnlyNote, RouterLink, Icon, CountUp, DecimalPipe, BarChart, ChartCard, Dialog, DateTimePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './fleet-health.html',
-  styleUrl: './fleet-health.scss',
+  styleUrl: './fleet-health.css',
 })
 export class FleetHealth {
   protected readonly store = inject(Store);

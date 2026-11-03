@@ -1,0 +1,73 @@
+@reference "../../../styles.css";
+
+/* The toolbar's selects are sized by the global `.toolbar app-select`. */
+.list {
+  @apply flex flex-col gap-4;
+}
+
+.actions-cell {
+  @apply w-10 text-right;
+}
+
+/* The empty state sits in one full-width cell, not a 48px row. */
+.empty-row {
+  @apply h-auto px-0 py-4;
+}
+
+/* ── Consumer form ── */
+.c-form {
+  @apply grid grid-cols-2 gap-4;
+}
+.c-form .full {
+  @apply col-span-full;
+}
+
+/* ── Drawer ── */
+.drawer-body {
+  @apply flex flex-col gap-6;
+}
+.dl.two {
+  @apply grid-cols-2;
+}
+.d-section {
+  @apply flex flex-col gap-3;
+}
+.d-section h3 .muted {
+  @apply ml-1 font-normal;
+}
+
+.dev-list {
+  @apply m-0 list-none p-0;
+}
+.dev-list li {
+  @apply flex items-center gap-2.5 border-t border-line py-2.5 first:border-t-0 first:pt-0 dark:border-dark-line;
+}
+.dev-main {
+  @apply flex min-w-0 flex-1 flex-col gap-0.5;
+}
+.dev-main .muted {
+  @apply text-xs;
+}
+
+.alloc {
+  @apply flex gap-2;
+}
+.alloc app-select {
+  @apply min-w-0 flex-1;
+}
+
+.small {
+  @apply text-xs;
+}
+
+@media (max-width: 640px) {
+  .c-form {
+    @apply grid-cols-1;
+  }
+  .alloc {
+    @apply flex-col;
+  }
+  .actions-cell {
+    @apply w-auto;
+  }
+}

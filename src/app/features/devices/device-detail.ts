@@ -36,7 +36,7 @@ interface ConfigRow { key: string; meta: SettingMeta; desired: TwinValue; report
   imports: [Select, SelectOption, RouterLink, Icon, Tabs, Menu, Dialog, CountUp, LineChart, DatePipe, DateTimePipe, RelativePipe, TonePipe, ReadOnlyNote],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './device-detail.html',
-  styleUrl: './device-detail.scss',
+  styleUrl: './device-detail.css',
 })
 export class DeviceDetail {
   protected readonly store = inject(Store);

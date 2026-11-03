@@ -1,6 +1,6 @@
 <div class="page">
   @if (org(); as o) {
-    <div class="title-row">
+    <div class="title-row smooth-reveal">
       <div class="title-block">
         <nav class="breadcrumb" aria-label="Breadcrumb">
           <a href="" (click)="$event.preventDefault(); back.emit()">Organizations</a><span aria-hidden="true">/</span><span class="crumb-current">{{ o.name }}</span>
@@ -22,16 +22,16 @@
     </div>
 
     @if (o.kind === 'Platform') {
-      <div class="notice info-notice"><app-icon name="info" />
+      <div class="notice info-notice smooth-reveal" style="--reveal-delay: 40ms"><app-icon name="info" />
         <span>{{ o.name }} is the platform organization: it runs the portal for every partner. It has every feature, no limits, and can't be suspended.</span>
       </div>
     } @else if (o.status === 'Invited') {
-      <div class="notice info-notice"><app-icon name="send" />
+      <div class="notice info-notice smooth-reveal" style="--reveal-delay: 40ms"><app-icon name="send" />
         <span class="grow">Invitation pending: {{ admin()?.name ?? o.contact.name }} ({{ admin()?.email ?? o.contact.email }}) hasn't signed in yet.</span>
         @if (canWrite()) { <button class="btn sm" (click)="resend.emit(o)">Resend invitation</button> }
       </div>
     } @else if (o.status === 'Suspended') {
-      <div class="notice"><app-icon name="pause" />
+      <div class="notice smooth-reveal" style="--reveal-delay: 40ms"><app-icon name="pause" />
         <span class="grow">Suspended: {{ stats().users }} {{ stats().users === 1 ? 'user' : 'users' }} can't sign in. Customers and devices keep running.</span>
         @if (canWrite()) { <button class="btn sm" (click)="status.emit({ kind: 'reactivate', org: o })">Reactivate</button> }
       </div>
@@ -42,7 +42,7 @@
     @switch (tab()) {
       <!-- Profile ───────────────────────────────────────────── -->
       @case ('profile') {
-        <section class="kpi-strip" aria-label="Usage">
+        <section class="kpi-strip smooth-reveal" style="--reveal-delay: 80ms" aria-label="Usage">
           <div class="kpi">
             <span class="kpi-label">Customers</span>
             @if (loading()) { <span class="skeleton" style="width:48px;height:30px;margin:3px 0"></span> }
@@ -68,7 +68,7 @@
             <span class="kpi-caption num">of {{ featureTotal().of }} it could have</span>
           </div>
         </section>
-        <div class="grid">
+        <div class="grid smooth-reveal" style="--reveal-delay: 120ms">
           <section class="card span-8">
             <div class="card-head">
               <h2>Profile</h2>
@@ -107,7 +107,7 @@
 
       <!-- Features (entitlements) ───────────────────────────── -->
       @case ('features') {
-        <div class="feat-head">
+        <div class="feat-head smooth-reveal" style="--reveal-delay: 80ms">
           <p class="muted num">
             @if (o.kind === 'Platform') {
               HyperNym has every feature at read & write. Its entitlements can't be changed.
@@ -120,7 +120,7 @@
           <p class="ro-hint muted"><app-icon name="lock" [size]="14" />Read-only: you need read & write on Organizations to change entitlements.</p>
         }
 
-        <div class="areas">
+        <div class="areas smooth-reveal" style="--reveal-delay: 120ms">
           @for (a of areas; track a.area) {
             <section class="area">
               <h3>{{ a.area }}</h3>
@@ -161,7 +161,7 @@
 
       <!-- Limits & usage ────────────────────────────────────── -->
       @case ('limits') {
-        <div class="grid">
+        <div class="grid smooth-reveal" style="--reveal-delay: 80ms">
           <section class="card span-6">
             <div class="card-head"><div><h2>Customers</h2><p class="card-sub">Business customers {{ o.name }} can onboard</p></div></div>
             <div class="card-body limit">
@@ -228,7 +228,7 @@
 
       <!-- People ────────────────────────────────────────────── -->
       @case ('people') {
-        <div class="list">
+        <div class="list smooth-reveal" style="--reveal-delay: 80ms">
           <div class="toolbar">
             <div class="left">
               <span class="count num">{{ members().length }} {{ members().length === 1 ? 'person' : 'people' }}@if (o.limits.maxUsers) { of {{ o.limits.maxUsers }} allowed }</span>
@@ -283,7 +283,7 @@
 
       <!-- Roles ─────────────────────────────────────────────── -->
       @case ('roles') {
-        <div class="list">
+        <div class="list smooth-reveal" style="--reveal-delay: 80ms">
           <div class="toolbar">
             <div class="left"><span class="count num">{{ roles().length }} {{ roles().length === 1 ? 'role' : 'roles' }} · capped by the entitlements above</span></div>
             <div class="right"><button class="btn" (click)="openRoles()"><app-icon name="external" />Open in Roles</button></div>
@@ -405,10 +405,10 @@
       </ng-container>
     </app-dialog>
   } @else {
-    <div class="title-row"><div class="title-block">
+    <div class="title-row smooth-reveal"><div class="title-block">
       <nav class="breadcrumb" aria-label="Breadcrumb"><a href="" (click)="$event.preventDefault(); back.emit()">Organizations</a></nav>
       <h1>Organization not found</h1>
     </div></div>
-    <div class="empty">There's no organization with id {{ orgId() }}. It may have been removed. <button class="btn sm" (click)="back.emit()">All organizations</button></div>
+    <div class="empty smooth-reveal" style="--reveal-delay: 40ms">There's no organization with id {{ orgId() }}. It may have been removed. <button class="btn sm" (click)="back.emit()">All organizations</button></div>
   }
 </div>

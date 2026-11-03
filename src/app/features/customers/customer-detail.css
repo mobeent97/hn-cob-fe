@@ -1,0 +1,151 @@
+@reference "../../../styles.css";
+
+.name-row {
+  @apply flex min-w-0 flex-wrap items-center gap-2.5;
+}
+
+.crumb-current {
+  @apply truncate;
+}
+
+/* "Advance · EBU · Dubai, UAE · Customer since …" */
+.meta {
+  @apply flex flex-wrap;
+}
+.meta span + span {
+  @apply before:mx-2 before:text-muted before:content-['·'] dark:before:text-brand-300;
+}
+
+.list {
+  @apply flex flex-col gap-4;
+}
+
+/* The empty state sits in one full-width cell, not a 48px row. */
+.empty-row {
+  @apply h-auto px-0 py-4;
+}
+
+.confirm-body {
+  @apply leading-5.5 text-muted dark:text-brand-300;
+}
+
+/* ── Onboarding progress ── */
+.progress-body {
+  @apply flex items-center gap-6;
+}
+.progress-text {
+  @apply flex min-w-0 flex-1 flex-col gap-0.5;
+}
+/* Nine segments, one per section: done in brand, the next one outlined. */
+.seg-meter {
+  @apply m-0 grid w-65 list-none grid-cols-9 gap-[3px] p-0;
+}
+.seg-meter li {
+  @apply h-1.5 rounded-[2px] bg-line dark:bg-dark-line;
+}
+.seg-meter li.on {
+  @apply bg-brand-600 dark:bg-brand-400;
+}
+.seg-meter li.next {
+  @apply bg-brand-50 inset-ring inset-ring-brand-600 dark:bg-brand-600/15 dark:inset-ring-brand-400;
+}
+
+.kpi-value.neg {
+  @apply text-danger;
+}
+.unit-lead {
+  @apply mr-1 text-base text-muted dark:text-brand-300;
+}
+
+/* ── Description lists ── */
+.dl.one {
+  @apply grid-cols-1 gap-3.5;
+}
+dd.warn {
+  @apply text-warning;
+}
+dd.neg {
+  @apply text-danger;
+}
+.dd-sub {
+  @apply ml-1 text-xs font-normal;
+}
+.brand-dd {
+  @apply flex items-center gap-2;
+}
+/* Brand colours are data; the edge adapts to the theme. */
+.brand-dd .sw {
+  @apply size-3.5 flex-none rounded-[3px] border border-ink/14 dark:border-white/14;
+}
+
+.file-name {
+  @apply inline-flex items-center gap-2;
+}
+.file-name app-icon {
+  @apply text-muted dark:text-brand-300;
+}
+
+/* ── Timeline ── */
+.timeline {
+  @apply m-0 max-w-215 list-none p-0;
+}
+.timeline li {
+  @apply relative grid grid-cols-[28px_minmax(0,1fr)_auto] gap-3 pt-2.5 pb-3.5;
+}
+/* The rail joining the markers. */
+.timeline li::before {
+  content: '';
+  @apply absolute top-9.5 -bottom-2.5 left-[13.5px] w-px bg-line;
+}
+/* A dark: utility can't sit after ::before, so the dark rail is its own rule. */
+:host-context(.dark) .timeline li::before {
+  @apply bg-dark-line;
+}
+.timeline li:last-child::before {
+  @apply hidden;
+}
+.timeline .t-icon {
+  @apply grid size-7 place-items-center rounded-full border border-line bg-white text-muted dark:border-dark-line dark:bg-dark-surface dark:text-brand-300;
+}
+.timeline .pos .t-icon {
+  @apply text-success;
+}
+.timeline .neg .t-icon {
+  @apply text-danger;
+}
+.timeline .t-text {
+  @apply flex flex-col gap-0.5 pt-1;
+}
+.timeline .t-text .muted {
+  @apply text-[13px];
+}
+.timeline .t-title {
+  @apply font-medium;
+}
+.timeline .t-meta {
+  @apply flex flex-col items-end gap-0.5 pt-1 text-[13px] whitespace-nowrap;
+}
+
+@media (max-width: 760px) {
+  .progress-body {
+    @apply flex-wrap gap-3.5;
+  }
+  .seg-meter {
+    @apply order-3 w-full;
+  }
+}
+
+@media (max-width: 640px) {
+  .title-row .actions {
+    @apply w-full;
+  }
+  .title-row .actions .btn:first-child {
+    @apply flex-1;
+  }
+  .timeline li {
+    @apply grid-cols-[28px_minmax(0,1fr)];
+  }
+  .timeline li .t-meta {
+    @apply col-2 flex-row items-start gap-2 pt-0 text-xs;
+  }
+}

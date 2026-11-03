@@ -1,0 +1,135 @@
+@reference "../../../styles.css";
+
+.picker {
+  @apply flex flex-col gap-4 pt-3;
+}
+
+.id-cell {
+  @apply inline-flex items-center gap-3;
+}
+.id-cell .check {
+  @apply -m-1 p-1;
+}
+
+/* Unlayered, so it wins over the global row hover without !important. */
+tr.picked {
+  @apply bg-brand-50 dark:bg-brand-600/15;
+}
+
+.table td.empty-row {
+  @apply h-auto px-0 py-4;
+}
+
+/*
+ * A4 label sheet at true proportions.
+ * Avery L7160: page 210 × 297 mm, top margin 15.15, side 7.2, labels 63.5 × 38.1, column pitch 66.04.
+ * Sizes are in cqw of the paper, so the on-screen preview and the printed page share one layout.
+ */
+.sheets {
+  @apply flex flex-col items-center gap-3 p-5;
+}
+
+/* The paper stays white in both themes, so its guides and text use the fixed light-theme tokens. */
+.paper {
+  @apply aspect-[210/297] w-full max-w-[794px] rounded-xs border border-line bg-white dark:border-dark-line;
+  container-type: inline-size;
+}
+
+.paper-inner {
+  @apply grid;
+  grid-template-columns: repeat(3, calc(63.5cqw / 2.1));
+  grid-auto-rows: calc(38.1cqw / 2.1);
+  column-gap: calc(2.54cqw / 2.1);
+  padding: calc(15.15cqw / 2.1) calc(7.2cqw / 2.1) 0;
+}
+
+.label {
+  @apply flex min-w-0 items-center overflow-hidden outline-1 -outline-offset-1 outline-line outline-dashed;
+  gap: calc(2.5cqw / 2.1);
+  padding: 0 calc(3cqw / 2.1);
+  border-radius: calc(2.5cqw / 2.1);
+}
+.label.blank {
+  @apply outline-line/60;
+}
+
+.qr {
+  @apply block flex-none;
+  width: calc(28cqw / 2.1);
+  height: calc(28cqw / 2.1);
+}
+.qr-wait {
+  @apply bg-line;
+}
+
+.label-text {
+  @apply flex min-w-0 flex-col leading-[1.2] text-ink;
+  gap: calc(0.8cqw / 2.1);
+}
+.l-id {
+  @apply leading-[1.2] font-semibold tracking-normal;
+  font-size: calc(3.6cqw / 2.1);
+}
+.l-imei {
+  @apply leading-[1.2] tracking-normal whitespace-nowrap;
+  font-size: calc(2.3cqw / 2.1);
+}
+.l-type {
+  @apply truncate;
+  font-size: calc(2.5cqw / 2.1);
+}
+
+.sheet-no {
+  @apply mb-2 text-xs text-muted dark:text-brand-300;
+}
+
+/*
+ * Print: only the cloned sheet (see QrCodes.mountPrint). The clone is appended to <body>, outside this
+ * component, so these few rules have to reach the global DOM with ::ng-deep and override the app's own
+ * layout with !important.
+ */
+@media screen {
+  ::ng-deep .qr-print-root {
+    display: none;
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  ::ng-deep body.qr-printing {
+    @apply h-auto! overflow-visible! bg-white!;
+  }
+  ::ng-deep body.qr-printing > *:not(.qr-print-root) {
+    display: none !important;
+  }
+  ::ng-deep html:has(body.qr-printing) {
+    @apply h-auto! overflow-visible!;
+  }
+  .sheets {
+    @apply block rounded-none bg-transparent p-0;
+  }
+  .paper {
+    @apply aspect-auto h-[297mm] w-[210mm] max-w-none rounded-none border-0 break-after-page;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .paper:last-of-type {
+    @apply break-after-auto;
+  }
+  .label,
+  .label.blank {
+    @apply outline-0;
+  }
+  .sheet-no {
+    @apply hidden;
+  }
+}
+
+@media (max-width: 640px) {
+  .table.stack td.phone-only {
+    @apply pl-7;
+  }
+}

@@ -79,3 +79,15 @@ h2 {
   .content,
   .state { animation: none; }
 }
+/* COB: on phones the header stacks, so a long legend or the chart actions never run over the title. */
+@media (max-width: 640px) {
+  header {
+    @apply flex-wrap;
+  }
+  .aside {
+    @apply w-full flex-wrap justify-start;
+  }
+  .legend {
+    @apply justify-start text-left;
+  }
+}

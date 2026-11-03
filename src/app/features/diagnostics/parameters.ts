@@ -23,7 +23,7 @@ const KEY_RE = /^[a-z][a-z0-9_]{1,39}$/;
   imports: [Select, SelectOption, ReadOnlyNote, Icon, Menu, Dialog],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './parameters.html',
-  styleUrl: './parameters.scss',
+  styleUrl: './parameters.css',
 })
 export class Parameters {
   protected readonly store = inject(Store);

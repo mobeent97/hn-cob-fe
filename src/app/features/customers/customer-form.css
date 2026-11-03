@@ -1,0 +1,559 @@
+@reference "../../../styles.css";
+
+/* Onboarding wizard: step rail on the left, the current section on the right. */
+.wizard {
+  @apply grid grid-cols-[220px_minmax(0,1fr)] items-start gap-6;
+}
+
+/* ── Rail ── */
+.rail {
+  @apply sticky top-4 flex flex-col;
+}
+.rail ol {
+  @apply m-0 flex list-none flex-col gap-0.5 p-0;
+}
+.rail .rail-sk {
+  @apply my-[9px];
+}
+
+.rail-progress {
+  @apply flex flex-col gap-2 px-2 pb-3.5 text-muted dark:text-brand-300;
+}
+.rail-progress strong {
+  @apply font-semibold text-ink dark:text-white;
+}
+
+.rail-step {
+  @apply flex min-h-9 w-full items-center gap-2.5 rounded-xl border-0 bg-transparent px-2 py-1.5 text-left text-muted dark:text-brand-300;
+  transition:
+    background-color var(--duration-hover) ease,
+    color var(--duration-hover) ease,
+    scale var(--duration-press) var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .rail-step:not(:disabled):not([data-state='current']):hover {
+    @apply bg-canvas text-ink dark:bg-dark-canvas dark:text-white;
+  }
+}
+/* Locked: unlocks once the sections before it are saved. */
+.rail-step:disabled {
+  @apply cursor-default text-muted/70 dark:text-brand-300/60;
+}
+
+.rail-step .marker {
+  @apply grid size-5.5 flex-none place-items-center rounded-full border border-line bg-white text-xs font-semibold dark:border-dark-line dark:bg-dark-surface;
+  transition:
+    background-color var(--duration-popover) var(--ease-out),
+    border-color var(--duration-popover) var(--ease-out),
+    color var(--duration-popover) var(--ease-out);
+}
+.rail-step[data-state='done'] {
+  @apply text-ink dark:text-white;
+}
+.rail-step[data-state='done'] .marker {
+  @apply border-brand-600 bg-brand-600 text-white;
+}
+.rail-step[data-state='current'] {
+  @apply bg-brand-50 font-medium text-brand-700 dark:bg-brand-600/15 dark:text-brand-300;
+}
+.rail-step[data-state='current'] .marker {
+  @apply border-brand-500 text-brand-700 dark:text-brand-300;
+}
+.rail-step[data-state='next'] {
+  @apply text-ink dark:text-white;
+}
+.rail-step[data-state='locked'] .marker {
+  @apply border-dashed;
+}
+
+/* ── Stage: side-by-side slide between sections ── */
+.stage {
+  @apply grid min-w-0;
+}
+.stage > .panel {
+  @apply col-start-1 row-start-1 min-w-0;
+}
+.slide-out {
+  @apply pointer-events-none;
+}
+
+/* Only animated when the person allows motion, so nothing needs overriding for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .moving .slide-in {
+    animation: step-in 250ms var(--ease-out) both;
+  }
+  .moving .slide-out {
+    animation: step-out 160ms var(--ease-out) both;
+  }
+  .stage[data-dir='-1'] .slide-in {
+    animation-name: step-in-back;
+  }
+  .stage[data-dir='-1'] .slide-out {
+    animation-name: step-out-back;
+  }
+
+  /* Error shake on an invalid save (transitions.dev "error state shake"). */
+  .panel.shake {
+    animation: shake 320ms var(--ease-out);
+  }
+}
+
+@keyframes step-in {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+    filter: blur(3px);
+  }
+}
+@keyframes step-out {
+  to {
+    opacity: 0;
+    transform: translateX(-8px);
+    filter: blur(3px);
+  }
+}
+@keyframes step-in-back {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+    filter: blur(3px);
+  }
+}
+@keyframes step-out-back {
+  to {
+    opacity: 0;
+    transform: translateX(8px);
+    filter: blur(3px);
+  }
+}
+@keyframes shake {
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(5px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+}
+
+/* ── Panel ── */
+.step-kicker {
+  @apply text-xs text-muted dark:text-brand-300;
+}
+
+.card-body {
+  @apply flex flex-col gap-4;
+}
+
+.panel-foot {
+  @apply flex justify-between gap-2 border-t border-line px-5 py-3.5 dark:border-dark-line;
+}
+
+.group-h {
+  @apply mb-3.5;
+}
+.group-h.rule {
+  @apply mt-6 border-t border-line pt-5 dark:border-dark-line;
+}
+/* Directly in the card body the flex gap already spaces the heading. */
+.card-body > .group-h {
+  @apply -mb-1;
+}
+.card-body > .group-h.rule {
+  @apply mt-2;
+}
+
+fieldset {
+  @apply min-w-0;
+}
+legend {
+  @apply mb-1.5;
+}
+.check-row {
+  @apply flex min-h-(--control-height) flex-wrap items-center gap-x-4 gap-y-2;
+}
+.groups {
+  @apply col-span-3;
+}
+.span-2 {
+  @apply col-span-2;
+}
+.pad {
+  @apply flex min-h-(--control-height) items-center;
+}
+.hint-line,
+.small {
+  @apply text-xs text-muted dark:text-brand-300;
+}
+.small {
+  @apply -mt-2 mb-3;
+}
+
+.file-error {
+  @apply -mt-1.5 text-[13px];
+}
+
+/* ── Documents ── */
+.drop {
+  @apply flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border border-dashed border-line bg-canvas px-4 py-7 text-center dark:border-dark-line dark:bg-dark-canvas;
+  transition:
+    border-color var(--duration-hover) ease,
+    background-color var(--duration-hover) ease;
+}
+.drop app-icon {
+  @apply text-muted dark:text-brand-300;
+}
+@media (hover: hover) and (pointer: fine) {
+  .drop:hover {
+    @apply border-brand-500 bg-brand-50 dark:border-brand-400 dark:bg-brand-600/15;
+  }
+}
+.drop.over {
+  @apply border-brand-500 bg-brand-50 dark:border-brand-400 dark:bg-brand-600/15;
+}
+.drop:focus-within {
+  @apply outline-2 outline-offset-2 outline-brand-500;
+}
+.drop .hint {
+  @apply text-xs text-muted dark:text-brand-300;
+}
+
+.file-name {
+  @apply inline-flex items-center gap-2 font-medium;
+}
+.file-name app-icon {
+  @apply text-muted dark:text-brand-300;
+}
+app-select.kind {
+  @apply w-40;
+  /* Compact trigger: the select's .ui-control reads this token. */
+  --control-height: var(--control-height-sm);
+}
+td.keep-right {
+  @apply w-10 text-right;
+}
+
+/* ── Selectable cards (package, customer type) ── */
+.choice-grid {
+  @apply grid gap-3;
+}
+.choice-grid.four {
+  @apply grid-cols-4;
+}
+.choice-grid.three {
+  @apply grid-cols-3;
+}
+
+.choice {
+  @apply flex flex-col gap-2 rounded-xl border border-line bg-white px-4 py-3.5 text-left dark:border-dark-line dark:bg-dark-surface;
+  transition:
+    border-color var(--duration-hover) ease,
+    background-color var(--duration-hover) ease,
+    scale var(--duration-press) var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .choice:not(.selected):hover {
+    @apply border-brand-300 dark:border-brand-500;
+  }
+}
+/* A large card presses in less than a button. */
+.choice:active {
+  scale: 0.99;
+}
+.choice.selected {
+  @apply border-brand-500 bg-brand-50 dark:border-brand-500 dark:bg-brand-600/15;
+}
+.choice .choice-top {
+  @apply flex items-center justify-between gap-2;
+}
+.choice .choice-title {
+  @apply text-sm font-semibold text-ink dark:text-white;
+}
+.choice .radio {
+  @apply size-4 flex-none rounded-full border border-line bg-white dark:border-dark-line dark:bg-dark-canvas;
+  transition: border-width var(--duration-popover) var(--ease-overshoot);
+}
+.choice.selected .radio {
+  @apply border-[5px] border-brand-600 dark:border-brand-400;
+}
+.choice .price {
+  @apply text-[13px];
+}
+.choice .price .muted {
+  @apply ml-1;
+}
+.choice .price strong {
+  @apply text-sm font-semibold;
+}
+.choice .desc {
+  @apply text-[13px] leading-4.5;
+}
+.choice .choice-foot {
+  @apply mt-auto border-t border-line pt-2 text-xs text-muted dark:border-dark-line dark:text-brand-300;
+}
+.choice.selected .choice-foot {
+  @apply border-brand-500/30 dark:border-brand-400/30;
+}
+
+.feat-list {
+  @apply m-0 flex list-none flex-col gap-1 p-0 text-[13px];
+}
+.feat-list li {
+  @apply flex items-center gap-1.5;
+}
+.feat-list app-icon {
+  @apply text-success;
+}
+/* Lines up with the feature names, past the 13px tick and its gap. */
+.feat-list .more {
+  @apply pl-[19px] text-muted dark:text-brand-300;
+}
+
+/* Billing switches use the global .seg; in a field column it keeps its own width. */
+.seg {
+  @apply self-start;
+}
+
+/* ── Features ── */
+.feat-head {
+  @apply flex items-center justify-between gap-3;
+}
+.feat-groups {
+  @apply grid grid-cols-3 gap-4;
+}
+.feat-group {
+  @apply rounded-xl border border-line px-3.5 pt-3 pb-1.5 dark:border-dark-line;
+}
+.feat-group h3 {
+  @apply mb-1;
+}
+.feat-row {
+  @apply flex min-h-9 w-full justify-between border-t border-line first-of-type:border-t-0 dark:border-dark-line;
+}
+
+/* ── Admins ── */
+.add-admin {
+  @apply flex flex-col gap-3.5;
+}
+.tray-head,
+.tray-foot {
+  @apply flex items-center justify-between gap-2;
+}
+.tray-foot {
+  @apply justify-end;
+}
+
+/* ── Hardware ── */
+.have {
+  @apply flex items-center gap-2 rounded-xl bg-canvas px-3.5 py-2.5 dark:bg-dark-canvas;
+}
+.have app-icon {
+  @apply text-muted dark:text-brand-300;
+}
+.hw {
+  @apply grid grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-6;
+}
+.hw-head {
+  @apply flex items-baseline justify-between gap-2;
+}
+.hw-head .muted {
+  @apply text-xs;
+}
+/* .ui-control is a full-width block; this one is narrow and sits at the right of its number column. */
+.hw-table .qty {
+  @apply ml-auto h-(--control-height-sm) w-18 text-right;
+}
+.hw-table tfoot td {
+  @apply border-t border-line font-semibold dark:border-dark-line;
+}
+
+.stock-list {
+  @apply m-0 max-h-78 list-none overflow-auto rounded-xl border border-line p-0 dark:border-dark-line;
+}
+.stock-list li {
+  @apply grid min-h-9.5 grid-cols-[112px_minmax(0,1fr)_auto] items-center gap-2.5 border-t border-line px-3 first:border-t-0 dark:border-dark-line;
+}
+.stock-list li > span {
+  @apply truncate;
+}
+.stock-list .muted {
+  @apply text-[13px];
+}
+.stock-list .imei {
+  @apply text-xs;
+}
+
+/* ── Branding ── */
+.brand {
+  @apply grid grid-cols-2 items-start gap-8;
+}
+.brand-form {
+  @apply flex flex-col gap-5;
+}
+.swatches {
+  @apply flex flex-wrap gap-2;
+}
+/* White tick on the customer's brand fill (data), the same in both themes. */
+.swatch {
+  @apply grid size-7 place-items-center rounded-md border border-ink/14 text-white dark:border-white/14;
+  transition: scale var(--duration-press) var(--ease-out);
+}
+.swatch:active {
+  scale: 0.94;
+}
+.swatch[aria-checked='true'] {
+  @apply outline-2 outline-offset-2 outline-ink dark:outline-white;
+}
+.colour-row {
+  @apply mt-1 flex items-center gap-2;
+}
+.colour-row .picker {
+  @apply size-8.5 cursor-pointer rounded-(--control-radius) border border-line bg-white p-0.5 dark:border-dark-line dark:bg-dark-surface;
+}
+.colour-row .hex {
+  @apply w-30;
+}
+.logo-row {
+  @apply flex min-w-0 items-center gap-2.5;
+}
+.logo-row label.btn {
+  @apply cursor-pointer;
+}
+.logo-row .ellipsis {
+  @apply min-w-0 truncate;
+}
+
+/* Portal preview: the bar and button take the customer's brand colour (data). */
+.preview {
+  @apply m-0 overflow-hidden rounded-xl border border-line dark:border-dark-line;
+}
+.preview .pv-bar {
+  @apply flex h-12 items-center gap-2.5 px-3.5 text-white;
+  transition: background-color var(--duration-popover) ease;
+}
+.preview .pv-bar img {
+  @apply max-h-7 max-w-30 object-contain;
+}
+.preview .pv-mark {
+  @apply grid size-7 place-items-center rounded-md bg-white/20 text-xs font-semibold;
+}
+.preview .pv-title {
+  @apply truncate font-semibold;
+}
+.preview .pv-body {
+  @apply flex flex-col gap-2.5 bg-canvas px-3.5 py-4.5 dark:bg-dark-canvas;
+}
+.preview .pv-line {
+  @apply h-2 rounded-full bg-line dark:bg-dark-line;
+}
+.preview .pv-line.w60 {
+  @apply w-3/5;
+}
+.preview .pv-line.w40 {
+  @apply w-2/5;
+}
+.preview .pv-btn {
+  @apply mt-1.5 self-start rounded-md px-2.5 py-1.25 text-xs font-medium text-white;
+}
+.preview figcaption {
+  @apply border-t border-line px-3.5 py-2 text-xs dark:border-dark-line;
+}
+
+/* Organization (tenant) row in General details: full width, select at one column's width. */
+.org-row {
+  @apply col-span-full;
+}
+.org-row .org-line {
+  @apply flex flex-wrap items-center gap-3;
+}
+/* One of the form grid's three columns: (width − two 1.25rem gaps) / 3. */
+.org-row app-select {
+  @apply w-[calc((100%-2.5rem)/3)] min-w-55;
+}
+.org-row .org-fixed {
+  @apply inline-flex min-h-9 items-center;
+}
+.org-row .hint.limit {
+  @apply text-danger;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1200px) {
+  .choice-grid.four {
+    @apply grid-cols-2;
+  }
+  .feat-groups {
+    @apply grid-cols-2;
+  }
+  .hw {
+    @apply grid-cols-1;
+  }
+}
+
+@media (max-width: 900px) {
+  .wizard {
+    @apply grid-cols-1 gap-4;
+  }
+  /* The rail folds into a horizontal strip of numbered steps; only the current one shows its label. */
+  .rail {
+    @apply static min-w-0;
+  }
+  .rail ol {
+    @apply flex-row gap-1 overflow-x-auto;
+    scrollbar-width: none;
+  }
+  .rail .rail-sk {
+    @apply hidden;
+  }
+  .rail-progress {
+    @apply px-0 pb-2.5;
+  }
+  .rail-step {
+    @apply w-auto py-1 pr-2 pl-1;
+  }
+  .rail-step .rail-label {
+    @apply hidden;
+  }
+  .rail-step[data-state='current'] .rail-label {
+    @apply inline whitespace-nowrap;
+  }
+  .groups,
+  .span-2 {
+    @apply col-auto;
+  }
+  .choice-grid.three,
+  .brand {
+    @apply grid-cols-1;
+  }
+}
+
+@media (max-width: 640px) {
+  .choice-grid.four,
+  .feat-groups {
+    @apply grid-cols-1;
+  }
+  .feat-head {
+    @apply flex-wrap;
+  }
+  .stock-list li {
+    @apply grid-cols-[1fr_auto];
+  }
+  .stock-list li .imei {
+    @apply hidden;
+  }
+  .hw-table th:nth-child(2),
+  .hw-table td:nth-child(2) {
+    @apply hidden;
+  }
+  .panel-foot {
+    @apply sticky bottom-0 rounded-b-2xl bg-white dark:bg-dark-surface;
+  }
+  .tray-head {
+    @apply flex-wrap;
+  }
+}
