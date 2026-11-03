@@ -1,0 +1,20 @@
+<!-- Mirrors FleetPoint's app-stat-card layout so the swap to real data doesn't shift anything. -->
+<article class="stat-card-skeleton" [class.compact]="compact()" aria-hidden="true">
+  <header>
+    <ui-skeleton class="stat-card-skeleton-label" [width]="labelWidth()" height="0.5rem" radius="0.25rem" />
+    @if (showIcon()) {
+      <ui-skeleton
+        class="stat-card-skeleton-icon"
+        [width]="compact() ? '1.5rem' : '1.75rem'"
+        [height]="compact() ? '1.5rem' : '1.75rem'"
+        [radius]="compact() ? '0.375rem' : '0.4375rem'"
+      />
+    }
+  </header>
+  <ui-skeleton
+    class="stat-card-skeleton-value"
+    [width]="valueWidth()"
+    [height]="compact() ? '1rem' : '1.25rem'"
+    radius="0.3rem"
+  />
+</article>

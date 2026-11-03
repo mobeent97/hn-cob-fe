@@ -68,7 +68,7 @@
           <div class="kpi">
             <span class="kpi-label">Messages today</span>
             @if (loading()) { <span class="skeleton" style="width:60px;height:30px;margin:3px 0"></span> }
-            @else { <span class="kpi-value"><app-num [value]="iot()?.messagesToday ?? 0" /></span> }
+            @else { <span class="kpi-value"><span class="num" [uiCountUp]="iot()?.messagesToday ?? 0"></span></span> }
             <span class="kpi-caption">since 00:00{{ isDashcam() ? ', events only' : '' }}</span>
           </div>
           <div class="kpi">

@@ -58,7 +58,7 @@
                   <span class="tags">@for (t of g.tags; track t[0]) { <span class="tag mono">{{ t[0] }}={{ t[1] }}</span> }</span>
                 </td>
                 <td class="desk-only num">
-                  <app-num [value]="g.enrolled" />
+                  <span class="num" [uiCountUp]="g.enrolled"></span>
                   @if (g.waiting) { <span class="sub" [class.warn]="!g.enabled">{{ g.waiting }} {{ g.enabled ? 'waiting' : 'can’t register' }}</span> }
                 </td>
                 <td class="keep" (click)="$event.stopPropagation()">
@@ -93,13 +93,13 @@
     <div class="count-cards" role="group" aria-label="Filter by registration state">
       <button class="count-card" [class.selected]="filter() === 'all'" (click)="filter.set('all')" [attr.aria-pressed]="filter() === 'all'">
         <span class="cc-label">All identities</span>
-        <span class="cc-value">@if (loading()) { <span class="skeleton" style="width:40px;height:18px"></span> } @else { <app-num [value]="counts().all" /> }</span>
+        <span class="cc-value">@if (loading()) { <span class="skeleton" style="width:40px;height:18px"></span> } @else { <span class="num" [uiCountUp]="counts().all"></span> }</span>
       </button>
       @for (r of registrations; track r) {
         <button class="count-card" [class.selected]="filter() === r" (click)="filter.set(filter() === r ? 'all' : r)" [attr.aria-pressed]="filter() === r">
           <span class="cc-label">{{ r }}</span>
           <span class="cc-value" [class.neg]="r === 'Attestation failed' && counts()[r]">
-            @if (loading()) { <span class="skeleton" style="width:32px;height:18px"></span> } @else { <app-num [value]="counts()[r]" /> }
+            @if (loading()) { <span class="skeleton" style="width:32px;height:18px"></span> } @else { <span class="num" [uiCountUp]="counts()[r]"></span> }
           </span>
         </button>
       }

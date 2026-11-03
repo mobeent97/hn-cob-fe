@@ -1,0 +1,132 @@
+@reference "../../../styles.css";
+
+/* FleetPoint header bell and notification panel (fleetpoint-header.css), reformatted. */
+:host {
+  @apply relative inline-flex;
+}
+.bell {
+  @apply relative grid size-9 cursor-pointer place-items-center rounded-full border border-line bg-white text-muted dark:border-dark-line dark:bg-dark-canvas dark:text-brand-300;
+  transition:
+    border-color var(--duration-hover) ease,
+    background-color var(--duration-hover) ease,
+    scale var(--duration-press) var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .bell:hover {
+    @apply border-brand-400 bg-brand-50 dark:border-brand-500 dark:bg-brand-600/15;
+  }
+}
+.badge {
+  @apply absolute -top-1 -right-1 grid min-w-4 place-items-center rounded-full border-2 border-white bg-danger px-1 text-[10px] leading-3 font-bold text-white dark:border-dark-surface;
+}
+/* A new alert: the bell swings once from its top and the count pops. */
+.bell app-icon.ring {
+  transform-origin: 50% 8%;
+  animation: motion-shake 700ms ease-in-out;
+}
+.badge.pop {
+  animation: motion-bump 420ms var(--ease-out);
+}
+
+.panel {
+  @apply absolute top-[calc(100%+0.65rem)] right-0 z-[1700] w-[22rem] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl border border-line bg-white dark:border-dark-line dark:bg-dark-surface;
+  box-shadow: var(--shadow-popover);
+  transform-origin: top right;
+  transition:
+    opacity var(--duration-popover) var(--ease-out),
+    transform var(--duration-popover) var(--ease-out);
+}
+@starting-style {
+  .panel {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+.panel.panel-leave {
+  animation: panel-leave 120ms var(--ease-out) both;
+  pointer-events: none;
+}
+@keyframes panel-leave {
+  to {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+header {
+  @apply flex items-center justify-between gap-3 border-b border-line px-4 py-3 dark:border-dark-line;
+}
+header strong,
+header small {
+  @apply block;
+}
+header strong {
+  @apply text-sm text-ink dark:text-white;
+}
+header small {
+  @apply mt-0.5 text-[10px] text-muted dark:text-brand-300;
+}
+ul {
+  @apply m-0 max-h-96 list-none overflow-y-auto p-0;
+}
+li + li {
+  @apply border-t border-line dark:border-dark-line;
+}
+.item {
+  @apply flex w-full cursor-pointer items-start gap-3 border-0 bg-transparent px-4 py-3 text-left text-ink dark:text-white;
+  transition: background-color var(--duration-hover) ease;
+}
+li.unread .item {
+  @apply bg-brand-50/70 dark:bg-brand-600/10;
+}
+@media (hover: hover) and (pointer: fine) {
+  .item:hover {
+    @apply bg-canvas dark:bg-dark-canvas;
+  }
+}
+.ic {
+  @apply mt-0.5 grid size-8 shrink-0 place-items-center rounded-full bg-brand-100 text-brand-600 dark:bg-brand-600/20 dark:text-brand-300;
+}
+.text {
+  @apply flex min-w-0 flex-1 flex-col gap-0.5;
+}
+.text strong {
+  @apply truncate text-[11px] font-semibold;
+}
+li:not(.unread) .text strong {
+  @apply font-medium text-muted dark:text-brand-300;
+}
+.body {
+  @apply line-clamp-2 text-[11px] leading-4 text-muted dark:text-brand-300;
+}
+.when {
+  @apply mt-1 text-[10px] text-brand-500;
+}
+.dot {
+  @apply mt-1.5 size-2 flex-none rounded-full bg-brand-500;
+}
+.none {
+  @apply px-5 py-10 text-center text-xs text-muted dark:text-brand-300;
+}
+footer {
+  @apply flex items-center justify-between border-t border-line px-4 py-2.5 text-[11px] font-semibold dark:border-dark-line;
+}
+footer a:first-child {
+  @apply text-brand-600 dark:text-brand-300;
+}
+footer a:hover {
+  @apply underline underline-offset-3;
+}
+@media (max-width: 520px) {
+  .panel {
+    @apply fixed top-[4.5rem] right-3 left-3 w-auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bell app-icon.ring,
+  .badge.pop {
+    animation: none;
+  }
+  .panel {
+    transform: none;
+  }
+}

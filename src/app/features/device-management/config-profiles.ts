@@ -8,7 +8,7 @@ import { Icon } from '../../shared/ui/icon';
 import { Menu, MenuItem } from '../../shared/ui/menu';
 import { Dialog } from '../../shared/ui/dialog';
 import { Toaster } from '../../shared/ui/toast';
-import { AnimatedNumber } from '../../shared/ui/animated-number';
+import { CountUp } from '@iotility/shared-ui';
 import { simulateLoad } from '../../shared/ui/loading';
 import {
   Clause, ID_RE, OPS, Op, SETTING, SETTINGS, TAG_KEYS, TagKey, fmtSetting, kebab, parseCondition, ranks,
@@ -69,7 +69,7 @@ const blankStat = (): Stat => ({ targeted: 0, applied: 0, pending: 0, error: 0, 
  */
 @Component({
   selector: 'app-configprofiles',
-  imports: [Select, SelectOption, ReadOnlyNote, RouterLink, Icon, Menu, Dialog, AnimatedNumber, RelativePipe, LowerCasePipe],
+  imports: [Select, SelectOption, ReadOnlyNote, RouterLink, Icon, Menu, Dialog, CountUp, RelativePipe, LowerCasePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './config-profiles.html',
   styleUrl: './config-profiles.scss',

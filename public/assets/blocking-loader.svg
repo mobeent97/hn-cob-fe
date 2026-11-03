@@ -1,0 +1,151 @@
+<svg width="300" height="220" viewBox="0 0 300 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="paint0_linear_1_24822" x1="3.27249" y1="50.3952" x2="138.661" y2="85.9596"
+            gradientUnits="userSpaceOnUse">
+            <stop offset="0.12" stop-color="#525DF7" />
+            <stop offset="0.77" stop-color="#34DBE8" />
+        </linearGradient>
+        <style>
+            <![CDATA[
+            svg {
+                display: block;
+                width: 100%;
+                height: auto;
+            }
+
+            /* 1. Wave & Z-Axis Expansion for Connected Dots */
+            @keyframes waveExpand {
+
+                0%,
+                100% {
+                    transform: scale(1);
+                    opacity: 0.3;
+                }
+
+                50% {
+                    transform: scale(1.4);
+                    opacity: 0.6;
+                    filter: blur(1px);
+                }
+            }
+
+            /* 2. Floating Wave Animation for the whole arch */
+            @keyframes floatWave {
+
+                0%,
+                100% {
+                    transform: translateY(0px);
+                }
+
+                50% {
+                    transform: translateY(-8px);
+                }
+            }
+
+            /* 3. Smooth Radar Pulse for separate dots */
+            @keyframes radarPing {
+                0% {
+                    transform: scale(1);
+                    opacity: 0.6;
+                    stroke-width: 2;
+                }
+
+                100% {
+                    transform: scale(2.2);
+                    opacity: 0;
+                    stroke-width: 0.5;
+                }
+            }
+
+            /* Main Arch Container */
+            .arch-group {
+                animation: floatWave 4s ease-in-out infinite;
+                transform-origin: center;
+            }
+
+            /* The 'Z-axis' expansion points on the arch */
+            .node-overlay {
+                transform-origin: center;
+                animation: waveExpand 3s ease-in-out infinite;
+            }
+
+            .node-1 {
+                animation-delay: 0s;
+                transform-origin: 15px 100px;
+            }
+
+            .node-2 {
+                animation-delay: 0.6s;
+                transform-origin: 51px 62px;
+            }
+
+            .node-3 {
+                animation-delay: 1.2s;
+                transform-origin: 87px 25px;
+            }
+
+            .node-4 {
+                animation-delay: 1.8s;
+                transform-origin: 124px 62px;
+            }
+
+            /* The separate pulse rings */
+            .ping {
+                animation: radarPing 3s infinite cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            }
+
+            .ping-1 {
+                transform-origin: 87.5px 94px;
+            }
+
+            .ping-2 {
+                transform-origin: 160px 100px;
+                animation-delay: 1.5s;
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+
+                .arch-group,
+                .node-overlay,
+                .ping {
+                    animation: none;
+                }
+            }
+            ]]>
+        </style>
+    </defs>
+
+    <!-- Grouped everything with a 'translate' to center it and give space for animations -->
+    <g transform="translate(60, 45)">
+
+        <!-- SEPARATE DOT 1 (Middle-Bottom) -->
+        <g>
+            <circle cx="87.58" cy="94.05" r="14" stroke="#34DBE8" fill="none" class="ping ping-1" />
+            <path
+                d="M87.5808 109.592C96.1978 109.592 103.183 102.636 103.183 94.054C103.183 85.4724 96.1978 78.5156 87.5808 78.5156C78.9639 78.5156 71.9785 85.4724 71.9785 94.054C71.9785 102.636 78.9639 109.592 87.5808 109.592Z"
+                fill="#34DBE8" />
+        </g>
+
+        <!-- CONNECTED PART (The Arch) -->
+        <g class="arch-group">
+            <!-- Original Brand Path -->
+            <path
+                d="M124.787 47.439C121.586 47.439 113.225 45.1999 109.224 40.4188C105.744 36.2832 103.183 29.9085 103.183 24.3307L103.135 24.5936C102.895 20.5952 101.111 16.8442 98.1579 14.1249C95.2046 11.4056 91.3101 9.92857 87.2886 10.0027C83.2672 10.0767 79.4302 11.6962 76.5799 14.5224C73.7296 17.3486 72.0867 21.1627 71.9947 25.1673C71.946 30.7079 69.9662 36.0596 66.3939 40.3073C62.3933 45.0883 54.3921 47.4788 51.1916 47.4788C47.1904 47.5758 43.38 49.2021 40.5499 52.0206C37.7197 54.8392 36.0868 58.6339 35.9894 62.6187C35.9406 68.1593 33.9608 73.5109 30.3885 77.7587C26.3879 82.5397 18.3867 84.9302 15.1863 84.9302C12.12 85.0101 9.14544 85.9889 6.63488 87.7439C4.12432 89.499 2.18921 91.9525 1.07173 94.7973C-0.0457606 97.6421 -0.296006 100.752 0.352296 103.738C1.0006 106.723 2.51865 109.453 4.71652 111.583C6.91438 113.714 9.69444 115.152 12.7088 115.717C15.7232 116.283 18.838 115.95 21.6635 114.761C24.489 113.572 26.8997 111.58 28.594 109.033C30.2882 106.487 31.1907 103.499 31.1886 100.445C31.1886 100.293 31.1886 100.142 31.1886 99.9905V100.046C31.1886 93.6715 34.3411 88.1495 37.5896 84.1095C39.9099 81.2249 44.7907 78.5316 51.9917 78.5316C56.0572 78.4278 59.9213 76.7471 62.7609 73.8477C65.6005 70.9483 67.1911 67.0593 67.194 63.0092C67.194 62.8578 67.194 62.7064 67.194 62.555V62.6108C67.194 56.236 70.3465 50.714 73.5949 46.674C75.9153 43.7894 80.796 41.0961 87.9971 41.0961C95.1981 41.0961 99.7188 43.9408 102.039 46.8254C105.272 50.8335 108.784 56.2042 108.784 62.5789V62.5072C108.784 62.6665 108.784 62.818 108.784 62.9773C108.785 66.0333 109.691 69.0212 111.388 71.5671C113.086 74.113 115.499 76.104 118.327 77.2908C121.155 78.4777 124.271 78.8078 127.286 78.2399C130.301 77.6719 133.081 76.231 135.278 74.0976C137.476 71.9642 138.992 69.233 139.639 66.2456C140.285 63.2581 140.033 60.1472 138.913 57.3019C137.793 54.4567 135.856 52.0034 133.343 50.2491C130.83 48.4948 127.854 47.5173 124.787 47.439Z"
+                fill="url(#paint0_linear_1_24822)" />
+
+            <!-- Z-Expansion Overlays -->
+            <circle cx="15" cy="100" r="14" fill="#525DF7" class="node-overlay node-1" />
+            <circle cx="51" cy="62" r="14" fill="#439DED" class="node-overlay node-2" />
+            <circle cx="87" cy="25" r="14" fill="#3ABEF9" class="node-overlay node-3" />
+            <circle cx="124" cy="62" r="14" fill="#34DBE8" class="node-overlay node-4" />
+        </g>
+
+        <!-- SEPARATE DOT 2 (Bottom-Right) -->
+        <g>
+            <circle cx="160" cy="100" r="14" stroke="#34DBE8" fill="none" class="ping ping-2" />
+            <path
+                d="M160.032 116.119C168.649 116.119 175.634 109.162 175.634 100.58C175.634 91.9987 168.649 85.042 160.032 85.042C151.415 85.042 144.43 91.9987 144.43 100.58C144.43 109.162 151.415 116.119 160.032 116.119Z"
+                fill="#34DBE8" />
+        </g>
+    </g>
+</svg>

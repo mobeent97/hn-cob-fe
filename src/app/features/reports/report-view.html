@@ -59,7 +59,7 @@
                   <span class="dash">—</span>
                 } @else {
                   @if (k.prefix) { <span class="unit pre">{{ k.prefix.trim() }}</span> }
-                  <app-num [value]="k.value" [decimals]="k.decimals ?? 0" />
+                  <span class="num" [uiCountUp]="k.value | number: '1.' + (k.decimals ?? 0) + '-' + (k.decimals ?? 0)"></span>
                   @if (k.suffix) { <span class="unit">{{ k.suffix }}</span> }
                 }
               </span>

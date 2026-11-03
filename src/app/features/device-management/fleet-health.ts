@@ -5,7 +5,8 @@ import { Store } from '../../core/data/store';
 import { DateTimePipe, fmtNum, fmtRelative } from '../../core/data/format';
 import { IotTransport, TwinValue } from '../../core/data/models';
 import { Icon } from '../../shared/ui/icon';
-import { AnimatedNumber } from '../../shared/ui/animated-number';
+import { DecimalPipe } from '@angular/common';
+import { CountUp } from '@iotility/shared-ui';
 import { BarChart, BarDatum } from '../../shared/charts/charts';
 import { Dialog } from '../../shared/ui/dialog';
 import { Toaster } from '../../shared/ui/toast';
@@ -38,7 +39,7 @@ const DAY = 86_400_000;
  */
 @Component({
   selector: 'app-fleethealth',
-  imports: [ReadOnlyNote, RouterLink, Icon, AnimatedNumber, BarChart, Dialog, DateTimePipe],
+  imports: [ReadOnlyNote, RouterLink, Icon, CountUp, DecimalPipe, BarChart, Dialog, DateTimePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './fleet-health.html',
   styleUrl: './fleet-health.scss',

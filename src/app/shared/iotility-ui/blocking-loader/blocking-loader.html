@@ -1,0 +1,16 @@
+@if (visible()) {
+<div class="loader-backdrop" animate.leave="loader-leave" [class.compact-loader]="compact()" [class.instant]="instant()" role="status" aria-live="polite" aria-busy="true">
+    <section class="loader-panel" [class.animation-only]="animationOnly()" [class.compact]="compact()">
+        <div class="loader-mark" aria-hidden="true">
+            <img class="loader-brand" src="assets/blocking-loader.svg" alt="" />
+        </div>
+        @if (!animationOnly()) {
+        <strong>{{ label() }}</strong>
+        @if (!compact()) {
+        <p>{{ message() }}</p>
+        <!-- <div class="loader-track" aria-hidden="true"><i></i></div> -->
+        }
+        }
+    </section>
+</div>
+}

@@ -19,13 +19,13 @@
     <div class="count-cards trk-counts" role="group" aria-label="Filter by state">
       <button class="count-card" type="button" [class.selected]="state() === 'all'" [attr.aria-pressed]="state() === 'all'" (click)="state.set('all')">
         <span class="cc-label">All</span>
-        <span class="cc-value"><app-num [value]="counts().all" /></span>
+        <span class="cc-value"><span class="num" [uiCountUp]="counts().all"></span></span>
       </button>
       @for (s of states; track s) {
         <button class="count-card" type="button" [class.selected]="state() === s" [attr.aria-pressed]="state() === s"
                 (click)="state.set(state() === s ? 'all' : s)">
           <span class="cc-label"><span class="dot" [style.color]="dotColour[s]" aria-hidden="true"></span>{{ s }}</span>
-          <span class="cc-value"><app-num [value]="counts()[s]" /></span>
+          <span class="cc-value"><span class="num" [uiCountUp]="counts()[s]"></span></span>
         </button>
       }
     </div>

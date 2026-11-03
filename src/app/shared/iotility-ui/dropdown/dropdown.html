@@ -1,0 +1,86 @@
+<div
+  class="dropdown-root"
+  [class.compact]="density() === 'compact'"
+  [class.has-chevron]="mode() === 'single' || mode() === 'multi'"
+>
+  <div class="dropdown-trigger" (click)="toggle()" [attr.aria-expanded]="isOpen()">
+    <ng-content select="[dropdown-trigger]" />
+    @if (mode() === 'single' || mode() === 'multi') {
+      <img class="dropdown-chevron" src="assets/fleetpoint/icons/chevron-down.svg" alt="" aria-hidden="true"/>
+    }
+  </div>
+  @if (isOpen()) {
+    <section
+      (animate.enter)="morphIn($event)"
+      (animate.leave)="morphOut($event)"
+      class="dropdown-panel"
+      [class.left]="align() === 'left'"
+      [class.match-trigger]="matchTriggerWidth()"
+      [class.above]="placement() === 'top'"
+    >
+      @if (searchable()) {
+        <label class="dropdown-search"
+          ><span>⌕</span
+          ><input
+            type="search"
+            [placeholder]="searchPlaceholder()"
+            [value]="query()"
+            (input)="updateQuery($event)"
+            (click)="$event.stopPropagation()"
+        /></label>
+      }
+      <div class="dropdown-options" (pointerover)="highlight($event)" (pointerleave)="clearHighlight($event)">
+        <span class="option-highlight" aria-hidden="true"></span>
+        @for (option of filteredOptions(); track option.id) {
+          <button
+            type="button"
+            class="dropdown-option"
+            data-no-press
+            [style.--i]="$index"
+            [class.danger]="option.icon === 'logout' || option.icon === 'delete'"
+            [class.selected]="(mode() === 'single' || mode() === 'multi') && isSelected(option.id)"
+            [disabled]="option.disabled"
+            (click)="choose(option)"
+          >
+            @if (showOptionIcons()) {
+              <span class="option-icon" [class.file-icon]="option.icon === 'excel' || option.icon === 'pdf'">
+                @if (option.icon === 'location') {
+                  ⌖
+                } @else if (option.icon === 'view') {
+                  <img src="assets/fleetpoint/icons/eye-brand-700.svg" alt="" aria-hidden="true"/>
+                } @else if (option.icon === 'edit') {
+                  <img src="assets/fleetpoint/icons/edit-brand-700.svg" alt="" aria-hidden="true"/>
+                } @else if (option.icon === 'delete') {
+                  <img src="assets/fleetpoint/icons/trash-option-danger.svg" alt="" aria-hidden="true"/>
+                } @else if (option.icon === 'logout') {
+                  ↪
+                } @else if (option.icon === 'excel') {
+                  <img src="assets/fleetpoint/report-icons/excel.svg" alt="" aria-hidden="true"/>
+                } @else if (option.icon === 'pdf') {
+                  <img src="assets/fleetpoint/report-icons/pdf.svg" alt="" aria-hidden="true"/>
+                } @else if (option.icon === 'user') {
+                  <img src="assets/fleetpoint/icons/user.svg" alt="user" aria-hidden="true"/>
+                } @else {
+                  ●
+                }
+              </span>
+            }
+            <span class="option-copy"
+              ><strong>{{ option.label }}</strong>
+              @if (option.description) {
+                <small>{{ option.description }}</small>
+              }
+            </span>
+            @if (mode() === 'multi' && showSelectionMarks()) {
+              <span class="selection-mark" [class.selected]="isSelected(option.id)">{{
+                isSelected(option.id) ? '✓' : ''
+              }}</span>
+            }
+          </button>
+        } @empty {
+          <p class="empty">No options found</p>
+        }
+      </div>
+    </section>
+  }
+</div>

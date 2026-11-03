@@ -1,0 +1,21 @@
+/* One source of truth for the expand/collapse height animation: the frame
+   tweens to whatever height its projected content reports (ResizeObserver), so
+   both grow and shrink animate — including content that appears/disappears via
+   structural @if inside the component. Override the custom properties on :host
+   to retune the motion per usage. */
+:host {
+  --smooth-height-duration: 260ms;
+  --smooth-height-easing: var(--ease-out);
+  display: block;
+  min-width: 0;
+}
+.height-frame { overflow: hidden; }
+/* Opt-in (`unclip`): stop clipping once a size settles so overlays rendered by
+   the content (e.g. absolutely positioned dropdown panels) stay visible. Still
+   clipped while tweening so the reveal/collapse stays clean. */
+.height-frame.unclip:not(.animating) { overflow: visible; }
+.height-frame.ready {
+  transition: height var(--smooth-height-duration) var(--smooth-height-easing);
+}
+.height-content { min-width: 0; }
+@media (prefers-reduced-motion: reduce) { .height-frame.ready { transition: none; } }

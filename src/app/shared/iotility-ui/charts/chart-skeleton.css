@@ -1,0 +1,144 @@
+@reference "../../../../styles.css";
+
+:host {
+  @apply relative flex size-full min-h-0 flex-col overflow-hidden;
+}
+/* One shimmer sweep across the whole placeholder. */
+:host::after {
+  content: '';
+  @apply pointer-events-none absolute inset-0 z-[1];
+  transform: translateX(-115%);
+  background: linear-gradient(100deg, transparent 22%, rgb(255 255 255 / 0.52) 47%, rgb(255 255 255 / 0.18) 56%, transparent 80%);
+  animation: chart-skeleton-shimmer 1.65s ease-in-out infinite;
+}
+:host-context(.dark)::after {
+  background: linear-gradient(100deg, transparent 22%, rgb(255 255 255 / 0.07) 47%, rgb(255 255 255 / 0.025) 56%, transparent 80%);
+}
+
+/* Shared tones (match ui-skeleton). */
+.y-axis span,
+.x-axis span,
+.bars span,
+.rows .label,
+.rows b,
+.legend i,
+.legend b,
+.total b,
+.total i {
+  @apply block rounded-full bg-line/80 dark:bg-dark-line/70;
+}
+
+/* Line and vertical bar: axes around a plot. */
+.axes {
+  @apply grid min-h-0 flex-1 grid-cols-[1.5rem_minmax(0,1fr)] pb-5 pr-1;
+}
+.y-axis {
+  @apply flex flex-col items-end justify-between pb-0.5 pr-2.5 pt-0.5;
+}
+.y-axis span {
+  @apply h-1.5;
+}
+.plot {
+  @apply relative min-w-0 border-b border-line/80 dark:border-dark-line/55;
+}
+.grid {
+  @apply absolute inset-0 flex flex-col justify-between;
+}
+.grid i {
+  @apply block w-full border-t border-dashed border-line/60 dark:border-dark-line/60;
+}
+.x-axis {
+  @apply absolute inset-x-0 -bottom-5 flex justify-around;
+}
+.x-axis span {
+  @apply h-1.5 w-6;
+}
+
+svg {
+  @apply absolute inset-0 size-full overflow-visible;
+}
+.stroke {
+  fill: none;
+  stroke: var(--color-line);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+.stroke.secondary {
+  stroke-dasharray: 4 5;
+  opacity: 0.8;
+}
+.area-top { stop-color: var(--color-line); stop-opacity: 0.6; }
+.area-bottom { stop-color: var(--color-line); stop-opacity: 0; }
+:host-context(.dark) .stroke { stroke: var(--color-dark-line); }
+:host-context(.dark) .area-top { stop-color: var(--color-dark-line); stop-opacity: 0.45; }
+:host-context(.dark) .area-bottom { stop-color: var(--color-dark-line); }
+
+.bars {
+  @apply absolute inset-0 flex items-end justify-around gap-[6%] px-[4%];
+}
+.bars span {
+  @apply w-full max-w-7 rounded-b-none rounded-t-md bg-line/60 dark:bg-dark-line/40;
+}
+
+/* Horizontal bars: a label stub and a track per row. */
+.rows {
+  @apply flex min-h-0 flex-1 flex-col justify-around gap-2 py-1;
+}
+.rows > div {
+  @apply grid grid-cols-[4.5rem_minmax(0,1fr)] items-center gap-3;
+}
+.rows .label {
+  @apply h-2 w-full;
+}
+.rows .track {
+  @apply block h-3.5 overflow-hidden rounded-full bg-canvas/80 dark:bg-dark-canvas/60;
+}
+.rows b {
+  @apply h-full rounded-full bg-line/70 dark:bg-dark-line/50;
+}
+
+/* Donut: segmented ring with the total placeholder in the middle. */
+.donut {
+  @apply relative mx-auto grid aspect-square h-full max-h-full min-h-0 flex-1 place-items-center;
+}
+.donut svg {
+  @apply static size-full;
+  transform: rotate(-90deg);
+}
+.ring {
+  fill: none;
+  stroke: var(--color-line);
+  stroke-opacity: 0.8;
+  stroke-width: 14;
+  stroke-linecap: butt;
+}
+:host-context(.dark) .ring { stroke: var(--color-dark-line); stroke-opacity: 0.55; }
+.total {
+  @apply absolute grid justify-items-center gap-1.5;
+}
+.total b {
+  @apply h-3.5 w-12;
+}
+.total i {
+  @apply h-1.5 w-8;
+}
+
+.legend {
+  @apply mt-3 flex shrink-0 flex-wrap items-center justify-center gap-4;
+}
+.legend span {
+  @apply inline-flex items-center gap-1.5;
+}
+.legend i {
+  @apply size-2;
+}
+.legend b {
+  @apply h-2 w-12;
+}
+
+@keyframes chart-skeleton-shimmer {
+  to { transform: translateX(115%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  :host::after { animation: none; }
+}

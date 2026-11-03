@@ -3,7 +3,8 @@ import { RouterLink } from '@angular/router';
 import { Store } from '../../core/data/store';
 import { fmtDateTime, fmtMoney, fmtNum } from '../../core/data/format';
 import { BarChart, LineChart, Ring, HBarChart } from '../../shared/charts/charts';
-import { AnimatedNumber } from '../../shared/ui/animated-number';
+import { DecimalPipe } from '@angular/common';
+import { CountUp } from '@iotility/shared-ui';
 import { Icon } from '../../shared/ui/icon';
 import { Tabs, TabItem } from '../../shared/ui/tabs';
 import { Toaster } from '../../shared/ui/toast';
@@ -24,7 +25,7 @@ import { Select, SelectOption } from '../../shared/ui/select';
  */
 @Component({
   selector: 'app-reportview',
-  imports: [HBarChart, Select, SelectOption, RouterLink, Icon, Tabs, AnimatedNumber, BarChart, LineChart, Ring, ScheduleDialog],
+  imports: [HBarChart, Select, SelectOption, RouterLink, Icon, Tabs, CountUp, DecimalPipe, BarChart, LineChart, Ring, ScheduleDialog],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './report-view.html',
   styleUrl: './report-view.scss',

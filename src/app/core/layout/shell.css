@@ -1,0 +1,375 @@
+@reference "../../../styles.css";
+
+/*
+ * FleetPoint shell (iotility projects/fleetpoint/src/app/layout: fleetpoint-layout.css, fleetpoint-sidebar.css,
+ * fleetpoint-header.css), reformatted. z-index scale: sticky 50, popover 1700, drawer 1800, modal 2000.
+ */
+
+/* ── Layout ── */
+.layout-shell {
+  @apply flex h-dvh w-screen overflow-hidden bg-canvas dark:bg-dark-canvas;
+}
+.sidebar-region {
+  @apply h-full shrink-0;
+}
+.mobile-sidebar-backdrop {
+  display: none;
+}
+@media (max-width: 767px) {
+  .sidebar-region {
+    @apply fixed inset-y-0 left-0 z-[1800] -translate-x-full;
+    transition: translate 300ms var(--ease-drawer);
+  }
+  .sidebar-region.open {
+    @apply translate-x-0;
+  }
+  .mobile-sidebar-backdrop {
+    @apply fixed inset-0 z-[1790] block border-0 bg-dark-canvas/60 backdrop-blur-sm;
+    transition: opacity 300ms var(--ease-drawer);
+  }
+}
+@starting-style {
+  .mobile-sidebar-backdrop {
+    opacity: 0;
+  }
+}
+.mobile-sidebar-backdrop.backdrop-leave {
+  animation: backdrop-leave 200ms var(--ease-out) both;
+  pointer-events: none;
+}
+@keyframes backdrop-leave {
+  to {
+    opacity: 0;
+  }
+}
+
+/*
+ * Desktop collapse/expand: the slot snaps to the final sidebar width (one reflow), the sidebar animates its
+ * own width on top of the content, and the content slides into place with a transform (Shell.slideContent).
+ */
+@media (min-width: 768px) {
+  .sidebar-region {
+    position: relative;
+    z-index: 30;
+    width: 14rem;
+  }
+  .sidebar-region.collapsed {
+    width: 5rem;
+  }
+}
+.layout-content {
+  @apply relative flex min-w-0 flex-1 flex-col;
+}
+/* Expanding narrows the content; this strip covers the gap it leaves on the right while it slides. */
+.layout-content.sliding::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 100%;
+  width: var(--slide-gap, 0);
+  background: linear-gradient(#fff 0 4rem, var(--color-canvas) 4rem);
+  pointer-events: none;
+}
+:host-context(.dark) .layout-content.sliding::after {
+  background: linear-gradient(var(--color-dark-surface) 0 4rem, var(--color-dark-canvas) 4rem);
+}
+.content {
+  @apply min-h-0 flex-1 overflow-y-auto;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  --sidebar-motion: 260ms var(--ease-out);
+  @apply flex h-full w-56 shrink-0 flex-col overflow-hidden text-white;
+  background: linear-gradient(180deg, #0a0a0f 0%, #1e0a3c 50%, #4c1d95 100%);
+  contain: layout paint;
+  will-change: width;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  transition: width var(--sidebar-motion);
+}
+.sidebar.collapsed {
+  @apply w-20;
+}
+
+.brand {
+  @apply flex h-16 shrink-0 items-center gap-3 border-b border-white/10 px-4;
+}
+.brand-link {
+  @apply flex min-w-0 flex-1 items-center gap-3 rounded-lg;
+}
+.brand-mark {
+  @apply h-9 w-auto shrink-0;
+}
+.brand-text {
+  @apply min-w-0;
+  overflow: hidden;
+  max-width: 8rem;
+  white-space: nowrap;
+  transition:
+    max-width var(--sidebar-motion),
+    opacity 160ms ease 90ms,
+    transform var(--sidebar-motion);
+}
+.brand-text strong {
+  @apply block truncate text-sm;
+}
+.brand-text small {
+  @apply block truncate text-[10px] text-brand-300;
+}
+.brand-toggle {
+  @apply ml-auto grid shrink-0 cursor-pointer place-items-center rounded-lg text-brand-300 hover:text-white;
+  transition:
+    transform var(--sidebar-motion),
+    color 160ms ease;
+}
+.brand-toggle app-icon {
+  transition: transform var(--sidebar-motion);
+}
+.sidebar.collapsed .brand {
+  @apply justify-center gap-1 px-2;
+}
+.sidebar.collapsed .brand-link {
+  @apply flex-none;
+}
+.sidebar.collapsed .brand-text {
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(-8px);
+  visibility: hidden;
+  transition:
+    max-width var(--sidebar-motion),
+    opacity 100ms ease,
+    transform var(--sidebar-motion),
+    visibility 0s linear 280ms;
+}
+.sidebar.collapsed .brand-mark {
+  @apply h-7;
+}
+.sidebar.collapsed .brand-toggle app-icon {
+  transform: rotate(180deg);
+}
+@media (max-width: 767px) {
+  .brand-toggle {
+    @apply hidden;
+  }
+}
+
+.scope {
+  @apply mx-2 mt-3 shrink-0;
+}
+
+nav {
+  @apply relative flex-1 overflow-x-hidden overflow-y-auto px-2 py-3;
+}
+.nav-hover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--color-brand-800) 50%, transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+.nav-hover.ready {
+  transition:
+    transform 240ms var(--ease-spring),
+    width 240ms var(--ease-spring),
+    height 240ms var(--ease-spring),
+    opacity 150ms ease;
+}
+nav section {
+  @apply mb-4;
+}
+nav section > p {
+  @apply mb-1 px-2 text-[10px] font-semibold tracking-wider whitespace-nowrap text-brand-400 uppercase;
+  overflow: hidden;
+  transition:
+    opacity 160ms ease 80ms,
+    transform var(--sidebar-motion);
+}
+.sidebar.collapsed nav section > p {
+  opacity: 0;
+  transform: translateX(-8px);
+}
+
+nav a,
+.footer-link {
+  @apply relative flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs text-brand-300 hover:text-white;
+  transition:
+    gap var(--sidebar-motion),
+    padding var(--sidebar-motion),
+    background-color 160ms ease,
+    color 160ms ease;
+}
+/* The active background is the sliding pill ([sharedTabIndicator] variant="pill"); the item only turns white. */
+nav a.active,
+nav a.active:hover {
+  @apply bg-transparent text-white;
+}
+.sidebar.collapsed nav a,
+.sidebar.collapsed .footer-link {
+  @apply mx-auto size-9 justify-center gap-0 px-0;
+}
+.nav-icon {
+  @apply shrink-0;
+}
+.nav-label {
+  @apply min-w-0 flex-auto truncate;
+  transition:
+    opacity 160ms ease 90ms,
+    transform var(--sidebar-motion);
+}
+.sidebar.collapsed .nav-label {
+  flex: 0 0 0;
+  width: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateX(-8px) scale(0.85);
+  pointer-events: none;
+}
+nav em {
+  @apply ml-auto rounded-full bg-danger px-1.5 py-0.5 text-[10px] leading-none font-semibold text-white not-italic;
+}
+/* Collapsed: the badge becomes a dot beside the icon; the count stays in the tooltip. */
+.sidebar.collapsed nav em {
+  @apply absolute top-1 right-1 size-2 min-w-0 overflow-hidden p-0 text-[0px] text-transparent;
+}
+
+.sidebar-footer {
+  @apply shrink-0 border-t border-white/10 p-2;
+}
+.footer-link:hover {
+  @apply bg-white/5;
+}
+.footer-link.active {
+  @apply bg-white/10 text-white;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-hover.ready {
+    transition: opacity 150ms ease;
+  }
+  .sidebar-region,
+  .sidebar,
+  .sidebar * {
+    transition-duration: 1ms;
+    transition-delay: 0ms;
+  }
+}
+
+/* ── Header (FleetPoint platform header: white h-16, search left, actions right) ── */
+.topbar {
+  @apply relative z-50 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-line bg-white px-6 dark:border-dark-line dark:bg-dark-surface;
+}
+.topbar-start {
+  @apply flex min-w-0 items-center gap-2;
+  width: min(34rem, 42vw);
+}
+.search-slot {
+  @apply min-w-0 flex-1;
+}
+.topbar-actions {
+  @apply flex min-w-0 shrink-0 items-center gap-3;
+}
+.mobile-menu-button {
+  display: none;
+}
+
+.env {
+  @apply rounded-full border border-warning/40 bg-warning/5 px-2.5 py-1 text-[11px] leading-none font-medium text-warning dark:bg-warning/10;
+}
+
+/* Theme pill (shared user-menu .theme). The icons swap with a blur-and-turn. */
+.theme-toggle {
+  @apply flex w-18 cursor-pointer items-center justify-center gap-1.5 rounded-full border border-line bg-transparent px-2 py-1.5 text-xs leading-none text-muted dark:border-dark-line dark:text-brand-300;
+  transition:
+    border-color var(--duration-hover) ease,
+    color var(--duration-hover) ease,
+    background-color var(--duration-hover) ease,
+    scale var(--duration-press) var(--ease-out);
+}
+.theme-toggle:hover {
+  @apply border-brand-300 bg-brand-50 text-brand-700 dark:border-brand-500 dark:bg-brand-600/15 dark:text-brand-200;
+}
+.swap {
+  @apply grid;
+}
+.swap app-icon {
+  grid-area: 1 / 1;
+  transition:
+    opacity var(--duration-popover) var(--ease-out),
+    transform var(--duration-popover) var(--ease-out),
+    filter var(--duration-popover) var(--ease-out);
+}
+.swap .sun,
+.swap.is-dark .moon {
+  opacity: 0;
+  filter: blur(2px);
+}
+.swap .sun {
+  transform: rotate(-60deg) scale(0.6);
+}
+.swap.is-dark .moon {
+  transform: rotate(60deg) scale(0.6);
+}
+.swap.is-dark .sun {
+  @apply text-brand-400;
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+/* Profile button (shared user-menu .profile-button) inside the account menu trigger. */
+.profile-copy {
+  @apply hidden text-right sm:block;
+}
+.profile-copy strong {
+  @apply block text-sm leading-4 font-semibold text-ink dark:text-white;
+}
+.profile-copy small {
+  @apply block text-[10px] leading-3 text-muted dark:text-brand-300;
+}
+.profile-avatar {
+  @apply relative grid size-9 shrink-0 place-items-center rounded-full bg-brand-600 text-sm font-bold text-white;
+  transition: box-shadow var(--duration-hover) ease;
+}
+.account:hover .profile-avatar,
+.account:focus-within .profile-avatar {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand-500) 22%, transparent);
+}
+
+@media (max-width: 767px) {
+  .topbar {
+    @apply px-4;
+  }
+  .topbar-start {
+    width: min(23rem, 58vw);
+  }
+  .mobile-menu-button {
+    @apply grid size-9 shrink-0 cursor-pointer place-items-center rounded-lg border border-line bg-transparent text-ink dark:border-dark-line dark:text-white;
+  }
+  .env {
+    @apply hidden;
+  }
+}
+@media (max-width: 520px) {
+  .topbar {
+    @apply gap-2 px-3;
+  }
+  .topbar-start {
+    @apply flex-1;
+    width: auto;
+  }
+  .topbar-actions {
+    @apply gap-2;
+  }
+  .theme-toggle {
+    @apply size-9 w-9 p-0;
+  }
+  .theme-label {
+    @apply sr-only;
+  }
+}

@@ -1,0 +1,128 @@
+@reference "../../../../styles.css";
+
+:host {
+  @apply inline-flex items-center;
+}
+.status-badge {
+  @apply inline-flex items-center;
+}
+.status-dot {
+  @apply size-2 shrink-0 rounded-full bg-muted;
+}
+.status-label {
+  @apply whitespace-nowrap;
+}
+
+/* dot — plain pulsing indicator (Live Fleet Status heading) */
+.status-badge.dot .status-dot {
+  @apply bg-success;
+  animation: status-pulse-soft 1.8s ease-in-out infinite;
+}
+.status-badge.dot.offline .status-dot {
+  @apply bg-muted;
+  animation: none;
+}
+
+/* ping — pulsing ring indicator (sidebar live tracking) */
+.status-badge.ping .status-dot {
+  @apply relative bg-success;
+}
+.status-badge.ping .status-dot::after {
+  content: '';
+  @apply absolute inset-0 rounded-full bg-success;
+  animation: status-ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+.status-badge.ping.offline .status-dot {
+  @apply bg-muted;
+}
+.status-badge.ping.offline .status-dot::after {
+  animation: none;
+  opacity: 0;
+}
+
+/* pill — neutral online/offline pill (vehicle detail status) */
+.status-badge.pill {
+  @apply gap-1.5 rounded-full bg-muted/10 px-2.5 py-1 text-[10px] font-medium text-muted;
+}
+.status-badge.pill.online {
+  @apply bg-success/10 text-success;
+}
+.status-badge.pill.online .status-dot {
+  @apply bg-success;
+}
+
+/* header — platform header live badge */
+.status-badge.header {
+  @apply w-16 justify-center gap-2 rounded-full border border-line bg-transparent px-2 py-1.5 text-xs text-muted dark:border-dark-line;
+}
+.status-badge.header .status-dot {
+  @apply size-1.5 bg-online;
+  animation: status-pulse-header 1.8s ease-out infinite;
+}
+.status-badge.header.online {
+  @apply text-success;
+}
+.status-badge.header.offline .status-dot {
+  @apply bg-muted;
+  animation: none;
+}
+
+/* map — live tracking map overlay badge */
+.status-badge.map {
+  @apply gap-2 rounded-lg border border-line bg-white/90 px-3 py-1 text-xs text-muted shadow-lg backdrop-blur-sm dark:border-dark-line dark:bg-dark-surface/90 dark:text-brand-300;
+}
+.status-badge.map .status-dot {
+  @apply bg-online;
+  animation: status-pulse-map 1.8s ease-in-out infinite;
+}
+.status-badge.map.offline .status-dot {
+  @apply bg-muted;
+  animation: none;
+}
+
+@keyframes status-pulse-soft {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.75);
+  }
+}
+@keyframes status-ping {
+  75%,
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+@keyframes status-pulse-header {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-online) 45%, transparent);
+  }
+  50% {
+    opacity: 0.75;
+    box-shadow: 0 0 0 0.3rem transparent;
+  }
+}
+@keyframes status-pulse-map {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-online) 45%, transparent);
+  }
+  50% {
+    opacity: 0.65;
+    box-shadow: 0 0 0 5px transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-dot,
+  .status-dot::after {
+    animation: none !important;
+  }
+}/* Phones: the header live badge shrinks to its pulsing dot (aria-label still carries the state). */
+@media (max-width: 520px) {
+  .status-badge.header { @apply size-9 w-9 p-0; }
+  .status-badge.header .status-label { @apply sr-only; }
+}

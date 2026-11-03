@@ -6,7 +6,7 @@ import * as L from 'leaflet';
 import { Store } from '../../core/data/store';
 import { Vehicle } from '../../core/data/models';
 import { Icon } from '../../shared/ui/icon';
-import { AnimatedNumber } from '../../shared/ui/animated-number';
+import { CountUp } from '@iotility/shared-ui';
 import { simulateLoad } from '../../shared/ui/loading';
 import { Theme } from '../../core/theme/theme';
 import { LiveVehicle, StateFilter, VehicleState, clock, popupHtml, relTime, simulateStep } from './tracking-sim';
@@ -24,7 +24,7 @@ const STATE_ORDER: Record<VehicleState, number> = { Moving: 0, Idle: 1, Offline:
  */
 @Component({
   selector: 'app-tracking',
-  imports: [Select, SelectOption, Icon, AnimatedNumber],
+  imports: [Select, SelectOption, Icon, CountUp],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   templateUrl: './tracking.html',

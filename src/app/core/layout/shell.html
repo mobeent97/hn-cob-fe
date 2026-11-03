@@ -1,90 +1,132 @@
-<div class="frame" [class.nav-open]="navOpen()">
-  <aside class="sidebar" aria-label="Main navigation">
-    <a class="brand" routerLink="/dashboard">
-      <app-brand-mark />
-      <span class="wordmark">HyperNym</span>
-      <span class="scope">Onboarding</span>
-    </a>
-    <app-scope-switcher />
+<div class="layout-shell">
+  @if (navOpen()) {
+    <button
+      type="button"
+      class="mobile-sidebar-backdrop"
+      animate.leave="backdrop-leave"
+      data-no-press
+      aria-label="Close navigation"
+      (click)="navOpen.set(false)"
+    ></button>
+  }
 
-    <nav>
-      @for (group of nav(); track group.label) {
-        <div class="group">
-          @if (group.label) {
-            <span class="group-label">{{ group.label }}</span>
-          }
-          @for (item of group.items; track item.path) {
-            <a
-              class="nav-item"
-              [routerLink]="item.path"
-              routerLinkActive="active"
-              [routerLinkActiveOptions]="{ exact: false }"
-              #rla="routerLinkActive"
-              [attr.aria-current]="rla.isActive ? 'page' : null"
-            >
-              <app-icon [name]="item.icon" />
-              <span class="label">{{ item.label }}</span>
-              @if (badgeFor(item)) {
-                <span class="badge num" [attr.aria-label]="badgeFor(item) + ' to ship'">{{ badgeFor(item) }}</span>
-              }
-            </a>
-          }
-        </div>
-      }
-    </nav>
-
-    <div class="sidebar-foot">
-      @for (item of navFooter(); track item.path) {
-        <a class="nav-item" [routerLink]="item.path" routerLinkActive="active">
-          <app-icon [name]="item.icon" />
-          <span class="label">{{ item.label }}</span>
+  <div class="sidebar-region" [class.open]="navOpen()" [class.collapsed]="railed()">
+    <aside class="sidebar" [class.collapsed]="railed()" aria-label="Main navigation">
+      <div class="brand">
+        <a class="brand-link" routerLink="/dashboard" aria-label="HyperNym Onboarding, overview">
+          <img class="brand-mark" src="assets/hypernym.svg" alt="" />
+          <span class="brand-text">
+            <strong>HyperNym</strong>
+            <small>Customer onboarding</small>
+          </span>
         </a>
-      }
-    </div>
-  </aside>
-
-  <header class="topbar">
-    <button class="btn ghost icon menu-btn" aria-label="Open navigation" (click)="navOpen.set(true)">
-      <app-icon name="menu" />
-    </button>
-    <a class="brand mobile-brand" routerLink="/dashboard">
-      <app-brand-mark [size]="20" />
-      <span class="wordmark">HyperNym</span>
-    </a>
-
-    <app-global-search class="search-slot" />
-
-    <div class="right">
-      <span class="env" title="Environment">Development</span>
-      <button
-        class="btn ghost icon theme-btn"
-        [attr.aria-label]="theme.mode() === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
-        [title]="theme.mode() === 'dark' ? 'Light mode' : 'Dark mode'"
-        (click)="theme.toggle()"
-      >
-        <span class="swap" [class.is-dark]="theme.mode() === 'dark'">
-          <app-icon name="moon" [size]="17" class="moon" />
-          <app-icon name="sun" [size]="17" class="sun" />
-        </span>
-      </button>
-      <app-notification-bell />
-      <div class="account">
-        <span class="avatar" aria-hidden="true">{{ initials() }}</span>
-        <span class="who">
-          <strong>{{ user().name }}</strong>
-          <small>{{ roleLabel() }}</small>
-        </span>
-        <app-menu [items]="accountMenu()" icon="chevron-down" label="Account menu" />
+        <button
+          type="button"
+          class="brand-toggle"
+          (click)="toggleCollapsed()"
+          [attr.aria-label]="railed() ? 'Expand sidebar' : 'Collapse sidebar'"
+          [attr.aria-expanded]="!railed()"
+          [tooltip]="railed() ? 'Expand sidebar' : 'Collapse sidebar'"
+          [position]="railed() ? 'right' : 'bottom'"
+        >
+          <app-icon name="chevron-left" [size]="16" [stroke]="2" />
+        </button>
       </div>
-    </div>
-  </header>
 
-  <main class="sheet">
-    <div class="sheet-content">
+      <app-scope-switcher class="scope" [compact]="railed()" />
+
+      <nav
+        sharedTabIndicator
+        tabIndicatorVariant="pill"
+        aria-label="Primary navigation"
+        (pointerover)="highlightNav($event)"
+        (pointerleave)="clearNavHighlight($event)"
+      >
+        <!-- One hover pill glides between items. -->
+        <span class="nav-hover" aria-hidden="true"></span>
+        @for (group of nav(); track group.label) {
+          <section>
+            @if (group.label) {
+              <p>{{ group.label }}</p>
+            }
+            @for (item of group.items; track item.path) {
+              <a
+                [routerLink]="item.path"
+                routerLinkActive="active"
+                #rla="routerLinkActive"
+                [attr.aria-current]="rla.isActive ? 'page' : null"
+                [tooltip]="railed() && badgeFor(item) ? item.label + ' · ' + badgeFor(item) : item.label"
+                [position]="'right'"
+                [disabled]="!railed()"
+              >
+                <app-icon class="nav-icon" [name]="item.icon" [size]="20" />
+                <span class="nav-label">{{ item.label }}</span>
+                @if (badgeFor(item)) {
+                  <em class="num" [attr.aria-label]="badgeFor(item) + ' to ship'">{{ badgeFor(item) }}</em>
+                }
+              </a>
+            }
+          </section>
+        }
+      </nav>
+
+      <div class="sidebar-footer">
+        @for (item of navFooter(); track item.path) {
+          <a
+            class="footer-link"
+            [routerLink]="item.path"
+            routerLinkActive="active"
+            [tooltip]="item.label"
+            [position]="'right'"
+            [disabled]="!railed()"
+          >
+            <app-icon class="nav-icon" [name]="item.icon" [size]="20" />
+            <span class="nav-label">{{ item.label }}</span>
+          </a>
+        }
+      </div>
+    </aside>
+  </div>
+
+  <div #content class="layout-content">
+    <header class="topbar">
+      <div class="topbar-start">
+        <button type="button" class="mobile-menu-button" aria-label="Open navigation" (click)="navOpen.set(true)">
+          <app-icon name="menu" [size]="20" />
+        </button>
+        <app-global-search class="search-slot" />
+      </div>
+
+      <div class="topbar-actions">
+        <span class="env" title="Environment">Development</span>
+        <button
+          type="button"
+          class="theme-toggle"
+          [attr.aria-label]="theme.mode() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+          [tooltip]="theme.mode() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+          (click)="theme.toggle()"
+        >
+          <span class="swap" [class.is-dark]="theme.mode() === 'dark'">
+            <app-icon name="moon" [size]="14" class="moon" />
+            <app-icon name="sun" [size]="14" class="sun" />
+          </span>
+          <span class="theme-label">{{ theme.mode() === 'dark' ? 'Light' : 'Dark' }}</span>
+        </button>
+        <app-notification-bell />
+        <app-menu class="account" trigger="custom" [items]="accountMenu()" label="Account menu">
+          <span class="profile-copy">
+            <strong>{{ user().name }}</strong>
+            <small>{{ roleLabel() }}</small>
+          </span>
+          <span class="profile-avatar" aria-hidden="true">{{ initials() }}</span>
+        </app-menu>
+      </div>
+    </header>
+
+    <main class="content">
       <router-outlet />
-    </div>
-  </main>
+    </main>
+  </div>
 
-  <div class="scrim" (click)="navOpen.set(false)"></div>
   <app-preview-as [(open)]="previewOpen" />
 </div>

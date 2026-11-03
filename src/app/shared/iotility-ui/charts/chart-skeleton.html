@@ -1,0 +1,66 @@
+@switch (type()) {
+  @case ('line') {
+    <div class="axes">
+      <div class="y-axis">
+        @for (width of yTicks; track $index) { <span [style.width.%]="width"></span> }
+      </div>
+      <div class="plot">
+        <div class="grid">
+          @for (_ of yTicks; track $index) { <i></i> }
+        </div>
+        <svg viewBox="0 0 500 200" preserveAspectRatio="none">
+          <defs>
+            <linearGradient [attr.id]="gradientId" x1="0" y1="0" x2="0" y2="1">
+              <stop class="area-top" offset="0%" />
+              <stop class="area-bottom" offset="100%" />
+            </linearGradient>
+          </defs>
+          <path class="area" d="M0 118 C60 104 110 80 170 86 S280 118 340 98 S440 56 500 62 L500 200 L0 200 Z" [attr.fill]="'url(#' + gradientId + ')'" />
+          <path class="stroke secondary" vector-effect="non-scaling-stroke" d="M0 156 C70 150 120 134 180 138 S290 156 350 144 S450 120 500 124" />
+          <path class="stroke" vector-effect="non-scaling-stroke" d="M0 118 C60 104 110 80 170 86 S280 118 340 98 S440 56 500 62" />
+        </svg>
+        <div class="x-axis">
+          @for (_ of xTicks; track $index) { <span></span> }
+        </div>
+      </div>
+    </div>
+  }
+  @case ('bar-horizontal') {
+    <div class="rows">
+      @for (width of rows; track $index) {
+        <div><span class="label"></span><span class="track"><b [style.width.%]="width"></b></span></div>
+      }
+    </div>
+  }
+  @case ('donut') {
+    <div class="donut">
+      <svg viewBox="0 0 100 100">
+        <circle class="ring" cx="50" cy="50" r="38" pathLength="100" stroke-dasharray="42 3 25 3 17 3 7 0" />
+      </svg>
+      <span class="total"><b></b><i></i></span>
+    </div>
+  }
+  @default {
+    <div class="axes">
+      <div class="y-axis">
+        @for (width of yTicks; track $index) { <span [style.width.%]="width"></span> }
+      </div>
+      <div class="plot">
+        <div class="grid">
+          @for (_ of yTicks; track $index) { <i></i> }
+        </div>
+        <div class="bars">
+          @for (height of bars; track $index) { <span [style.height.%]="height"></span> }
+        </div>
+        <div class="x-axis">
+          @for (_ of bars; track $index) { <span></span> }
+        </div>
+      </div>
+    </div>
+  }
+}
+@if (legend()) {
+  <div class="legend">
+    @for (_ of legendItems; track $index) { <span><i></i><b></b></span> }
+  </div>
+}

@@ -9,7 +9,7 @@ import { Menu, MenuItem } from '../../shared/ui/menu';
 import { Dialog } from '../../shared/ui/dialog';
 import { Toaster } from '../../shared/ui/toast';
 import { Pager, pageOf } from '../../shared/ui/pager';
-import { AnimatedNumber } from '../../shared/ui/animated-number';
+import { CountUp } from '@iotility/shared-ui';
 import { simulateLoad } from '../../shared/ui/loading';
 import { DEVICE_ID_RE, parseCsv } from '../inventory/device-import';
 import { ReadOnlyNote, writeAccess } from '../tenancy';
@@ -58,7 +58,7 @@ const TAG_KEYS = ['deviceType', 'package', 'customerId', 'country', 'useCase'];
  */
 @Component({
   selector: 'app-provisioning',
-  imports: [Select, SelectOption, ReadOnlyNote, RouterLink, Icon, Menu, Dialog, Pager, AnimatedNumber, RelativePipe],
+  imports: [Select, SelectOption, ReadOnlyNote, RouterLink, Icon, Menu, Dialog, Pager, CountUp, RelativePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './provisioning.html',
   styleUrl: './provisioning.scss',

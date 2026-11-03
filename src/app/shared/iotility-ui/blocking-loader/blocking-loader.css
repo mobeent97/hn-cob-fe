@@ -1,0 +1,22 @@
+@reference "../../../../styles.css";
+
+:host { display: contents; }
+
+.loader-backdrop { @apply fixed inset-0 z-[2500] grid place-items-center bg-dark-canvas/75 p-5 backdrop-blur-sm; }
+.loader-panel { @apply flex w-full max-w-xs flex-col items-center justify-center gap-0 text-center; }
+.loader-panel.animation-only { @apply grid place-items-center p-0; }
+.loader-panel.compact { @apply flex w-auto min-w-48 flex-col items-center justify-center gap-1 px-6 py-4; }
+.loader-panel.compact strong { @apply whitespace-nowrap text-sm; }
+.loader-mark { @apply mx-auto w-32; }
+.loader-brand { @apply block h-auto w-full; }
+.loader-panel.animation-only .loader-mark { @apply m-0 w-24; }
+.loader-panel.compact .loader-mark { @apply m-0 w-20; }
+.loader-panel strong { @apply block text-base font-semibold text-white; }
+.loader-panel p { @apply text-xs leading-5 text-white/70; }
+
+/* Fades in and out instead of hard-cutting the whole screen. */
+.loader-backdrop { transition: opacity var(--duration-modal) var(--ease-out); }
+@starting-style { .loader-backdrop { opacity: 0; } }
+@starting-style { .loader-backdrop.instant { opacity: 1; } }
+.loader-backdrop.loader-leave { animation: loader-leave 200ms var(--ease-out) both; pointer-events: none; }
+@keyframes loader-leave { to { opacity: 0; } }

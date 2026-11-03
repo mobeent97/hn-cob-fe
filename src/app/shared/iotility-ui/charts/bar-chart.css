@@ -1,0 +1,113 @@
+@reference "../../../../styles.css";
+
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+.bar-chart {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+.bar-chart.horizontal {
+  flex-direction: row;
+}
+.plot {
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+}
+
+/* Slim scrollbar: faint track, brand pill thumb (never smaller than 2rem), arrows and a count. */
+.scroller {
+  @apply flex shrink-0 items-center gap-1.5;
+  animation: scroller-in 300ms var(--ease-out) both;
+}
+.horizontal .scroller {
+  @apply flex-col;
+}
+.track {
+  --thumb: max(2rem, calc(var(--thumb-ratio) * 100%));
+  @apply relative min-w-0 flex-1 cursor-pointer rounded-full bg-line/70 outline-none dark:bg-white/10;
+  height: 4px;
+  transition: height 160ms var(--ease-out), width 160ms var(--ease-out);
+}
+.horizontal .track {
+  width: 4px;
+  height: auto;
+  min-height: 0;
+}
+.scroller:hover .track,
+.track:focus-visible {
+  height: 6px;
+}
+.horizontal .scroller:hover .track,
+.horizontal .track:focus-visible {
+  width: 6px;
+  height: auto;
+}
+.track:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand-500) 30%, transparent);
+}
+.thumb {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc((100% - var(--thumb)) * var(--thumb-position));
+  width: var(--thumb);
+  border-radius: 9999px;
+  background: linear-gradient(90deg, var(--color-brand-400), var(--color-brand-600));
+  box-shadow: 0 0 10px -2px color-mix(in srgb, var(--color-brand-500) 60%, transparent);
+  cursor: grab;
+  touch-action: none;
+  transition: left 280ms var(--ease-out), top 280ms var(--ease-out);
+}
+.thumb.dragging {
+  cursor: grabbing;
+  transition: none;
+}
+.horizontal .thumb {
+  top: calc((100% - var(--thumb)) * var(--thumb-position));
+  right: 0;
+  bottom: auto;
+  left: 0;
+  width: auto;
+  height: var(--thumb);
+  background: linear-gradient(180deg, var(--color-brand-400), var(--color-brand-600));
+}
+
+.nav {
+  @apply grid size-6 shrink-0 cursor-pointer place-items-center rounded-full border-0 bg-transparent text-muted transition hover:bg-brand-50 hover:text-brand-600 disabled:cursor-default disabled:opacity-30 disabled:hover:bg-transparent dark:text-brand-300 dark:hover:bg-white/10;
+}
+.nav svg {
+  @apply size-3.5 fill-none stroke-current;
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.horizontal .nav svg {
+  transform: rotate(90deg);
+}
+.count {
+  @apply shrink-0 whitespace-nowrap pl-1 text-[10px] font-medium tabular-nums text-muted dark:text-brand-300;
+}
+.count i {
+  @apply not-italic opacity-60;
+}
+.horizontal .count {
+  display: none;
+}
+
+@keyframes scroller-in {
+  from { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scroller { animation: none; }
+  .track,
+  .thumb { transition: none; }
+}

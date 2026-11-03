@@ -1,0 +1,36 @@
+@reference "../../../../styles.css";
+
+:host { @apply block min-w-0; }
+
+.stat-card-skeleton {
+  display: flex;
+  height: 100%;
+  min-height: 96px;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 14px;
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: var(--shadow-card);
+}
+.stat-card-skeleton.compact {
+  min-height: 88px;
+  padding: 13px;
+}
+:host-context(.dark) .stat-card-skeleton {
+  border-color: var(--color-dark-line);
+  background: var(--color-dark-surface);
+}
+.stat-card-skeleton header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 7px;
+}
+.stat-card-skeleton-label {
+  margin-top: 2px;
+}
+.stat-card-skeleton-value {
+  margin-top: 10px;
+}

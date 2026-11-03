@@ -77,7 +77,7 @@ export type IconName = keyof typeof ICONS;
 export class Icon {
   readonly name = input.required<IconName>();
   readonly size = input(16);
-  readonly stroke = input(1.6);
+  readonly stroke = input(1.8);
   protected readonly nodes = computed(
     () => ICONS[this.name()] as unknown as [string, Record<string, string>][],
   );

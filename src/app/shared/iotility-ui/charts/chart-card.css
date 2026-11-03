@@ -1,0 +1,81 @@
+@reference "../../../../styles.css";
+
+:host {
+  @apply block min-w-0;
+}
+.chart-card {
+  @apply flex h-full min-h-56 min-w-0 flex-col rounded-2xl border border-line bg-white p-4 dark:border-dark-line dark:bg-dark-surface;
+  box-shadow: var(--shadow-card);
+}
+header {
+  @apply mb-3 flex shrink-0 items-start justify-between gap-3;
+}
+.titles {
+  @apply grid min-w-0 gap-1;
+}
+.subtitle-skeleton {
+  @apply mt-1;
+}
+h2 {
+  @apply truncate text-sm font-semibold text-ink dark:text-white;
+}
+.titles p {
+  @apply text-[11px] text-muted dark:text-brand-300;
+}
+.aside {
+  @apply flex min-w-0 shrink items-center justify-end gap-3;
+}
+.aside:empty {
+  @apply hidden;
+}
+.legend {
+  @apply flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-right text-[11px] text-ink dark:text-white;
+}
+.legend > span {
+  @apply inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap;
+}
+.legend i {
+  @apply size-2 rounded-full;
+}
+.badge {
+  @apply shrink-0 rounded-full bg-success/10 px-2.5 py-1 text-[10px] font-medium text-success;
+}
+.body {
+  @apply relative flex min-h-0 flex-1 flex-col;
+}
+/* Loaded content and states settle in rather than popping over the skeleton. */
+.content,
+.state {
+  animation: chart-card-in 260ms var(--ease-out) both;
+}
+.content {
+  @apply relative min-h-0 flex-1;
+}
+.state {
+  @apply grid flex-1 place-content-center justify-items-center text-center;
+}
+.state-icon {
+  @apply mb-3 grid size-14 place-items-center rounded-2xl bg-brand-50 text-brand-400 dark:bg-brand-600/10 dark:text-brand-300;
+}
+.state-icon svg {
+  @apply size-9 fill-none stroke-current;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
+.state.error .state-icon {
+  @apply bg-danger/10 text-danger;
+}
+.state.error .state-icon svg {
+  @apply size-7;
+}
+.state p {
+  @apply text-xs text-muted dark:text-brand-300;
+}
+@keyframes chart-card-in {
+  from { opacity: 0; transform: translateY(4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .content,
+  .state { animation: none; }
+}

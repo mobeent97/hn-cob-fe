@@ -1,0 +1,89 @@
+@reference "../../../styles.css";
+
+/* FleetPoint header search (fleetpoint-header.css .search-control / .search-results), reformatted. */
+:host {
+  @apply block min-w-0;
+}
+.box {
+  @apply relative;
+}
+.search-control {
+  @apply relative flex h-(--control-height) items-center gap-2 rounded-(--control-radius) border border-line bg-canvas/60 px-3 dark:border-dark-line dark:bg-dark-canvas/70;
+  transition:
+    border-color var(--duration-hover) ease,
+    background-color var(--duration-hover) ease,
+    box-shadow var(--duration-hover) ease;
+}
+.search-control:focus-within {
+  @apply border-brand-400 bg-white shadow-[0_5px_18px_rgb(30_20_60/0.08)] dark:border-brand-500 dark:bg-dark-canvas;
+}
+.search-control app-icon {
+  @apply shrink-0 text-muted dark:text-brand-300;
+}
+.search-control input {
+  @apply min-w-0 flex-1 appearance-none border-0 bg-transparent p-0 text-xs text-ink outline-none placeholder:text-muted dark:text-white dark:placeholder:text-brand-300;
+}
+.search-control input::-webkit-search-cancel-button {
+  display: none;
+}
+kbd {
+  @apply shrink-0 rounded-md border border-line bg-white px-1.5 py-0.5 font-sans text-[10px] font-medium text-muted dark:border-dark-line dark:bg-dark-surface dark:text-brand-300;
+}
+
+/* Opened by Ctrl K many times a day, so it appears without motion. */
+.results {
+  @apply absolute top-[calc(100%+0.5rem)] right-0 left-0 z-[1700] m-0 max-h-90 list-none overflow-auto rounded-2xl border border-line bg-white p-1.5 dark:border-dark-line dark:bg-dark-surface;
+  box-shadow:
+    var(--shadow-popover),
+    0 0 0 1px color-mix(in srgb, var(--color-brand-500) 14%, transparent),
+    0 22px 60px -24px color-mix(in srgb, var(--color-brand-600) 55%, transparent);
+}
+li {
+  @apply relative flex h-10 cursor-pointer items-center gap-3 rounded-lg px-3 text-muted dark:text-brand-300;
+}
+/* Accent bar that grows on the active result (keyboard or mouse). */
+li::before {
+  content: '';
+  @apply absolute top-[22%] bottom-[22%] left-0 w-[3px] rounded-r-[3px] bg-brand-500;
+  transform: scaleY(0);
+  transition: transform 180ms var(--ease-out);
+}
+li.active {
+  @apply bg-brand-50 dark:bg-brand-600/10;
+}
+li.active::before {
+  transform: scaleY(1);
+}
+.lbl {
+  @apply truncate text-xs font-semibold text-ink dark:text-white;
+}
+.sub {
+  @apply ml-auto text-[11px] whitespace-nowrap;
+}
+.none {
+  @apply h-auto cursor-default px-3 py-6 text-center text-xs;
+}
+.none::before {
+  display: none;
+}
+@media (max-width: 767px) {
+  kbd {
+    @apply hidden;
+  }
+}
+@media (max-width: 520px) {
+  .search-control {
+    @apply px-2.5;
+  }
+  .search-control input::placeholder {
+    color: transparent;
+  }
+  .results {
+    @apply fixed top-[4.5rem] right-3 left-3;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  li::before {
+    transition: none;
+  }
+}

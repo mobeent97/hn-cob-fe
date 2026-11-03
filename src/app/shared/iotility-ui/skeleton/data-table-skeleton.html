@@ -1,0 +1,89 @@
+<section class="table-card" [class.compact-rows]="compactRows()" aria-hidden="true">
+  <header>
+    <div class="table-heading">
+      <h2>{{ title() }}</h2>
+      <span><ui-skeleton width="9rem" height="0.625rem" radius="0.25rem" /></span>
+    </div>
+    @if (showToolbar()) {
+      <div class="toolbar-skeleton">
+        @if (showSearch()) {
+          <div class="search-field-skeleton">
+            <ui-skeleton variant="circle" width="1rem" height="1rem" />
+            <ui-skeleton width="7rem" height="0.75rem" radius="0.3rem" />
+          </div>
+        }
+        @if (showHeaderFilter()) {
+          <div class="filter-field-skeleton">
+            <ui-skeleton width="2.5rem" height="0.5625rem" radius="0.25rem" />
+            <span><ui-skeleton width="4.5rem" height="0.75rem" radius="0.3rem" /></span>
+          </div>
+        }
+        @if (showExport()) {
+          <span class="export-skeleton">
+            <ui-skeleton variant="circle" width="1rem" height="1rem" />
+            <ui-skeleton width="2.75rem" height="0.75rem" radius="0.3rem" />
+          </span>
+        }
+      </div>
+    }
+  </header>
+  <div class="scroll">
+    <table [style.min-width.px]="minTableWidth()">
+      <thead>
+        <tr>
+          @for (_ of columnItems(); track $index) {
+            <th>
+              @if (columnLabel($index); as label) {
+                {{ label }}
+              } @else {
+                <ui-skeleton
+                  [width]="$index === 0 ? '5.5rem' : '4rem'"
+                  height="0.6875rem"
+                  radius="0.25rem"
+                />
+              }
+            </th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (_ of rowItems(); track $index) {
+          <tr>
+            @for (_ of columnItems(); track $index; let columnIndex = $index) {
+              <td [style.height.px]="rowHeight()">
+                @if (leadingVisual() && columnIndex === 0) {
+                  <span class="leading-cell">
+                    <ui-skeleton width="2rem" height="2rem" radius="0.5rem" />
+                    <span>
+                      <span class="leading-primary-line"
+                        ><ui-skeleton width="5.5rem" height="0.75rem" radius="0.25rem"
+                      /></span>
+                      <span class="leading-secondary-line"
+                        ><ui-skeleton width="7rem" height="0.625rem" radius="0.25rem"
+                      /></span>
+                    </span>
+                  </span>
+                } @else if (twoLineFirstColumn() && columnIndex === 0) {
+                  <span class="text-leading-cell">
+                    <span class="leading-primary-line"
+                      ><ui-skeleton width="7.5rem" height="0.75rem" radius="0.25rem"
+                    /></span>
+                    <span class="leading-secondary-line"
+                      ><ui-skeleton width="9rem" height="0.625rem" radius="0.25rem"
+                    /></span>
+                  </span>
+                } @else {
+                  <ui-skeleton
+                    [width]="columnIndex % 3 === 0 ? '7.5rem' : '6.5rem'"
+                    height="0.75rem"
+                    radius="0.25rem"
+                  />
+                }
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>

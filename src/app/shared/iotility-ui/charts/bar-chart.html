@@ -1,0 +1,31 @@
+<div class="bar-chart" [class.horizontal]="horizontal()">
+  <ui-chart-canvas class="plot" [option]="option()" (zoomed)="onZoom($event)" />
+  @if (scroll()) {
+    <div class="scroller">
+      <button type="button" class="nav prev" [disabled]="start() === 0" aria-label="Show previous" (click)="page(-1)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+      </button>
+      <div
+        #track
+        class="track"
+        role="scrollbar"
+        tabindex="0"
+        [attr.aria-orientation]="horizontal() ? 'vertical' : 'horizontal'"
+        [attr.aria-valuemin]="1"
+        [attr.aria-valuemax]="total()"
+        [attr.aria-valuenow]="start() + 1"
+        [attr.aria-valuetext]="start() + 1 + '–' + (end() + 1) + ' of ' + total()"
+        [style.--thumb-ratio]="thumbRatio()"
+        [style.--thumb-position]="thumbPosition()"
+        (pointerdown)="onTrackPointerDown($event, track)"
+        (keydown)="onKeydown($event)"
+      >
+        <span class="thumb"></span>
+      </div>
+      <button type="button" class="nav next" [disabled]="end() >= total() - 1" aria-label="Show next" (click)="page(1)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+      </button>
+      <span class="count" aria-hidden="true">{{ start() + 1 }}–{{ end() + 1 }} <i>of</i> {{ total() }}</span>
+    </div>
+  }
+</div>

@@ -1,0 +1,37 @@
+@reference "../../../../styles.css";
+:host { @apply block min-w-0; }
+.table-card { @apply min-w-0 overflow-visible rounded-2xl border border-line bg-white dark:border-dark-line dark:bg-dark-surface; }
+.table-card > header { @apply flex items-center justify-between gap-4 p-4; }
+.table-heading h2 { @apply m-0 text-sm font-semibold text-ink dark:text-white; }
+.table-heading > span { @apply mt-1 flex h-[0.9375rem] items-center; }
+.toolbar-skeleton {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+.search-field-skeleton {
+  @apply flex h-9 w-64 shrink-0 items-center gap-2 rounded-lg border border-line px-3 dark:border-dark-line;
+}
+.export-skeleton {
+  @apply flex h-9 shrink-0 items-center gap-2 rounded-lg border border-line px-3 dark:border-dark-line;
+}
+.filter-field-skeleton {
+  @apply grid w-32 shrink-0 gap-1;
+}
+.filter-field-skeleton > span {
+  @apply flex h-9 w-32 items-center rounded-lg border border-line px-3 dark:border-dark-line;
+}
+.scroll { @apply max-w-full overflow-hidden; }
+table { @apply w-full min-w-[760px] border-collapse text-left; }
+th, td { @apply h-14 border-b border-line px-4 py-3 dark:border-dark-line; }
+th { @apply h-[2.5625rem] text-[11px] font-medium text-muted dark:text-brand-300; }
+.compact-rows td { @apply h-[2.5625rem] py-2; }
+tbody tr:last-child td { @apply border-b-0; }
+.leading-cell { @apply flex items-center gap-2; }
+.leading-cell > span { @apply block; }
+.text-leading-cell { @apply block; }
+.leading-primary-line { @apply flex h-4 items-center; }
+.leading-secondary-line { @apply mt-1 flex h-[0.9375rem] items-center; }

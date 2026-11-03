@@ -61,11 +61,11 @@
               <td class="desk-only num">{{ p.priority }}</td>
               @if (p.status === 'Active') {
                 <td class="desk-only num">
-                  <app-num [value]="s.targeted" />
+                  <span class="num" [uiCountUp]="s.targeted"></span>
                   @if (s.overridden) { <span class="sub" [title]="overriddenTitle(p)">{{ s.overridden }} overridden</span> }
                 </td>
-                <td class="desk-only num"><app-num [value]="s.pending" /></td>
-                <td class="desk-only num" [class.neg]="s.error" [title]="errorTitle(p)"><app-num [value]="s.error" /></td>
+                <td class="desk-only num"><span class="num" [uiCountUp]="s.pending"></span></td>
+                <td class="desk-only num" [class.neg]="s.error" [title]="errorTitle(p)"><span class="num" [uiCountUp]="s.error"></span></td>
                 <td class="desk-only">
                   @if (s.targeted) {
                     <div class="rollout">

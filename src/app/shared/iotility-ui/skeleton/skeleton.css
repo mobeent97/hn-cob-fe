@@ -1,0 +1,49 @@
+@reference "../../../../styles.css";
+
+:host {
+  @apply relative block max-w-full overflow-hidden;
+  border-radius: var(--skeleton-radius);
+}
+
+.skeleton {
+  @apply block size-full bg-line/80 dark:bg-dark-line/70;
+  border-radius: inherit;
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-110%);
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    rgb(255 255 255 / 0.48) 45%,
+    rgb(255 255 255 / 0.2) 55%,
+    transparent 80%
+  );
+  animation: skeleton-shimmer 1.65s ease-in-out infinite;
+}
+
+:host-context(.dark) .skeleton::after {
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    rgb(255 255 255 / 0.08) 45%,
+    rgb(255 255 255 / 0.03) 55%,
+    transparent 80%
+  );
+}
+
+:host:has(.skeleton-circle),
+.skeleton-circle {
+  border-radius: 9999px;
+}
+
+@keyframes skeleton-shimmer {
+  to { transform: translateX(110%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after { animation: none; }
+}

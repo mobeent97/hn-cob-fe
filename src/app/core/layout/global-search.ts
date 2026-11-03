@@ -24,21 +24,22 @@ interface Hit {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="box" [class.open]="open() && q().length > 0">
-      <app-icon name="search" class="lead" />
-      <input
-        #input
-        class="ui-control"
-        type="search"
-        placeholder="Search customers, device IDs, screens"
-        aria-label="Search"
-        [value]="q()"
-        (input)="q.set(input.value); active.set(0); open.set(true)"
-        (focus)="open.set(true)"
-        (keydown.arrowdown)="move(1, $event)"
-        (keydown.arrowup)="move(-1, $event)"
-        (keydown.enter)="choose(hits()[active()])"
-      />
-      <kbd>Ctrl K</kbd>
+      <div class="search-control">
+        <app-icon name="search" [size]="16" />
+        <input
+          #input
+          type="search"
+          placeholder="Search customers, device IDs, screens"
+          aria-label="Search"
+          [value]="q()"
+          (input)="q.set(input.value); active.set(0); open.set(true)"
+          (focus)="open.set(true)"
+          (keydown.arrowdown)="move(1, $event)"
+          (keydown.arrowup)="move(-1, $event)"
+          (keydown.enter)="choose(hits()[active()])"
+        />
+        <kbd>Ctrl K</kbd>
+      </div>
       @if (open() && q().length > 0) {
         <ul class="results" role="listbox">
           @for (h of hits(); track h.kind + h.label; let i = $index) {
@@ -55,26 +56,7 @@ interface Hit {
       }
     </div>
   `,
-  styles: `
-    .box { position: relative; width: min(520px, 100%); display: flex; align-items: center; }
-    .lead { position: absolute; left: 10px; color: var(--muted); pointer-events: none; }
-    .ui-control { padding-left: 32px; padding-right: 64px; background: var(--surface); height: 34px; }
-    .ui-control::-webkit-search-cancel-button { display: none; }
-    kbd {
-      position: absolute; right: 8px; font: 500 11px var(--font); color: var(--muted);
-      border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; background: var(--raised);
-    }
-    .results {
-      position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 70; margin: 0; padding: 4px; list-style: none;
-      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow-float);
-      max-height: 360px; overflow: auto;
-    }
-    li { display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 10px; border-radius: 4px; cursor: pointer; color: var(--muted); }
-    li.active { background: var(--raised); color: var(--text); }
-    .lbl { color: var(--text); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .sub { margin-left: auto; font-size: 12px; white-space: nowrap; }
-    .none { cursor: default; height: auto; padding: 10px; }
-  `,
+  styleUrl: './global-search.css',
 })
 export class GlobalSearch {
   private readonly store = inject(Store);

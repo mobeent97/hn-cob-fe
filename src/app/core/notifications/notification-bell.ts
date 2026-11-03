@@ -18,22 +18,23 @@ import { KIND_META, NotificationFeed } from './notification-feed';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <button
-      class="btn ghost icon bell"
+      type="button"
+      class="bell"
       [attr.aria-label]="unread() ? unread() + ' unread notifications' : 'Notifications'"
       aria-haspopup="dialog"
       [attr.aria-expanded]="open()"
       (click)="$event.stopPropagation(); open.set(!open())"
     >
-      <app-icon name="bell" [size]="17" />
+      <app-icon name="bell" [size]="18" [stroke]="1.7" [class.ring]="pop()" />
       @if (unread()) {
         <span class="badge num" [class.pop]="pop()">{{ unread() > 9 ? '9+' : unread() }}</span>
       }
     </button>
 
     @if (open()) {
-      <section class="panel" role="dialog" aria-label="Notifications" (click)="$event.stopPropagation()">
+      <section class="panel" animate.leave="panel-leave" role="dialog" aria-label="Notifications" (click)="$event.stopPropagation()">
         <header>
-          <h2>Notifications</h2>
+          <div><strong>Notifications</strong><small>Orders, deletion requests and device alerts</small></div>
           <button class="btn ghost sm" [disabled]="!unread()" (click)="store.markAllRead()">
             <app-icon name="check-check" [size]="14" />Mark all read
           </button>
@@ -62,47 +63,7 @@ import { KIND_META, NotificationFeed } from './notification-feed';
       </section>
     }
   `,
-  styles: `
-    :host { position: relative; display: inline-flex; }
-    .bell { position: relative; color: var(--muted); }
-    .badge {
-      position: absolute; top: 2px; right: 1px; min-width: 16px; height: 16px; padding: 0 4px;
-      border-radius: 8px; background: var(--negative); color: var(--on-accent);
-      font-size: 10px; font-weight: 600; line-height: 16px; text-align: center;
-      box-shadow: 0 0 0 2px var(--frame);
-      transition: transform var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out);
-      @starting-style { transform: translate(-6px, 8px) scale(0.6); opacity: 0; }
-    }
-    .badge.pop { animation: pop 500ms var(--ease-bounce); }
-    @keyframes pop { 30% { transform: scale(1.25); } }
-
-    .panel {
-      position: absolute; right: -8px; top: calc(100% + 8px); z-index: 80; width: 380px; max-width: calc(100vw - 24px);
-      background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow-float);
-      transform-origin: top right;
-      transition: opacity var(--duration-quick) var(--ease-out), transform var(--duration-fast) var(--ease-out);
-      @starting-style { opacity: 0; transform: scale(var(--scale-menu)) translateY(-4px); }
-    }
-    header { display: flex; justify-content: space-between; align-items: center; padding: 12px 12px 8px 16px; }
-    ul { list-style: none; margin: 0; padding: 0 6px; max-height: 420px; overflow: auto; }
-    li + li { border-top: 1px solid var(--rule); }
-    .item {
-      width: 100%; display: flex; gap: 10px; align-items: flex-start; text-align: left; border: 0; background: none;
-      padding: 10px; border-radius: 6px; color: var(--text); transition: background-color var(--duration-quick) ease;
-    }
-    .item:hover { background: var(--raised); }
-    .ic { width: 28px; height: 28px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--active); color: var(--muted); }
-    .text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
-    .text strong { font-weight: 500; }
-    li:not(.unread) .text strong { font-weight: 400; color: var(--muted); }
-    .body { color: var(--muted); font-size: 13px; line-height: 18px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .when { color: var(--faint); font-size: 12px; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-top: 6px; flex: none; }
-    .none { padding: 18px 12px; color: var(--muted); }
-    footer { display: flex; justify-content: space-between; padding: 10px 16px; border-top: 1px solid var(--rule); font-weight: 500; }
-    footer a:first-child { color: var(--accent); }
-    footer a:hover { text-decoration: underline; text-underline-offset: 3px; }
-  `,
+  styleUrl: './notification-bell.css',
 })
 export class NotificationBell {
   protected readonly store = inject(Store);

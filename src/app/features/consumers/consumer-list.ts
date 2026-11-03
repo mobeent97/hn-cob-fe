@@ -8,7 +8,7 @@ import { Pager, pageOf } from '../../shared/ui/pager';
 import { Menu, MenuItem } from '../../shared/ui/menu';
 import { Dialog } from '../../shared/ui/dialog';
 import { Toaster } from '../../shared/ui/toast';
-import { AnimatedNumber } from '../../shared/ui/animated-number';
+import { CountUp } from '@iotility/shared-ui';
 import { downloadCsv } from '../../shared/ui/csv';
 import { OrgFilter, OrgTag, ReadOnlyNote, orgContext, writeAccess } from '../tenancy';
 import { simulateLoad } from '../../shared/ui/loading';
@@ -25,7 +25,7 @@ const PLUG_AND_GO_TYPE = 2;
  */
 @Component({
   selector: 'app-consumer-list',
-  imports: [Select, SelectOption, ReactiveFormsModule, Icon, Pager, Menu, Dialog, AnimatedNumber, DatePipe, RelativePipe, TonePipe, OrgTag, OrgFilter, ReadOnlyNote],
+  imports: [Select, SelectOption, ReactiveFormsModule, Icon, Pager, Menu, Dialog, CountUp, DatePipe, RelativePipe, TonePipe, OrgTag, OrgFilter, ReadOnlyNote],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './consumer-list.html',
   styleUrl: './consumer-list.scss',

@@ -1,0 +1,183 @@
+@reference "../../../../styles.css";
+:host {
+  @apply block min-w-0;
+}
+.dropdown-root {
+  @apply relative;
+}
+.dropdown-trigger {
+  @apply contents;
+}
+/* Select-mode triggers get the generic .ui-control .ui-select look (applied in dropdown.ts); this only
+   leaves room for the chevron the component draws on the right. */
+.has-chevron .dropdown-trigger ::ng-deep [dropdown-trigger] {
+  padding-right: 2.25rem;
+}
+.compact.has-chevron .dropdown-trigger ::ng-deep [dropdown-trigger] {
+  padding-right: 1.75rem;
+}
+.compact .dropdown-chevron {
+  @apply right-2 size-3.5;
+}
+.dropdown-chevron {
+  @apply pointer-events-none absolute right-3 top-1/2 z-[1] size-4 text-muted transition-transform;
+  transform: translateY(-50%);
+}
+.dropdown-trigger[aria-expanded='true'] .dropdown-chevron {
+  transform: translateY(-50%) rotate(180deg);
+}
+.dropdown-panel {
+  @apply absolute right-0 top-[calc(100%+0.65rem)] z-[900] w-60 overflow-hidden rounded-xl border border-line bg-white p-2 dark:border-dark-line dark:bg-dark-surface;
+  box-shadow: var(--shadow-popover);
+  /* Open state: clip sits outside the box so the drop shadow is never cut. The morph (dropdown.ts)
+     animates from the trigger's own shape to this. */
+  clip-path: inset(-16px -16px -40px -16px round 12px);
+}
+.dropdown-panel.left {
+  @apply left-0 right-auto;
+}
+.dropdown-panel.match-trigger {
+  @apply left-0 right-auto w-full min-w-full;
+}
+.dropdown-panel.above {
+  @apply bottom-[calc(100%+0.65rem)] top-auto;
+}
+.dropdown-search {
+  @apply mb-2 flex items-center gap-2 rounded-lg border border-line px-2.5 py-2 dark:border-dark-line;
+}
+.dropdown-search input {
+  @apply min-w-0 flex-1 border-0 bg-transparent text-xs text-ink outline-none dark:text-white;
+}
+.dropdown-options {
+  @apply flex max-h-60 flex-col gap-1 overflow-auto;
+}
+.dropdown-option {
+  @apply flex w-full cursor-pointer items-center gap-3 rounded-lg border-0 bg-transparent px-3 py-2.5 text-left text-ink disabled:cursor-not-allowed disabled:opacity-40 dark:text-white;
+}
+.dropdown-option.selected {
+  @apply bg-brand-50 font-semibold text-brand-700 hover:bg-brand-100 dark:bg-brand-600/15 dark:text-brand-300 dark:hover:bg-brand-600/25;
+}
+.dropdown-option.danger {
+  @apply text-danger;
+}
+.option-icon {
+  @apply grid size-8 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-700;
+  :host-context(.dark) & {
+    background: color-mix(in srgb, var(--color-brand-500) 12%, transparent);
+    color: var(--color-brand-300);
+  }
+}
+.option-icon img {
+  @apply size-4;
+}
+.dropdown-option.danger .option-icon {
+  @apply bg-danger/10 text-danger;
+}
+.compact .dropdown-panel {
+  @apply w-52 p-1.5;
+}
+.compact .dropdown-panel.match-trigger {
+  @apply w-full min-w-full;
+}
+.compact .dropdown-options {
+  @apply gap-0.5;
+}
+.compact .dropdown-option {
+  @apply gap-2 px-2 py-1.5;
+}
+.compact .option-icon {
+  @apply size-7 rounded-md;
+}
+.compact .option-icon img {
+  @apply size-3.5;
+}
+.option-copy {
+  @apply min-w-0 flex-1;
+}
+.option-copy strong {
+  @apply block text-xs font-medium;
+}
+.option-copy small {
+  @apply mt-0.5 block truncate text-[10px] text-muted;
+}
+.selection-mark {
+  @apply grid size-4 place-items-center rounded border border-line text-[10px];
+}
+.selection-mark.selected {
+  @apply border-brand-600 bg-brand-600 text-white;
+}
+.empty {
+  @apply p-6 text-center text-xs text-muted;
+}
+
+/* Panel content arrives once the morph is under way; options cascade 18ms apart (capped at 8 rows).
+   Decorative only: rows are clickable the whole time. */
+.dropdown-search {
+  transition: opacity 160ms var(--ease-out) 60ms;
+}
+.dropdown-options > .dropdown-option {
+  transition:
+    opacity 200ms var(--ease-out),
+    transform 260ms var(--ease-spring);
+  transition-delay: calc(min(var(--i, 0), 8) * 18ms + 60ms);
+}
+@starting-style {
+  .dropdown-search {
+    opacity: 0;
+  }
+  .dropdown-options > .dropdown-option {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* Sliding hover highlight: one pill glides between options instead of each row lighting up. */
+.dropdown-options {
+  position: relative;
+}
+.option-highlight {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 0;
+  border-radius: 0.5rem;
+  background: var(--color-brand-50);
+  opacity: 0;
+  pointer-events: none;
+}
+.option-highlight.ready {
+  transition:
+    transform 240ms var(--ease-spring),
+    height 240ms var(--ease-spring),
+    opacity 150ms ease;
+}
+:host-context(.dark) .option-highlight {
+  background: var(--color-dark-canvas);
+}
+.dropdown-options > .dropdown-option {
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dropdown-options > .dropdown-option {
+    transform: none;
+    transition-delay: 0ms;
+  }
+  @starting-style {
+    .dropdown-options > .dropdown-option {
+      transform: none;
+    }
+  }
+  .option-highlight.ready {
+    transition: opacity 150ms ease;
+  }
+}
+/* File-format icons (Excel, PDF) carry their own colour, so they sit on a neutral chip. */
+.option-icon.file-icon {
+  @apply bg-canvas dark:bg-white/5;
+}
+.option-icon.file-icon img {
+  @apply size-[18px];
+}

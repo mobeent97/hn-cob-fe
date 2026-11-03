@@ -1,0 +1,45 @@
+<article class="chart-card" [style.height.px]="height()" [attr.aria-busy]="loading()">
+  <header>
+    <div class="titles">
+      @if (loading()) {
+        <ui-skeleton width="9rem" height="0.85rem" radius="0.3rem" />
+        @if (subtitle()) { <ui-skeleton class="subtitle-skeleton" width="6.5rem" height="0.58rem" radius="0.25rem" /> }
+      } @else {
+        @if (title()) { <h2>{{ title() }}</h2> }
+        @if (subtitle()) { <p>{{ subtitle() }}</p> }
+      }
+    </div>
+    <div class="aside">
+      @if (!loading() && legend().length) {
+        <span class="legend">
+          @for (item of legend(); track item.label) {
+            <span><i [style.background]="item.color" aria-hidden="true"></i>{{ item.label }}</span>
+          }
+        </span>
+      }
+      @if (!loading() && badge()) { <span class="badge">{{ badge() }}</span> }
+      <ng-content select="[chart-actions]" />
+    </div>
+  </header>
+  <div class="body">
+    @if (loading()) {
+      <ui-chart-skeleton [type]="skeleton()" />
+    } @else if (error()) {
+      <div class="state error" role="alert">
+        <span class="state-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 7.5v5m0 3.5h.01" /></svg>
+        </span>
+        <p>{{ error() }}</p>
+      </div>
+    } @else if (empty()) {
+      <div class="state">
+        <span class="state-icon" aria-hidden="true">
+          <svg class="draw-in" viewBox="0 0 48 48"><rect x="6" y="7" width="36" height="30" rx="6" pathLength="1" /><path d="M13 30v-6M20 30V18M27 30v-9M34 30V14" pathLength="1" /></svg>
+        </span>
+        <p>{{ emptyMessage() }}</p>
+      </div>
+    } @else {
+      <div class="content"><ng-content /></div>
+    }
+  </div>
+</article>

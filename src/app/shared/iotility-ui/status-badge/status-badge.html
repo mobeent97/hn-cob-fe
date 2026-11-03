@@ -1,0 +1,17 @@
+<span
+  class="status-badge"
+  [class]="variant()"
+  [class.online]="effectiveOnline()"
+  [class.offline]="!effectiveOnline()"
+  [tooltip]="title()"
+  [attr.aria-label]="title() || null"
+>
+  <i class="status-dot" aria-hidden="true"></i>
+  @if (loading()) {
+    <span class="status-label">
+      <ui-skeleton width="6.5rem" height="0.75rem" radius="0.25rem" />
+    </span>
+  } @else if (showText()) {
+    <span class="status-label">{{ text() }}</span>
+  }
+</span>

@@ -18,19 +18,19 @@
     <div class="kpi">
       <span class="kpi-label">Consumers</span>
       @if (loading()) { <span class="skeleton" style="width:40px;height:30px;margin:3px 0"></span> }
-      @else { <span class="kpi-value"><app-num [value]="total()" /></span> }
+      @else { <span class="kpi-value"><span class="num" [uiCountUp]="total()"></span></span> }
       <span class="kpi-caption num">{{ total() - active() }} inactive</span>
     </div>
     <div class="kpi">
       <span class="kpi-label">Active</span>
       @if (loading()) { <span class="skeleton" style="width:40px;height:30px;margin:3px 0"></span> }
-      @else { <span class="kpi-value"><app-num [value]="active()" /></span> }
+      @else { <span class="kpi-value"><span class="num" [uiCountUp]="active()"></span></span> }
       <span class="kpi-caption num">{{ total() ? ((active() / total()) * 100).toFixed(0) : 0 }}% of consumers</span>
     </div>
     <div class="kpi">
       <span class="kpi-label">Devices in service</span>
       @if (loading()) { <span class="skeleton" style="width:40px;height:30px;margin:3px 0"></span> }
-      @else { <span class="kpi-value"><app-num [value]="inService()" /></span> }
+      @else { <span class="kpi-value"><span class="num" [uiCountUp]="inService()"></span></span> }
       <span class="kpi-caption">Plug & Go, plugged in and reporting</span>
     </div>
   </section>

@@ -8,7 +8,7 @@ import { Tabs, TabItem } from '../../shared/ui/tabs';
 import { Menu, MenuItem } from '../../shared/ui/menu';
 import { Dialog } from '../../shared/ui/dialog';
 import { Toaster } from '../../shared/ui/toast';
-import { AnimatedNumber } from '../../shared/ui/animated-number';
+import { CountUp } from '@iotility/shared-ui';
 import { LineChart } from '../../shared/charts/charts';
 import { simulateLoad } from '../../shared/ui/loading';
 import { STATUS_LABEL } from '../inventory/device-status';
@@ -33,7 +33,7 @@ interface ConfigRow { key: string; meta: SettingMeta; desired: TwinValue; report
  */
 @Component({
   selector: 'app-device-detail',
-  imports: [Select, SelectOption, RouterLink, Icon, Tabs, Menu, Dialog, AnimatedNumber, LineChart, DatePipe, DateTimePipe, RelativePipe, TonePipe, ReadOnlyNote],
+  imports: [Select, SelectOption, RouterLink, Icon, Tabs, Menu, Dialog, CountUp, LineChart, DatePipe, DateTimePipe, RelativePipe, TonePipe, ReadOnlyNote],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './device-detail.html',
   styleUrl: './device-detail.scss',

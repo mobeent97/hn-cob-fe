@@ -46,25 +46,25 @@
           <div class="kpi">
             <span class="kpi-label">Customers</span>
             @if (loading()) { <span class="skeleton" style="width:48px;height:30px;margin:3px 0"></span> }
-            @else { <span class="kpi-value"><app-num [value]="stats().customers" /></span> }
+            @else { <span class="kpi-value"><span class="num" [uiCountUp]="stats().customers"></span></span> }
             <span class="kpi-caption num">@if (o.limits.maxCustomers) { of {{ o.limits.maxCustomers }} allowed } @else { no limit }</span>
           </div>
           <div class="kpi">
             <span class="kpi-label">Devices in service</span>
             @if (loading()) { <span class="skeleton" style="width:48px;height:30px;margin:3px 0"></span> }
-            @else { <span class="kpi-value"><app-num [value]="stats().inService" /></span> }
+            @else { <span class="kpi-value"><span class="num" [uiCountUp]="stats().inService"></span></span> }
             <span class="kpi-caption num">of {{ stats().devices }} devices it holds</span>
           </div>
           <div class="kpi">
             <span class="kpi-label">Users</span>
             @if (loading()) { <span class="skeleton" style="width:40px;height:30px;margin:3px 0"></span> }
-            @else { <span class="kpi-value"><app-num [value]="stats().users" /></span> }
+            @else { <span class="kpi-value"><span class="num" [uiCountUp]="stats().users"></span></span> }
             <span class="kpi-caption num">@if (o.limits.maxUsers) { of {{ o.limits.maxUsers }} allowed } @else { no limit }</span>
           </div>
           <div class="kpi">
             <span class="kpi-label">Features</span>
             @if (loading()) { <span class="skeleton" style="width:40px;height:30px;margin:3px 0"></span> }
-            @else { <span class="kpi-value"><app-num [value]="featureTotal().on" /></span> }
+            @else { <span class="kpi-value"><span class="num" [uiCountUp]="featureTotal().on"></span></span> }
             <span class="kpi-caption num">of {{ featureTotal().of }} it could have</span>
           </div>
         </section>
