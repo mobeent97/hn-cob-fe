@@ -113,7 +113,8 @@ export class Dashboard {
       label: p.name,
       value: p.devices,
       display: fmtNum(p.devices),
-      sub: `${p.customers} ${p.customers === 1 ? 'customer' : 'customers'}`,
+      // The card subtitle says the brackets are the customer count, so the label stays short: "Enterprise (6)".
+      sub: String(p.customers),
     })),
   );
 

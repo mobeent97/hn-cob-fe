@@ -126,7 +126,7 @@
       </div>
     </section>
 
-    <section class="card span-4">
+    <section class="card span-4 tall">
       <div class="card-head"><h2>Needs attention</h2></div>
       <div class="card-body">
         <ul class="attention">
@@ -168,7 +168,7 @@
       </div>
     </section>
 
-    <ui-chart-card class="span-6" title="Devices in service by package" subtitle="Customer count in brackets" [height]="300">
+    <ui-chart-card class="span-8" title="Devices in service by package" subtitle="Customer count in brackets" [height]="300">
       @if (can.packages()) { <a chart-actions class="btn ghost sm" routerLink="/packages">Packages</a> }
       <ui-bar-chart
         [horizontal]="true"
@@ -180,7 +180,7 @@
       />
     </ui-chart-card>
 
-    <section class="card span-6">
+    <section class="card span-12">
       <div class="card-head">
         <h2>Recently added customers</h2>
         @if (can.customers()) { <a class="btn ghost sm" routerLink="/customers">View all</a> }

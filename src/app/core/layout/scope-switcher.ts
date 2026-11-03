@@ -1,4 +1,7 @@
-import { ChangeDetectionStrategy, Component, ElementRef, HostListener, computed, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy, Component, DestroyRef, ElementRef, HostListener, computed, effect, inject, input, signal,
+  viewChild,
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { Store } from '../data/store';
 import { Icon } from '../../shared/ui/icon';
@@ -7,6 +10,8 @@ import { Tooltip } from '@iotility/shared-ui';
 /**
  * The tenant scope, under the product name. Platform users (HyperNym) choose "All organizations"
  * or one tenant, and every list follows. Partner users see their own organization, fixed.
+ * The list opens in the browser's top layer (a popover), so the sidebar's overflow clip — which its collapse
+ * animation needs — can't cut it off, even on the 5rem rail.
  */
 @Component({
   selector: 'app-scope-switcher',
@@ -14,16 +19,16 @@ import { Tooltip } from '@iotility/shared-ui';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (store.crossTenant()) {
-      <button class="trigger" aria-haspopup="listbox" [tooltip]="store.scopeOrg()?.name ?? 'All organizations'" [position]="'right'" [disabled]="!compact()" [attr.aria-expanded]="open()" (click)="$event.stopPropagation(); open.set(!open())">
+      <button #trigger class="trigger" aria-haspopup="listbox" [tooltip]="store.scopeOrg()?.name ?? 'All organizations'" [position]="'right'" [disabled]="!compact()" [attr.aria-expanded]="open()" (click)="toggle($event)">
         <span class="sw" [style.background]="store.scopeOrg()?.brandColour ?? 'var(--color-brand-400)'"></span>
         <span class="text">
           <strong>{{ store.scopeOrg()?.name ?? 'All organizations' }}</strong>
           <small>{{ store.scopeOrg() ? store.scopeOrg()!.kind : orgs().length + ' organizations' }}</small>
         </span>
-        <app-icon name="chevrons-up-down" [size]="14" />
+        @if (!compact()) { <app-icon name="chevrons-up-down" [size]="14" /> }
       </button>
       @if (open()) {
-        <ul class="pop" role="listbox" aria-label="Organization">
+        <ul #pop class="pop" popover="manual" role="listbox" aria-label="Organization" [style.top.px]="pos().top" [style.left.px]="pos().left">
           <li>
             <button role="option" [attr.aria-selected]="store.activeOrgId() === null" (click)="choose(null)">
               <span class="sw all"></span>
@@ -63,6 +68,32 @@ export class ScopeSwitcher {
   readonly compact = input(false);
   protected readonly open = signal(false);
   protected readonly orgs = computed(() => this.store.organizations());
+  protected readonly pos = signal({ top: 0, left: 0 });
+  private readonly triggerEl = viewChild<ElementRef<HTMLElement>>('trigger');
+  private readonly popEl = viewChild<ElementRef<HTMLElement>>('pop');
+
+  constructor() {
+    // Promote the list to the top layer as soon as it renders.
+    effect(() => {
+      const pop = this.popEl()?.nativeElement;
+      if (pop && !pop.matches(':popover-open')) pop.showPopover();
+    });
+    // Positioned against the viewport, so a resize would leave it behind: close instead.
+    const close = () => this.open.set(false);
+    window.addEventListener('resize', close);
+    inject(DestroyRef).onDestroy(() => window.removeEventListener('resize', close));
+  }
+
+  /** Opens below the trigger, left-aligned to it and kept on screen. */
+  protected toggle(event: MouseEvent) {
+    event.stopPropagation();
+    if (!this.open()) {
+      const r = this.triggerEl()!.nativeElement.getBoundingClientRect();
+      const width = 288; // .pop is w-72
+      this.pos.set({ top: r.bottom + 8, left: Math.max(8, Math.min(r.left, window.innerWidth - width - 8)) });
+    }
+    this.open.update((v) => !v);
+  }
 
   protected choose(id: number | null) {
     this.store.activeOrgId.set(id);

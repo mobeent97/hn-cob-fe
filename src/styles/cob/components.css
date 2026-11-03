@@ -37,9 +37,15 @@
     @apply transition-colors hover:text-brand-600 dark:hover:text-white;
   }
 
-  /* 12-column grid; every span stacks below 1100px. */
+  /*
+   * 12-column grid; every span stacks below 1100px. Cards in a row stretch to the row's height, so a short card
+   * beside a tall one doesn't leave a gap under it. A .tall card spans two rows (a long list beside two shorter ones).
+   */
   .grid {
-    @apply grid grid-cols-12 items-start gap-4;
+    @apply grid grid-cols-12 items-stretch gap-4;
+  }
+  .grid > .tall {
+    grid-row: span 2;
   }
   .span-3 {
     grid-column: span 3;
@@ -65,6 +71,9 @@
   @media (max-width: 1100px) {
     .grid > [class*='span-'] {
       grid-column: 1 / -1;
+    }
+    .grid > .tall {
+      grid-row: auto;
     }
   }
 

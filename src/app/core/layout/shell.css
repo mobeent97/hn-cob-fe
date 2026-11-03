@@ -112,6 +112,7 @@
 }
 .brand-mark {
   @apply h-9 w-auto shrink-0;
+  transition: opacity var(--duration-hover) ease;
 }
 .brand-text {
   @apply min-w-0;
@@ -138,11 +139,27 @@
 .brand-toggle app-icon {
   transition: transform var(--sidebar-motion);
 }
+/*
+ * Rail: the logo sits centred over the icon column; hovering the brand (or focusing the toggle) swaps it for the
+ * expand chevron in the same spot.
+ */
 .sidebar.collapsed .brand {
-  @apply justify-center gap-1 px-2;
+  @apply relative justify-center px-0;
 }
 .sidebar.collapsed .brand-link {
-  @apply flex-none;
+  @apply flex-none justify-center gap-0;
+}
+.sidebar.collapsed .brand-toggle {
+  @apply absolute inset-0 m-auto size-9 bg-white/10 text-white opacity-0;
+  transition: opacity var(--duration-hover) ease;
+}
+.sidebar.collapsed .brand:hover .brand-toggle,
+.sidebar.collapsed .brand-toggle:focus-visible {
+  @apply opacity-100;
+}
+.sidebar.collapsed .brand:hover .brand-mark,
+.sidebar.collapsed .brand:has(.brand-toggle:focus-visible) .brand-mark {
+  @apply opacity-0;
 }
 .sidebar.collapsed .brand-text {
   max-width: 0;
@@ -173,6 +190,10 @@
 
 nav {
   @apply relative flex-1 overflow-x-hidden overflow-y-auto px-2 py-3;
+}
+/* On the rail the scrollbar would push the icons off-centre: keep an equal gutter on both sides. */
+.sidebar.collapsed nav {
+  scrollbar-gutter: stable both-edges;
 }
 .nav-hover {
   position: absolute;

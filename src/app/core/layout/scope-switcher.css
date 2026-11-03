@@ -41,16 +41,17 @@ button.trigger {
 :host(.compact) .trigger {
   @apply mx-auto size-9 justify-center p-0;
 }
-:host(.compact) .text,
-:host(.compact) .trigger app-icon {
+:host(.compact) .trigger .text {
   @apply hidden;
 }
-:host(.compact) .sw {
+:host(.compact) .trigger .sw {
   @apply size-3;
 }
 
+/* A popover in the top layer: fixed to the viewport at the top/left the component measures. */
 .pop {
-  @apply absolute top-[calc(100%+0.5rem)] left-0 z-[1700] m-0 w-72 list-none rounded-xl border border-line bg-white p-2 dark:border-dark-line dark:bg-dark-surface;
+  @apply fixed m-0 w-72 list-none overflow-visible rounded-xl border border-line bg-white p-2 text-ink dark:border-dark-line dark:bg-dark-surface dark:text-white;
+  inset: auto;
   box-shadow: var(--shadow-popover);
   transform-origin: top left;
   transition:

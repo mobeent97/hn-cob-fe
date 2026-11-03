@@ -5,7 +5,7 @@
   @apply flex items-center gap-5;
 }
 .donut {
-  @apply size-32 shrink-0;
+  @apply size-40 shrink-0;
 }
 .legend-table {
   @apply flex-1;
