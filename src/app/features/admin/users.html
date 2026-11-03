@@ -31,7 +31,7 @@
       <div class="left">
         <label class="search">
           <app-icon name="search" />
-          <input class="input" type="search" placeholder="Name, username, email or manager" aria-label="Search users"
+          <input class="ui-control" type="search" placeholder="Name, username, email or manager" aria-label="Search users"
                  [value]="q()" (input)="q.set($any($event.target).value)" />
         </label>
       </div>
@@ -165,19 +165,19 @@
     }
     <div class="field full">
       <label for="u-name">Full name<span class="req">*</span></label>
-      <input id="u-name" class="input" maxlength="120" autocomplete="off" [value]="draft().name" (input)="set('name', $any($event.target).value)"
+      <input id="u-name" class="ui-control" maxlength="120" autocomplete="off" [value]="draft().name" (input)="set('name', $any($event.target).value)"
              [class.invalid]="tried() && errors().name" />
       @if (tried() && errors().name) { <span class="error">{{ errors().name }}</span> }
     </div>
     <div class="field">
       <label for="u-email">Work email<span class="req">*</span></label>
-      <input id="u-email" class="input" type="email" autocomplete="off" [value]="draft().email" (input)="setEmail($any($event.target).value)"
+      <input id="u-email" class="ui-control" type="email" autocomplete="off" [value]="draft().email" (input)="setEmail($any($event.target).value)"
              [class.invalid]="tried() && errors().email" />
       @if (tried() && errors().email) { <span class="error">{{ errors().email }}</span> }
     </div>
     <div class="field">
       <label for="u-user">Username<span class="req">*</span></label>
-      <input id="u-user" class="input" autocomplete="off" spellcheck="false" [value]="draft().username" (input)="set('username', $any($event.target).value.trim().toLowerCase())"
+      <input id="u-user" class="ui-control" autocomplete="off" spellcheck="false" [value]="draft().username" (input)="set('username', $any($event.target).value.trim().toLowerCase())"
              [class.invalid]="tried() && errors().username" />
       @if (tried() && errors().username) { <span class="error">{{ errors().username }}</span> }
     </div>

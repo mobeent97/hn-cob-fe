@@ -176,7 +176,7 @@
               @if (editable()) {
                 <div class="field">
                   <label for="lim-c">Maximum customers</label>
-                  <input id="lim-c" class="input num" inputmode="numeric" placeholder="No limit" [value]="maxCustomers()" (input)="maxCustomers.set($any($event.target).value)"
+                  <input id="lim-c" class="ui-control num" inputmode="numeric" placeholder="No limit" [value]="maxCustomers()" (input)="maxCustomers.set($any($event.target).value)"
                          [class.invalid]="limitErrors().customers" />
                   @if (limitErrors().customers) { <span class="error">{{ limitErrors().customers }}</span> }
                   @else { <span class="hint">Leave empty for no limit.</span> }
@@ -201,7 +201,7 @@
               @if (editable()) {
                 <div class="field">
                   <label for="lim-u">Maximum users</label>
-                  <input id="lim-u" class="input num" inputmode="numeric" placeholder="No limit" [value]="maxUsers()" (input)="maxUsers.set($any($event.target).value)"
+                  <input id="lim-u" class="ui-control num" inputmode="numeric" placeholder="No limit" [value]="maxUsers()" (input)="maxUsers.set($any($event.target).value)"
                          [class.invalid]="limitErrors().users" />
                   @if (limitErrors().users) { <span class="error">{{ limitErrors().users }}</span> }
                   @else { <span class="hint">Leave empty for no limit.</span> }
@@ -317,12 +317,12 @@
       <div class="form">
         <div class="field">
           <label for="p-name">Name<span class="req">*</span></label>
-          <input id="p-name" class="input" maxlength="60" [value]="p.name" (input)="setP('name', $any($event.target).value)" [class.invalid]="profileTried() && e.name" />
+          <input id="p-name" class="ui-control" maxlength="60" [value]="p.name" (input)="setP('name', $any($event.target).value)" [class.invalid]="profileTried() && e.name" />
           @if (profileTried() && e.name) { <span class="error">{{ e.name }}</span> }
         </div>
         <div class="field">
           <label for="p-legal">Legal name<span class="req">*</span></label>
-          <input id="p-legal" class="input" maxlength="120" [value]="p.legalName" (input)="setP('legalName', $any($event.target).value)" [class.invalid]="profileTried() && e.legalName" />
+          <input id="p-legal" class="ui-control" maxlength="120" [value]="p.legalName" (input)="setP('legalName', $any($event.target).value)" [class.invalid]="profileTried() && e.legalName" />
           @if (profileTried() && e.legalName) { <span class="error">{{ e.legalName }}</span> }
         </div>
         <fieldset class="field">
@@ -346,18 +346,18 @@
         <div class="sep"></div>
         <div class="field">
           <label for="p-cname">Contact name<span class="req">*</span></label>
-          <input id="p-cname" class="input" maxlength="80" [value]="p.contactName" (input)="setP('contactName', $any($event.target).value)" [class.invalid]="profileTried() && e.contactName" />
+          <input id="p-cname" class="ui-control" maxlength="80" [value]="p.contactName" (input)="setP('contactName', $any($event.target).value)" [class.invalid]="profileTried() && e.contactName" />
           @if (profileTried() && e.contactName) { <span class="error">{{ e.contactName }}</span> }
         </div>
         <div class="pair">
           <div class="field">
             <label for="p-cemail">Contact email<span class="req">*</span></label>
-            <input id="p-cemail" class="input" type="email" [value]="p.contactEmail" (input)="setP('contactEmail', $any($event.target).value)" [class.invalid]="profileTried() && e.contactEmail" />
+            <input id="p-cemail" class="ui-control" type="email" [value]="p.contactEmail" (input)="setP('contactEmail', $any($event.target).value)" [class.invalid]="profileTried() && e.contactEmail" />
             @if (profileTried() && e.contactEmail) { <span class="error">{{ e.contactEmail }}</span> }
           </div>
           <div class="field">
             <label for="p-cphone">Contact phone<span class="req">*</span></label>
-            <input id="p-cphone" class="input num" type="tel" [value]="p.contactPhone" (input)="setP('contactPhone', $any($event.target).value)" [class.invalid]="profileTried() && e.contactPhone" />
+            <input id="p-cphone" class="ui-control num" type="tel" [value]="p.contactPhone" (input)="setP('contactPhone', $any($event.target).value)" [class.invalid]="profileTried() && e.contactPhone" />
             @if (profileTried() && e.contactPhone) { <span class="error">{{ e.contactPhone }}</span> }
           </div>
         </div>
@@ -389,12 +389,12 @@
       <div class="form">
         <div class="field">
           <label for="i-name">Full name<span class="req">*</span></label>
-          <input id="i-name" class="input" maxlength="80" [value]="iv.name" (input)="invite.set({ name: $any($event.target).value, email: iv.email })" [class.invalid]="inviteTried() && ie.name" />
+          <input id="i-name" class="ui-control" maxlength="80" [value]="iv.name" (input)="invite.set({ name: $any($event.target).value, email: iv.email })" [class.invalid]="inviteTried() && ie.name" />
           @if (inviteTried() && ie.name) { <span class="error">{{ ie.name }}</span> }
         </div>
         <div class="field">
           <label for="i-email">Work email<span class="req">*</span></label>
-          <input id="i-email" class="input" type="email" [value]="iv.email" (input)="invite.set({ name: iv.name, email: $any($event.target).value })" [class.invalid]="inviteTried() && ie.email" />
+          <input id="i-email" class="ui-control" type="email" [value]="iv.email" (input)="invite.set({ name: iv.name, email: $any($event.target).value })" [class.invalid]="inviteTried() && ie.email" />
           @if (inviteTried() && ie.email) { <span class="error">{{ ie.email }}</span> }
           @else { <span class="hint">We email them a sign-in link, valid for 7 days.</span> }
         </div>

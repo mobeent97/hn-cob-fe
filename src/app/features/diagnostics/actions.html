@@ -15,7 +15,7 @@
       <div class="left">
         <label class="search">
           <app-icon name="search" />
-          <input class="input" type="search" placeholder="Name, endpoint or key" aria-label="Search actions"
+          <input class="ui-control" type="search" placeholder="Name, endpoint or key" aria-label="Search actions"
                  [value]="q()" (input)="q.set($any($event.target).value)" />
         </label>
       </div>
@@ -88,7 +88,7 @@
   <div class="form">
     <div class="field">
       <label for="a-name">Action name<span class="req">*</span></label>
-      <input id="a-name" class="input" maxlength="60" placeholder="e.g. Beep" [value]="draft().name"
+      <input id="a-name" class="ui-control" maxlength="60" placeholder="e.g. Beep" [value]="draft().name"
              (input)="set('name', $any($event.target).value)" [class.invalid]="tried() && errors().name" />
       @if (tried() && errors().name) { <span class="error">{{ errors().name }}</span> }
     </div>
@@ -96,7 +96,7 @@
       <label for="a-ep">Endpoint<span class="req">*</span></label>
       <div class="input-group">
         <span class="prefix mono">POST</span>
-        <input id="a-ep" class="input mono" maxlength="80" autocomplete="off" spellcheck="false" [value]="draft().endpoint"
+        <input id="a-ep" class="ui-control mono" maxlength="80" autocomplete="off" spellcheck="false" [value]="draft().endpoint"
                (input)="set('endpoint', $any($event.target).value.trim())" [class.invalid]="tried() && errors().endpoint" />
       </div>
       @if (tried() && errors().endpoint) { <span class="error">{{ errors().endpoint }}</span> }
@@ -104,13 +104,13 @@
     <div class="pair">
       <div class="field">
         <label for="a-param">Parameter<span class="req">*</span></label>
-        <input id="a-param" class="input mono" maxlength="40" placeholder="is_beep" autocomplete="off" spellcheck="false" [value]="draft().parameter"
+        <input id="a-param" class="ui-control mono" maxlength="40" placeholder="is_beep" autocomplete="off" spellcheck="false" [value]="draft().parameter"
                (input)="set('parameter', $any($event.target).value.trim())" [class.invalid]="tried() && errors().parameter" />
         @if (tried() && errors().parameter) { <span class="error">{{ errors().parameter }}</span> }
       </div>
       <div class="field">
         <label for="a-key">Response key<span class="req">*</span></label>
-        <input id="a-key" class="input mono" maxlength="40" placeholder="is_beep" autocomplete="off" spellcheck="false" [value]="draft().responseKey"
+        <input id="a-key" class="ui-control mono" maxlength="40" placeholder="is_beep" autocomplete="off" spellcheck="false" [value]="draft().responseKey"
                (input)="set('responseKey', $any($event.target).value.trim())" [class.invalid]="tried() && errors().responseKey" />
         @if (tried() && errors().responseKey) { <span class="error">{{ errors().responseKey }}</span> }
       </div>
@@ -134,7 +134,7 @@
           <label for="s-find">Device</label>
           <label class="search wide">
             <app-icon name="search" />
-            <input id="s-find" class="input" type="search" placeholder="Device ID, IMEI or plate" [value]="deviceQ()" (input)="deviceQ.set($any($event.target).value)" />
+            <input id="s-find" class="ui-control" type="search" placeholder="Device ID, IMEI or plate" [value]="deviceQ()" (input)="deviceQ.set($any($event.target).value)" />
           </label>
           <app-select aria-label="Device" [value]="deviceId() ?? ''" (valueChange)="pick($event)">
             @if (!deviceOptions().length) { <app-option value="">No device matches</app-option> }
@@ -159,7 +159,7 @@
           <div class="notice"><app-icon name="alert" /><span>The engine won't start again until someone sends the release command. Check the vehicle is parked.</span></div>
           <div class="field">
             <label for="s-plate">Type the plate <span class="mono">{{ d.plate }}</span> to confirm</label>
-            <input id="s-plate" class="input mono" autocomplete="off" spellcheck="false" [value]="typedPlate()" (input)="typedPlate.set($any($event.target).value)" />
+            <input id="s-plate" class="ui-control mono" autocomplete="off" spellcheck="false" [value]="typedPlate()" (input)="typedPlate.set($any($event.target).value)" />
           </div>
         }
 

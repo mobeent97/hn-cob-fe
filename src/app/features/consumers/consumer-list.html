@@ -40,7 +40,7 @@
       <div class="left">
         <label class="search">
           <app-icon name="search" />
-          <input class="input" type="search" placeholder="Name, email, phone or Q-ID" aria-label="Search consumers"
+          <input class="ui-control" type="search" placeholder="Name, email, phone or Q-ID" aria-label="Search consumers"
                  [value]="q()" (input)="q.set($any($event.target).value)" />
         </label>
         <label class="sr-only" for="c-status">Status</label>
@@ -136,17 +136,17 @@
   <form id="consumer-form" class="c-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
     <div class="field">
       <label for="c-first">First name<span class="req">*</span></label>
-      <input id="c-first" class="input" formControlName="firstName" autocomplete="given-name" [class.invalid]="err(form.controls.firstName, 'x')" />
+      <input id="c-first" class="ui-control" formControlName="firstName" autocomplete="given-name" [class.invalid]="err(form.controls.firstName, 'x')" />
       @if (err(form.controls.firstName, 'a first name'); as e) { <span class="error">{{ e }}</span> }
     </div>
     <div class="field">
       <label for="c-last">Last name<span class="req">*</span></label>
-      <input id="c-last" class="input" formControlName="lastName" autocomplete="family-name" [class.invalid]="err(form.controls.lastName, 'x')" />
+      <input id="c-last" class="ui-control" formControlName="lastName" autocomplete="family-name" [class.invalid]="err(form.controls.lastName, 'x')" />
       @if (err(form.controls.lastName, 'a last name'); as e) { <span class="error">{{ e }}</span> }
     </div>
     <div class="field full">
       <label for="c-email">Email<span class="req">*</span></label>
-      <input id="c-email" class="input" type="email" formControlName="email" autocomplete="email" [class.invalid]="err(form.controls.email, 'x')" />
+      <input id="c-email" class="ui-control" type="email" formControlName="email" autocomplete="email" [class.invalid]="err(form.controls.email, 'x')" />
       @if (err(form.controls.email, 'an email', 'Enter an email like name@mail.com.'); as e) { <span class="error">{{ e }}</span> }
     </div>
     <div class="field">
@@ -155,13 +155,13 @@
         <app-select formControlName="dial" aria-label="Dial code">
           @for (c of store.countries; track c.code) { <app-option [value]="c.dial" [hint]="c.name">{{ c.dial }}</app-option> }
         </app-select>
-        <input id="c-phone" class="input num" formControlName="phone" inputmode="tel" autocomplete="tel-national" [class.invalid]="err(form.controls.phone, 'x')" />
+        <input id="c-phone" class="ui-control num" formControlName="phone" inputmode="tel" autocomplete="tel-national" [class.invalid]="err(form.controls.phone, 'x')" />
       </div>
       @if (err(form.controls.phone, 'a phone number', 'Use 7 to 15 digits, without the dial code.'); as e) { <span class="error">{{ e }}</span> }
     </div>
     <div class="field">
       <label for="c-qid">Q-ID or passport<span class="req">*</span></label>
-      <input id="c-qid" class="input mono" formControlName="qid" [class.invalid]="err(form.controls.qid, 'x')" />
+      <input id="c-qid" class="ui-control mono" formControlName="qid" [class.invalid]="err(form.controls.qid, 'x')" />
       @if (err(form.controls.qid, 'a Q-ID or passport number', 'Use 6 to 20 letters, digits or dashes.'); as e) { <span class="error">{{ e }}</span> }
     </div>
   </form>

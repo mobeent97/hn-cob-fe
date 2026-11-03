@@ -213,7 +213,7 @@ dd.neg {
   .edit-cell {
     padding-top: 8px;
     padding-bottom: 8px;
-    .input,
+    .ui-control,
     app-select {
       width: 180px;
     }
@@ -235,7 +235,7 @@ dd.neg {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  .input {
+  .ui-control {
     width: 120px !important;
     text-align: right;
   }

@@ -1,0 +1,77 @@
+/*
+ * COB base: page background, type defaults and a few text helpers on top of Tailwind's preflight and
+ * IoTility's theme.css (which already sets the font, focus ring, press feedback and route fade-in).
+ */
+@layer base {
+  html {
+    @apply bg-canvas dark:bg-dark-canvas;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-canvas text-[13px] leading-5 text-ink dark:bg-dark-canvas dark:text-white;
+  }
+
+  /* Page title, card title and sub-heading, as FleetPoint pages size them. */
+  h1 {
+    @apply text-xl font-bold;
+  }
+  h2 {
+    @apply text-sm font-semibold;
+  }
+  h3 {
+    @apply text-[13px] font-semibold;
+  }
+
+  ::selection {
+    @apply bg-brand-100 text-ink dark:bg-brand-600/40 dark:text-white;
+  }
+}
+
+/* Text helpers used across templates. */
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* IDs, IMEIs and keys only. */
+.mono {
+  @apply font-mono text-xs tracking-tight;
+}
+
+.muted {
+  @apply text-muted;
+}
+
+.unit {
+  @apply ml-0.5 text-[0.86em] text-muted;
+}
+
+.dash {
+  @apply text-muted;
+}
+
+/* Theme switch: one quick cross-fade of the whole window (Theme service, View Transitions API). */
+html.theme-swap::view-transition-old(root) {
+  animation: theme-swap-out var(--duration-popover) var(--ease-out) both;
+}
+html.theme-swap::view-transition-new(root) {
+  animation: theme-swap-in var(--duration-popover) var(--ease-out) both;
+}
+@keyframes theme-swap-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes theme-swap-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none;
+  }
+}

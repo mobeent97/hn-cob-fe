@@ -112,7 +112,7 @@
     <div class="pair">
       <div class="field">
         <label for="g-name">Role name<span class="req">*</span></label>
-        <input id="g-name" class="input" maxlength="60" [readOnly]="readOnly()" [value]="draft().name" (input)="set('name', $any($event.target).value)"
+        <input id="g-name" class="ui-control" maxlength="60" [readOnly]="readOnly()" [value]="draft().name" (input)="set('name', $any($event.target).value)"
                [class.invalid]="tried() && errors().name" />
         @if (tried() && errors().name) { <span class="error">{{ errors().name }}</span> }
       </div>
@@ -128,7 +128,7 @@
     </div>
     <div class="field">
       <label for="g-desc">Description<span class="req">*</span></label>
-      <input id="g-desc" class="input" maxlength="160" [readOnly]="readOnly()" [value]="draft().description" (input)="set('description', $any($event.target).value)"
+      <input id="g-desc" class="ui-control" maxlength="160" [readOnly]="readOnly()" [value]="draft().description" (input)="set('description', $any($event.target).value)"
              [class.invalid]="tried() && errors().description" />
       @if (tried() && errors().description) { <span class="error">{{ errors().description }}</span> }
     </div>

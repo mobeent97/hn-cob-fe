@@ -27,7 +27,7 @@ interface Hit {
       <app-icon name="search" class="lead" />
       <input
         #input
-        class="input"
+        class="ui-control"
         type="search"
         placeholder="Search customers, device IDs, screens"
         aria-label="Search"
@@ -58,8 +58,8 @@ interface Hit {
   styles: `
     .box { position: relative; width: min(520px, 100%); display: flex; align-items: center; }
     .lead { position: absolute; left: 10px; color: var(--muted); pointer-events: none; }
-    .input { padding-left: 32px; padding-right: 64px; background: var(--surface); height: 34px; }
-    .input::-webkit-search-cancel-button { display: none; }
+    .ui-control { padding-left: 32px; padding-right: 64px; background: var(--surface); height: 34px; }
+    .ui-control::-webkit-search-cancel-button { display: none; }
     kbd {
       position: absolute; right: 8px; font: 500 11px var(--font); color: var(--muted);
       border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; background: var(--raised);

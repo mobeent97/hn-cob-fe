@@ -26,7 +26,7 @@
             <div class="field">
               <label for="pw-min">Minimum length</label>
               <div class="input-group">
-                <input id="pw-min" class="input num" type="number" min="8" max="64" [value]="password().minLength"
+                <input id="pw-min" class="ui-control num" type="number" min="8" max="64" [value]="password().minLength"
                        (input)="setPassword('minLength', num($event))" [class.invalid]="err('password.minLength')" />
                 <span class="suffix">characters</span>
               </div>
@@ -35,7 +35,7 @@
             <div class="field">
               <label for="pw-exp">Expires after</label>
               <div class="input-group">
-                <input id="pw-exp" class="input num" type="number" min="0" max="365" [value]="password().expiryDays"
+                <input id="pw-exp" class="ui-control num" type="number" min="0" max="365" [value]="password().expiryDays"
                        (input)="setPassword('expiryDays', num($event))" [class.invalid]="err('password.expiryDays')" />
                 <span class="suffix">days</span>
               </div>
@@ -45,7 +45,7 @@
             <div class="field">
               <label for="pw-hist">Remember last</label>
               <div class="input-group">
-                <input id="pw-hist" class="input num" type="number" min="0" max="24" [value]="password().history"
+                <input id="pw-hist" class="ui-control num" type="number" min="0" max="24" [value]="password().history"
                        (input)="setPassword('history', num($event))" [class.invalid]="err('password.history')" />
                 <span class="suffix">passwords</span>
               </div>
@@ -132,7 +132,7 @@
             <div class="field">
               <label for="lg-sess">Session timeout</label>
               <div class="input-group">
-                <input id="lg-sess" class="input num" type="number" min="5" max="480" [value]="login().sessionMinutes"
+                <input id="lg-sess" class="ui-control num" type="number" min="5" max="480" [value]="login().sessionMinutes"
                        (input)="setLogin('sessionMinutes', num($event))" [class.invalid]="err('login.sessionMinutes')" />
                 <span class="suffix">min</span>
               </div>
@@ -141,7 +141,7 @@
             <div class="field">
               <label for="lg-att">Lock after</label>
               <div class="input-group">
-                <input id="lg-att" class="input num" type="number" min="3" max="10" [value]="login().maxAttempts"
+                <input id="lg-att" class="ui-control num" type="number" min="3" max="10" [value]="login().maxAttempts"
                        (input)="setLogin('maxAttempts', num($event))" [class.invalid]="err('login.maxAttempts')" />
                 <span class="suffix">attempts</span>
               </div>
@@ -150,7 +150,7 @@
             <div class="field">
               <label for="lg-lock">Lock for</label>
               <div class="input-group">
-                <input id="lg-lock" class="input num" type="number" min="1" max="1440" [value]="login().lockMinutes"
+                <input id="lg-lock" class="ui-control num" type="number" min="1" max="1440" [value]="login().lockMinutes"
                        (input)="setLogin('lockMinutes', num($event))" [class.invalid]="err('login.lockMinutes')" />
                 <span class="suffix">min</span>
               </div>
@@ -245,13 +245,13 @@
             <div class="quiet">
               <div class="field">
                 <label for="nt-from">From</label>
-                <input id="nt-from" class="input num" type="time" [value]="notif().from" [class.invalid]="quietError().from"
+                <input id="nt-from" class="ui-control num" type="time" [value]="notif().from" [class.invalid]="quietError().from"
                        (input)="setNotif('from', $any($event.target).value)" />
                 @if (quietError().from) { <span class="error">{{ quietError().from }}</span> }
               </div>
               <div class="field">
                 <label for="nt-to">To</label>
-                <input id="nt-to" class="input num" type="time" [value]="notif().to" [class.invalid]="quietError().to"
+                <input id="nt-to" class="ui-control num" type="time" [value]="notif().to" [class.invalid]="quietError().to"
                        (input)="setNotif('to', $any($event.target).value)" />
                 @if (quietError().to) { <span class="error">{{ quietError().to }}</span> }
               </div>

@@ -118,7 +118,7 @@
       <div class="left">
         <label class="search">
           <app-icon name="search" />
-          <input class="input" type="search" placeholder="Device ID or customer" aria-label="Search registrations"
+          <input class="ui-control" type="search" placeholder="Device ID or customer" aria-label="Search registrations"
                  [value]="q()" (input)="q.set($any($event.target).value)" />
         </label>
         <label class="sr-only" for="pv-type">Device type</label>
@@ -289,7 +289,7 @@
               <app-select class="mono" [aria-label]="'Tag ' + (i + 1)" [value]="t.key" (valueChange)="setTag(i, { key: $event })">
                 @for (k of freeTagKeys(i); track k) { <app-option [value]="k" [selected]="k === t.key">{{ k }}</app-option> }
               </app-select>
-              <input class="input mono" [attr.aria-label]="'Value for ' + t.key" [value]="t.value" (input)="setTag(i, { value: $any($event.target).value })"
+              <input class="ui-control mono" [attr.aria-label]="'Value for ' + t.key" [value]="t.value" (input)="setTag(i, { value: $any($event.target).value })"
                      [class.invalid]="gTried() && !t.value.trim()" />
               <button type="button" class="btn ghost icon sm" [attr.aria-label]="'Remove ' + t.key" (click)="removeTag(i)"><app-icon name="x" /></button>
             </div>
@@ -315,7 +315,7 @@
             subheading="Creates hub identities for devices that don’t have one. Paste IDs or drop a CSV with a device_id column.">
   <div class="reg-input">
     <label for="pv-paste" class="sr-only">Device IDs</label>
-    <textarea id="pv-paste" class="textarea mono" rows="5" spellcheck="false" placeholder="DEV-20001&#10;DEV-20002, DEV-20003"
+    <textarea id="pv-paste" class="ui-control mono" rows="5" spellcheck="false" placeholder="DEV-20001&#10;DEV-20002, DEV-20003"
               [value]="regText()" (input)="regText.set($any($event.target).value); regFile.set(null)"></textarea>
     <label class="drop" [class.over]="dragging()" (dragover)="$event.preventDefault(); dragging.set(true)" (dragleave)="dragging.set(false)" (drop)="onDrop($event)">
       <input type="file" accept=".csv,.txt,text/csv,text/plain" class="sr-only" (change)="onPick($event)" />

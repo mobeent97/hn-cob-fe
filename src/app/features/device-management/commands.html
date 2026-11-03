@@ -18,7 +18,7 @@
       <div class="left">
         <label class="search">
           <app-icon name="search" />
-          <input class="input" type="search" placeholder="Device ID" aria-label="Search by device ID"
+          <input class="ui-control" type="search" placeholder="Device ID" aria-label="Search by device ID"
                  [value]="q()" (input)="setFilter(q, $any($event.target).value)" />
         </label>
         <label class="sr-only" for="cmd-method">Method</label>

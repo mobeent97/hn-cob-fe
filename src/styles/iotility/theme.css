@@ -1,0 +1,417 @@
+/* Copied from iotility@035c514 (branch qpmc): projects/shared-ui/src/styles/theme.css
+   Keep this file identical to the source so later IoTility fixes can be synced; change COB styles elsewhere. */
+@import "tailwindcss";
+
+/* Inter, self-hosted (variable weight + optical size; OFL licence beside the files). Without these
+   every stack below silently fell back to Segoe UI / system-ui. Root-relative URLs, so the host and
+   the standalone remote each serve their own copy from public/assets/fonts. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/assets/fonts/inter-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+    U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/assets/fonts/inter-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308,
+    U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113,
+    U+2C60-2C7F, U+A720-A7FF;
+}
+
+@theme {
+  /* This creates the 'bg-brand-gradient' utility */
+  --background-image-fp-brand-gradient: linear-gradient(to bottom right,
+      var(--color-purple-500),
+      var(--color-blue-500));
+
+
+      /* Gradients based on your mock images */
+  --background-image-brand-purple: linear-gradient(135deg, #c4b5fd, #8b5cf6);
+  --background-image-brand-red: linear-gradient(135deg, #fecaca, #ef4444);
+  --background-image-brand-teal: linear-gradient(135deg, #99f6e4, #10b981);
+  --background-image-brand-blue: linear-gradient(135deg, #bae6fd, #0ea5e9);
+  --background-image-brand-orange: linear-gradient(135deg, #ffedd5, #f97316);
+
+  --color-brand-50: var(--color-purple-50);
+  --color-brand-100: var(--color-purple-100);
+  --color-brand-200: var(--color-purple-200);
+  --color-brand-300: var(--color-purple-300);
+  --color-brand-400: var(--color-purple-400);
+  --color-brand-500: var(--color-purple-500);
+  --color-brand-600: var(--color-purple-600);
+  --color-brand-700: var(--color-purple-700);
+  --color-brand-800: var(--color-purple-800);
+  --color-brand-900: var(--color-purple-900);
+  --color-brand-950: var(--color-purple-950);
+  --color-ink: #1e1b4b;
+  /* Secondary text. Ink-tinted (not blue slate) and AA on white/canvas: 5.2:1 / 4.8:1. The old
+     #94a3b8 was 2.6:1. `.dark` swaps in a lighter value below. */
+  --color-muted: #6e6a85;
+  --color-line: #e7e2ed;
+  --color-canvas: #f8f7fa;
+  --color-danger: #d9435f;
+  --color-success: #21a179;
+  --color-warning: #e7a92d;
+  --color-info: #3978d4;
+  --color-dark-canvas: #09090f;
+  --color-dark-surface: #17131f;
+  --color-dark-line: #3a3443;
+  --color-online: #4ade80;
+  --color-dialog-surface: #17131f;
+  --color-dialog-line: #3a3443;
+  --color-dialog-muted: #aaa1b5;
+  --color-dialog-question: #a855f7;
+  --color-dialog-success: #21a179;
+  --color-dialog-warning: #e7a92d;
+  --color-dialog-error: #d9435f;
+  --color-dialog-backdrop: #09090f;
+  --color-dialog-light-surface: #fff;
+  --color-dialog-light-text: #18151f;
+  --color-dialog-light-line: #e7e2ed;
+  --color-dialog-light-muted: #716b7d;
+  --color-dialog-on-accent: #fff;
+
+  /* Type: Inter first everywhere (body and every font-sans utility). */
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Motion: strong curves replace Tailwind's weak defaults (also powers ease-out / ease-in-out utilities). */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* `:not(:not(*))` is always true and adds zero specificity; it is there for Angular. For a selector
+   list (`th, td { @apply dark:… }`) Tailwind emits `:is(th, td):where(.dark, .dark *)`, and Angular's
+   style encapsulation scopes the contents of a compound made only of :is()/:where() — turning `.dark`
+   into `.dark[_ngcontent-…]`, which never matches <html>. Any other pseudo in the compound makes Angular
+   scope the subject element instead and leave `.dark` global, so dark styles on selector lists apply. */
+@custom-variant dark (&:where(.dark, .dark *):not(:not(*)));
+
+:root {
+  /* Form controls: every input, select-style dropdown, date picker and search box sizes from these. */
+  --control-height-sm: 2rem;
+  --control-height: 2.375rem;
+  --control-height-lg: 2.75rem;
+  --control-radius: 0.5rem; /* IoTility; FleetPoint overrides below */
+  --control-radius-sm: 0.5rem;
+  --control-font-size: 0.8125rem;
+  --control-padding-x: 0.75rem;
+
+  --duration-press: 160ms;
+  --duration-hover: 150ms;
+  --duration-tooltip: 125ms;
+  --duration-popover: 200ms;
+  --duration-modal: 250ms;
+  /* Dialogs: backdrop fades first, the panel glides up on a sheet curve, content follows; exits accelerate away.
+     Keep --duration-dialog-out in sync with the close timers (modal.ts, feedback-dialog.service.ts). */
+  --duration-dialog-backdrop: 300ms;
+  --duration-dialog-in: 420ms;
+  --duration-dialog-fade: 260ms;
+  --duration-dialog-out: 200ms;
+  --delay-dialog-panel: 40ms;
+  --ease-dialog: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-dialog-out: cubic-bezier(0.4, 0, 1, 1);
+  /* Small physical overshoot for toggles/checks only (transitions.dev ease-bounce). */
+  --ease-overshoot: cubic-bezier(0.34, 1.36, 0.64, 1);
+  /* Real spring (bounce 0.15) as CSS linear(): 90% there by ~130ms, settles at 333ms. For popovers that should feel physical. */
+  --ease-spring: linear(0, 0.027, 0.095, 0.186, 0.286, 0.388, 0.486, 0.577, 0.657, 0.727, 0.787, 0.837, 0.877, 0.91, 0.936, 0.957, 0.972, 0.984, 0.992, 0.998, 1.002, 1.004, 1.006, 1.006, 1.006, 1.006, 1.006, 1.005, 1.004, 1.004, 1.003, 1.003, 1);
+  --duration-spring: 333ms;
+
+  /* Elevation: layered, ink-tinted shadows. Use via box-shadow: var(--shadow-*). */
+  --shadow-card: 0 1px 2px rgb(30 27 75 / 0.04), 0 1px 3px rgb(30 27 75 / 0.05);
+  --shadow-card-hover: 0 1px 2px rgb(30 27 75 / 0.04), 0 4px 8px -2px rgb(30 27 75 / 0.06),
+    0 12px 24px -8px rgb(30 27 75 / 0.12);
+  --shadow-popover: 0 2px 4px -1px rgb(30 27 75 / 0.05), 0 8px 16px -4px rgb(30 27 75 / 0.08),
+    0 20px 40px -12px rgb(30 27 75 / 0.16);
+  --shadow-modal: 0 8px 16px -8px rgb(30 27 75 / 0.12), 0 32px 64px -16px rgb(30 27 75 / 0.3);
+}
+
+/* FleetPoint fields are rounder than IoTility's; one token keeps the difference deliberate. */
+app-fleetpoint-layout {
+  --control-radius: 0.75rem;
+}
+
+.dark {
+  /* Muted text without its own dark: override stays readable on dark surfaces (~7:1). */
+  --color-muted: #a29db6;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-card-hover: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 28px -8px rgb(0 0 0 / 0.55),
+    0 0 0 1px rgb(168 85 247 / 0.08);
+  --shadow-popover: 0 0 0 1px rgb(255 255 255 / 0.04), 0 8px 16px -4px rgb(0 0 0 / 0.45),
+    0 24px 48px -12px rgb(0 0 0 / 0.6);
+  --shadow-modal: 0 0 0 1px rgb(255 255 255 / 0.05), 0 32px 80px -16px rgb(0 0 0 / 0.75);
+}
+
+@layer base {
+  /* One consistent, visible keyboard focus ring for every control (components may override). */
+  :where(a[href], button, [role='button'], [role='tab'], [role='switch'], [role='link'], summary, [tabindex]:not([tabindex='-1'])):focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
+
+  /* Numbers that line up in columns or update live shouldn't jitter. */
+  :where(td, th, time, output) {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Pointer affordance for everything interactive that isn't a plain <button>. Zero specificity so components can override. */
+  :where(
+      a[href],
+      [role='button'],
+      [role='tab'],
+      [role='menuitem'],
+      [role='menuitemradio'],
+      [role='menuitemcheckbox'],
+      [role='option'],
+      [role='switch'],
+      [role='checkbox'],
+      [role='radio'],
+      summary,
+      label[for],
+      select,
+      input[type='checkbox'],
+      input[type='radio'],
+      input[type='range'],
+      input[type='color'],
+      input[type='file']
+    ):not(:disabled, [aria-disabled='true']) {
+    cursor: pointer;
+  }
+
+  :where(input, select, textarea, [role='button'], [role='option'], [role='tab']):is(
+      :disabled,
+      [aria-disabled='true']
+    ) {
+    cursor: not-allowed;
+  }
+
+  /* Press feedback. The standalone `scale` property composes with any transform a component already uses. */
+  :where(button, [role='button']):not(:disabled, [aria-disabled='true'], [data-no-press], .has-tab-indicator *, .ui-control, [dropdown-trigger]) {
+    transition-property: scale;
+    transition-duration: var(--duration-press);
+    transition-timing-function: var(--ease-out);
+  }
+
+  :where(button, [role='button']):not(:disabled, [aria-disabled='true'], [data-no-press], .has-tab-indicator *, .ui-control, [dropdown-trigger]):active {
+    scale: 0.97;
+  }
+}
+
+/* Route changes: the incoming page (the element Angular inserts after <router-outlet>) fades in.
+   Opacity only and no snapshots, so maps, overlays and sliding indicators are never covered or ghosted. */
+router-outlet + * {
+  animation: route-page-in 160ms var(--ease-out) backwards;
+}
+/* A page continuing a full-screen loader from the previous one appears at once, so the loader never dips. */
+router-outlet + [data-route-instant] {
+  animation: none;
+}
+@keyframes route-page-in {
+  from {
+    opacity: 0;
+  }
+}
+
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    fill 0.3s ease,
+    stroke 0.3s ease !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.theme-transition *,
+  html.theme-transition *::before,
+  html.theme-transition *::after {
+    transition: none !important;
+  }
+}
+
+html,
+body {
+  min-width: 320px;
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  /* cv05: lowercase l with a tail, so plates, IMEIs and IDs never confuse l / I / 1. */
+  font-feature-settings: 'cv05';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Headings: Inter tightens with size; the optical-size axis handles letterforms, this handles spacing. */
+:where(h1, h2) {
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+:where(p) {
+  text-wrap: pretty;
+}
+
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+.live-dot {
+  display: inline-block;
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 999px;
+  background: var(--color-online);
+  animation: live-dot-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes live-dot-pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-online) 45%, transparent);
+  }
+
+  50% {
+    opacity: 0.65;
+    box-shadow: 0 0 0 5px transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot {
+    animation: none;
+  }
+}
+/* Sliding tab underline ([sharedTabIndicator]). A 1px-wide bar positioned and sized purely with transform. */
+.has-tab-indicator {
+  position: relative;
+}
+.shared-tab-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--tab-indicator-color, var(--color-brand-600));
+  transform-origin: left center;
+  pointer-events: none;
+  opacity: 0;
+}
+.shared-tab-indicator.ready {
+  transition:
+    transform 250ms var(--ease-out),
+    opacity var(--duration-hover) ease;
+}
+.dark .shared-tab-indicator {
+  background: var(--tab-indicator-color, var(--color-brand-400));
+}
+.has-tab-indicator:not(.tab-indicator-pill-host) > :is(a, button) {
+  transition:
+    color var(--duration-hover) ease,
+    scale var(--duration-press) var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .has-tab-indicator:not(.tab-indicator-pill-host) > :is(a, button):not(.active):hover {
+    color: var(--color-ink);
+  }
+  .dark .has-tab-indicator:not(.tab-indicator-pill-host) > :is(a, button):not(.active):hover {
+    color: #fff;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shared-tab-indicator.ready {
+    transition: opacity var(--duration-hover) ease;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --ease-overshoot: var(--ease-out);
+    --ease-spring: var(--ease-out);
+  }
+}
+
+/* Pill variant: a filled background that glides behind the active nav item (sidebars). */
+:where(.tab-indicator-pill-host) :where(a, button) {
+  position: relative;
+  z-index: 1;
+}
+.shared-tab-indicator.pill {
+  top: 0;
+  bottom: auto;
+  z-index: 0;
+  border-radius: var(--tab-pill-radius, 0.5rem);
+  background: var(--tab-pill-bg, var(--color-brand-600));
+  box-shadow: var(--tab-pill-shadow, 0 4px 12px -4px rgb(124 58 237 / 0.55));
+  transform-origin: 0 0;
+}
+.shared-tab-indicator.pill.ready {
+  transition:
+    transform 300ms var(--ease-out),
+    width 300ms var(--ease-out),
+    height 300ms var(--ease-out),
+    opacity var(--duration-hover) ease;
+}
+.dark .shared-tab-indicator.pill {
+  background: var(--tab-pill-bg, var(--color-brand-600));
+}
+@media (prefers-reduced-motion: reduce) {
+  .shared-tab-indicator.pill.ready {
+    transition: opacity var(--duration-hover) ease;
+  }
+}
+
+/* Cursor-tracked border glow ([sharedSpotlightBorder]): a gradient centred on the pointer
+   (--spotlight-x/y, set by the directive), masked to the 1px border ring, so the edge nearest the
+   cursor lights up. Colour: --spotlight-color. */
+.has-spotlight {
+  position: relative;
+}
+.has-spotlight::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: 1;
+  padding: 1px;
+  border-radius: inherit;
+  background: radial-gradient(
+    140px circle at var(--spotlight-x, 50%) var(--spotlight-y, 50%),
+    var(--spotlight-color, var(--color-brand-500)),
+    color-mix(in srgb, var(--spotlight-color, var(--color-brand-500)) 35%, transparent) 45%,
+    transparent 75%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .has-spotlight:hover::before {
+    opacity: 1;
+  }
+}

@@ -18,12 +18,12 @@
               <div class="pair">
                 <div class="field">
                   <label for="w-name">Name<span class="req">*</span></label>
-                  <input id="w-name" class="input" maxlength="60" placeholder="As partners know it" [value]="name()" (input)="name.set($any($event.target).value)" [class.invalid]="err('name')" />
+                  <input id="w-name" class="ui-control" maxlength="60" placeholder="As partners know it" [value]="name()" (input)="name.set($any($event.target).value)" [class.invalid]="err('name')" />
                   @if (err('name')) { <span class="error">{{ err('name') }}</span> }
                 </div>
                 <div class="field">
                   <label for="w-legal">Legal name<span class="req">*</span></label>
-                  <input id="w-legal" class="input" maxlength="120" placeholder="As registered" [value]="legalName()" (input)="legalName.set($any($event.target).value)" [class.invalid]="err('legalName')" />
+                  <input id="w-legal" class="ui-control" maxlength="120" placeholder="As registered" [value]="legalName()" (input)="legalName.set($any($event.target).value)" [class.invalid]="err('legalName')" />
                   @if (err('legalName')) { <span class="error">{{ err('legalName') }}</span> }
                 </div>
               </div>
@@ -94,12 +94,12 @@
               <div class="pair">
                 <div class="field">
                   <label for="w-aname">Full name<span class="req">*</span></label>
-                  <input id="w-aname" class="input" maxlength="80" [value]="adminName()" (input)="adminName.set($any($event.target).value)" [class.invalid]="err('adminName')" />
+                  <input id="w-aname" class="ui-control" maxlength="80" [value]="adminName()" (input)="adminName.set($any($event.target).value)" [class.invalid]="err('adminName')" />
                   @if (err('adminName')) { <span class="error">{{ err('adminName') }}</span> }
                 </div>
                 <div class="field">
                   <label for="w-aemail">Work email<span class="req">*</span></label>
-                  <input id="w-aemail" class="input" type="email" [value]="adminEmail()" (input)="adminEmail.set($any($event.target).value)" [class.invalid]="err('adminEmail')" />
+                  <input id="w-aemail" class="ui-control" type="email" [value]="adminEmail()" (input)="adminEmail.set($any($event.target).value)" [class.invalid]="err('adminEmail')" />
                   @if (err('adminEmail')) { <span class="error">{{ err('adminEmail') }}</span> }
                 </div>
               </div>
@@ -107,12 +107,12 @@
               <div class="pair">
                 <div class="field">
                   <label for="w-maxc">Maximum customers</label>
-                  <input id="w-maxc" class="input num" inputmode="numeric" placeholder="No limit" [value]="maxCustomers()" (input)="maxCustomers.set($any($event.target).value)" [class.invalid]="err('maxCustomers')" />
+                  <input id="w-maxc" class="ui-control num" inputmode="numeric" placeholder="No limit" [value]="maxCustomers()" (input)="maxCustomers.set($any($event.target).value)" [class.invalid]="err('maxCustomers')" />
                   @if (err('maxCustomers')) { <span class="error">{{ err('maxCustomers') }}</span> } @else { <span class="hint">Empty for no limit.</span> }
                 </div>
                 <div class="field">
                   <label for="w-maxu">Maximum users</label>
-                  <input id="w-maxu" class="input num" inputmode="numeric" placeholder="No limit" [value]="maxUsers()" (input)="maxUsers.set($any($event.target).value)" [class.invalid]="err('maxUsers')" />
+                  <input id="w-maxu" class="ui-control num" inputmode="numeric" placeholder="No limit" [value]="maxUsers()" (input)="maxUsers.set($any($event.target).value)" [class.invalid]="err('maxUsers')" />
                   @if (err('maxUsers')) { <span class="error">{{ err('maxUsers') }}</span> } @else { <span class="hint">Empty for no limit.</span> }
                 </div>
               </div>

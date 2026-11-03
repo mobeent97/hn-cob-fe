@@ -34,7 +34,7 @@
       <div class="left">
         <label class="search">
           <app-icon name="search" />
-          <input class="input" type="search" placeholder="Company, contact, email or phone" aria-label="Search customers"
+          <input class="ui-control" type="search" placeholder="Company, contact, email or phone" aria-label="Search customers"
                  [value]="q()" (input)="q.set($any($event.target).value)" />
         </label>
         @if (orgs.showOrg()) { <app-org-filter [(value)]="orgId" /> }

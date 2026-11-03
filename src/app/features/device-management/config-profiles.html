@@ -146,13 +146,13 @@
     <div class="pair">
       <div class="field">
         <label for="cp-name">Name<span class="req">*</span></label>
-        <input id="cp-name" class="input" maxlength="80" [value]="d.name" (input)="setName($any($event.target).value)"
+        <input id="cp-name" class="ui-control" maxlength="80" [value]="d.name" (input)="setName($any($event.target).value)"
                [class.invalid]="tried() && errors().name" />
         @if (tried() && errors().name) { <span class="error">{{ errors().name }}</span> }
       </div>
       <div class="field">
         <label for="cp-id">ID<span class="req">*</span></label>
-        <input id="cp-id" class="input mono" maxlength="64" [value]="d.id" [readOnly]="!!original()" (input)="setId($any($event.target).value)"
+        <input id="cp-id" class="ui-control mono" maxlength="64" [value]="d.id" [readOnly]="!!original()" (input)="setId($any($event.target).value)"
                [class.invalid]="tried() && errors().id" />
         @if (tried() && errors().id) { <span class="error">{{ errors().id }}</span> }
         @else if (original()) { <span class="hint">Fixed: IoT Hub can’t rename a configuration.</span> }
@@ -162,11 +162,11 @@
     <div class="pair">
       <div class="field">
         <label for="cp-desc">Description</label>
-        <input id="cp-desc" class="input" maxlength="160" [value]="d.description" (input)="patch({ description: $any($event.target).value })" />
+        <input id="cp-desc" class="ui-control" maxlength="160" [value]="d.description" (input)="patch({ description: $any($event.target).value })" />
       </div>
       <div class="field prio">
         <label for="cp-prio">Priority<span class="req">*</span></label>
-        <input id="cp-prio" class="input num" type="number" min="1" max="100" step="1" [value]="d.priority"
+        <input id="cp-prio" class="ui-control num" type="number" min="1" max="100" step="1" [value]="d.priority"
                (input)="patch({ priority: +$any($event.target).value })" [class.invalid]="tried() && errors().priority" />
         @if (tried() && errors().priority) { <span class="error">{{ errors().priority }}</span> }
         @else { <span class="hint">1–100. Higher wins.</span> }
@@ -226,7 +226,7 @@
       } @else {
         <div class="field">
           <label for="cp-raw" class="sr-only">Target condition</label>
-          <textarea id="cp-raw" class="textarea mono" rows="3" spellcheck="false" [value]="d.raw" (input)="patch({ raw: $any($event.target).value })"
+          <textarea id="cp-raw" class="ui-control mono" rows="3" spellcheck="false" [value]="d.raw" (input)="patch({ raw: $any($event.target).value })"
                     [class.invalid]="!!conditionError()"></textarea>
           @if (conditionError()) { <span class="error">{{ conditionError() }}</span> }
           @else { <span class="hint">IoT Hub syntax on twin tags: <span class="mono">tags.x='v'</span>, <span class="mono">tags.x != 'v'</span>, <span class="mono">tags.x IN ['a','b']</span>, joined by AND.</span> }
@@ -282,7 +282,7 @@
               @switch (m?.kind) {
                 @case ('number') {
                   <span class="input-unit">
-                    <input class="input num" type="number" [min]="m!.min" [max]="m!.max" step="1" [value]="s.value"
+                    <input class="ui-control num" type="number" [min]="m!.min" [max]="m!.max" step="1" [value]="s.value"
                            [attr.aria-label]="m!.label" (input)="setSettingValue(i, $any($event.target).value)"
                            [class.invalid]="tried() && settingErr(s)" />
                     <span class="unit">{{ m!.unit }}</span>
@@ -297,7 +297,7 @@
                   </app-select>
                 }
                 @default {
-                  <input class="input mono" [attr.list]="s.key === 'firmware' ? 'cp-fw' : null" [value]="s.value" [attr.aria-label]="m?.label ?? s.key"
+                  <input class="ui-control mono" [attr.list]="s.key === 'firmware' ? 'cp-fw' : null" [value]="s.value" [attr.aria-label]="m?.label ?? s.key"
                          (input)="setSettingValue(i, $any($event.target).value)" [class.invalid]="tried() && settingErr(s)" />
                 }
               }

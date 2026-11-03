@@ -66,7 +66,7 @@
   <div class="form">
     <div class="field">
       <label for="uc-name">Name<span class="req">*</span></label>
-      <input id="uc-name" class="input" maxlength="60" [value]="draft().name" (input)="setName($any($event.target).value)"
+      <input id="uc-name" class="ui-control" maxlength="60" [value]="draft().name" (input)="setName($any($event.target).value)"
              [class.invalid]="tried() && errors().name" />
       @if (tried() && errors().name) { <span class="error">{{ errors().name }}</span> }
     </div>

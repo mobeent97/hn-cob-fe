@@ -206,7 +206,7 @@
   color: var(--text);
   overflow-wrap: anywhere;
 }
-.textarea.mono {
+.ui-control.mono {
   font-family: var(--mono);
   font-size: 13px;
 }
@@ -275,7 +275,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  .input {
+  .ui-control {
     width: 120px;
   }
   .unit {

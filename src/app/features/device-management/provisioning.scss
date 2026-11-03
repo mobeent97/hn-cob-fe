@@ -172,7 +172,7 @@ tr.picked {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 180px;
   gap: 12px;
-  .textarea {
+  .ui-control {
     font-family: var(--mono);
     font-size: 13px;
   }

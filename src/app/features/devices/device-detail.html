@@ -300,7 +300,7 @@
                             @switch (r.meta.kind) {
                               @case ('number') {
                                 <div class="num-input">
-                                  <input class="input num" type="number" [attr.min]="r.meta.min" [attr.max]="r.meta.max" [attr.aria-label]="r.meta.label"
+                                  <input class="ui-control num" type="number" [attr.min]="r.meta.min" [attr.max]="r.meta.max" [attr.aria-label]="r.meta.label"
                                          [value]="draft()[r.key]" (input)="setDraft(r.key, num($any($event.target).value))"
                                          [class.invalid]="tried() && draftErrors()[r.key]" />
                                   @if (r.meta.unit) { <span class="muted">{{ r.meta.unit }}</span> }
@@ -318,7 +318,7 @@
                                 </label>
                               }
                               @default {
-                                <input class="input" [attr.aria-label]="r.meta.label" [value]="draft()[r.key]" (input)="setDraft(r.key, $any($event.target).value)"
+                                <input class="ui-control" [attr.aria-label]="r.meta.label" [value]="draft()[r.key]" (input)="setDraft(r.key, $any($event.target).value)"
                                        [class.invalid]="tried() && draftErrors()[r.key]" />
                               }
                             }
@@ -600,14 +600,14 @@
             <div class="pair">
               <div class="field">
                 <label for="p-id">Parameter ID</label>
-                <input id="p-id" class="input mono" inputmode="numeric" placeholder="10050" [value]="paramId()" (input)="paramId.set($any($event.target).value)"
+                <input id="p-id" class="ui-control mono" inputmode="numeric" placeholder="10050" [value]="paramId()" (input)="paramId.set($any($event.target).value)"
                        [class.invalid]="sendTried() && paramErrors().id" />
                 @if (sendTried() && paramErrors().id) { <span class="error">{{ paramErrors().id }}</span> }
                 @else { <span class="hint">From the Teltonika configurator</span> }
               </div>
               <div class="field">
                 <label for="p-val">Value</label>
-                <input id="p-val" class="input mono" placeholder="30" [value]="paramValue()" (input)="paramValue.set($any($event.target).value)"
+                <input id="p-val" class="ui-control mono" placeholder="30" [value]="paramValue()" (input)="paramValue.set($any($event.target).value)"
                        [class.invalid]="sendTried() && paramErrors().value" />
                 @if (sendTried() && paramErrors().value) { <span class="error">{{ paramErrors().value }}</span> }
               </div>
@@ -618,7 +618,7 @@
             <div class="notice"><app-icon name="alert" /><span>The engine won't start again until someone sends Restore ignition. Check the vehicle is parked.</span></div>
             <div class="field">
               <label for="c-typed">Type {{ d.plate ? 'the plate' : 'the device ID' }} <span class="mono">{{ confirmWord() }}</span> to confirm</label>
-              <input id="c-typed" class="input mono" autocomplete="off" spellcheck="false" [value]="typed()" (input)="typed.set($any($event.target).value)"
+              <input id="c-typed" class="ui-control mono" autocomplete="off" spellcheck="false" [value]="typed()" (input)="typed.set($any($event.target).value)"
                      [class.invalid]="sendTried() && !typedOk()" />
               @if (sendTried() && !typedOk()) { <span class="error">That doesn't match {{ confirmWord() }}.</span> }
             </div>

@@ -1,0 +1,62 @@
+/* Copied from iotility@035c514 (branch qpmc): projects/fleetpoint/src/app/shared/styles/fields.css
+   Only change: the source's first line, @reference "../../../styles.css", is dropped because this file is
+   imported into the global stylesheet instead of being referenced from a component. */
+
+.fleet-checkbox {
+  @apply relative size-5 shrink-0 cursor-pointer appearance-none rounded-full border border-line bg-white transition dark:border-dark-line dark:bg-dark-canvas;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.fleet-checkbox:checked {
+  @apply border-brand-600 bg-brand-600 shadow-[0_2px_6px_rgba(124,58,237,0.3)];
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='m5.5 10.2 2.8 2.8 6.2-6.2' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+.fleet-checkbox:focus-visible { @apply outline-2 outline-offset-2 outline-brand-400; }
+
+/* Search box: generic .ui-control .ui-control-group .ui-control-sm (controls.css); only placement here. */
+.fleet-search-field {
+  @apply mx-3 mt-3 w-auto;
+}
+
+.shared-form-field {
+  @apply block;
+}
+.shared-form-field > span {
+  @apply mb-1.5 block text-xs font-medium text-ink dark:text-brand-300;
+}
+/* Required marker: "Name <b>*</b>". */
+.shared-form-field > span b {
+  @apply font-medium text-danger;
+}
+/* Field-level validation message under a control. */
+.shared-form-error {
+  @apply mt-1.5 block text-[10px] font-medium text-danger;
+}
+/* Form-level error from the API, shown above the fields. */
+.shared-form-alert {
+  @apply rounded-xl border border-danger/30 bg-danger/10 p-3 text-xs text-danger;
+}
+.shared-button-primary {
+  @apply inline-flex min-h-10 items-center justify-center rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:opacity-50;
+}
+.shared-button-secondary {
+  @apply inline-flex min-h-10 items-center justify-center rounded-xl border border-line px-4 text-sm font-medium text-muted transition hover:border-brand-400 hover:text-brand-600 disabled:opacity-50 disabled:hover:border-line disabled:hover:text-muted dark:border-dark-line dark:text-brand-300;
+}
+
+/* Modal form footer: secondary action then primary, equal width across the footer. */
+.form-actions {
+  @apply flex w-full gap-2;
+}
+.form-actions > button {
+  @apply flex-1;
+}
+/* With a step rail on the left, the buttons line up under the step content instead. */
+@media (min-width: 1024px) {
+  .form-actions.with-stepper {
+    @apply ml-auto;
+    width: calc(100% - 14rem);
+  }
+}

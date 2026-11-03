@@ -146,20 +146,20 @@
   <div class="form">
     <div class="field">
       <label for="pkg-name">Package name<span class="req">*</span></label>
-      <input id="pkg-name" class="input" maxlength="60" [value]="draft().name" (input)="set('name', $any($event.target).value)"
+      <input id="pkg-name" class="ui-control" maxlength="60" [value]="draft().name" (input)="set('name', $any($event.target).value)"
              [class.invalid]="tried() && errors().name" />
       @if (tried() && errors().name) { <span class="error">{{ errors().name }}</span> }
     </div>
     <div class="field">
       <label for="pkg-desc">Description</label>
-      <textarea id="pkg-desc" class="textarea" rows="3" [value]="draft().description" (input)="set('description', $any($event.target).value)"></textarea>
+      <textarea id="pkg-desc" class="ui-control" rows="3" [value]="draft().description" (input)="set('description', $any($event.target).value)"></textarea>
       <span class="hint">Shown to the onboarding team when they pick a package.</span>
     </div>
     <div class="field">
       <label for="pkg-price">Monthly price per device<span class="req">*</span></label>
       <div class="input-group">
         <span class="prefix">AED</span>
-        <input id="pkg-price" class="input num" type="number" min="1" step="1" inputmode="decimal"
+        <input id="pkg-price" class="ui-control num" type="number" min="1" step="1" inputmode="decimal"
                [value]="draft().monthlyPrice ?? ''" (input)="set('monthlyPrice', $any($event.target).value === '' ? null : +$any($event.target).value)"
                [class.invalid]="tried() && errors().monthlyPrice" />
       </div>

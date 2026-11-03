@@ -29,13 +29,13 @@
           <div class="fields two">
             <div class="field">
               <label for="pf-name">Full name</label>
-              <input id="pf-name" class="input" maxlength="120" autocomplete="name" [value]="name()" (input)="name.set($any($event.target).value)"
+              <input id="pf-name" class="ui-control" maxlength="120" autocomplete="name" [value]="name()" (input)="name.set($any($event.target).value)"
                      [class.invalid]="detailsTried() && detailErrors().name" />
               @if (detailsTried() && detailErrors().name) { <span class="error">{{ detailErrors().name }}</span> }
             </div>
             <div class="field">
               <label for="pf-email">Email</label>
-              <input id="pf-email" class="input" readonly [value]="me().email" />
+              <input id="pf-email" class="ui-control" readonly [value]="me().email" />
               <span class="hint">Your sign-in. An administrator can change it from Users.</span>
             </div>
             <div class="field">
@@ -44,7 +44,7 @@
                 <app-select aria-label="Country code" [value]="dial()" (valueChange)="dial.set($event)">
                   @for (c of store.countries; track c.code) { <app-option [value]="c.dial" [selected]="c.dial === dial()">{{ c.dial }}</app-option> }
                 </app-select>
-                <input id="pf-phone" class="input num" inputmode="tel" autocomplete="tel-national" [value]="phone()" (input)="phone.set($any($event.target).value)"
+                <input id="pf-phone" class="ui-control num" inputmode="tel" autocomplete="tel-national" [value]="phone()" (input)="phone.set($any($event.target).value)"
                        [class.invalid]="detailsTried() && detailErrors().phone" />
               </div>
               @if (detailsTried() && detailErrors().phone) { <span class="error">{{ detailErrors().phone }}</span> }
@@ -52,7 +52,7 @@
             </div>
             <div class="field">
               <label for="pf-user">Username</label>
-              <input id="pf-user" class="input" readonly [value]="me().username" />
+              <input id="pf-user" class="ui-control" readonly [value]="me().username" />
             </div>
           </div>
           <div class="panel-foot">
@@ -135,7 +135,7 @@
             <div class="fields">
               <div class="field">
                 <label for="pw-cur">Current password</label>
-                <input id="pw-cur" class="input" [type]="show() ? 'text' : 'password'" autocomplete="current-password" [value]="current()"
+                <input id="pw-cur" class="ui-control" [type]="show() ? 'text' : 'password'" autocomplete="current-password" [value]="current()"
                        (input)="current.set($any($event.target).value)" [class.invalid]="pwTried() && !current()" />
                 @if (pwTried() && !current()) { <span class="error">Enter your current password.</span> }
               </div>
@@ -149,12 +149,12 @@
                     {{ show() ? 'Hide' : 'Show' }}
                   </button>
                 </div>
-                <input id="pw-new" class="input" [type]="show() ? 'text' : 'password'" autocomplete="new-password" [value]="next()"
+                <input id="pw-new" class="ui-control" [type]="show() ? 'text' : 'password'" autocomplete="new-password" [value]="next()"
                        (input)="next.set($any($event.target).value)" aria-describedby="pw-rules" />
               </div>
               <div class="field">
                 <label for="pw-conf">Confirm new password</label>
-                <input id="pw-conf" class="input" [type]="show() ? 'text' : 'password'" autocomplete="new-password" [value]="confirm()"
+                <input id="pw-conf" class="ui-control" [type]="show() ? 'text' : 'password'" autocomplete="new-password" [value]="confirm()"
                        (input)="confirm.set($any($event.target).value)" />
               </div>
             </div>

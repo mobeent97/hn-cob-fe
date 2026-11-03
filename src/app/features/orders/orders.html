@@ -17,7 +17,7 @@
       <div class="left">
         <label class="search">
           <app-icon name="search" />
-          <input class="input" type="search" placeholder="Order no, customer, device type or email" aria-label="Search orders"
+          <input class="ui-control" type="search" placeholder="Order no, customer, device type or email" aria-label="Search orders"
                  [value]="q()" (input)="q.set($any($event.target).value)" />
         </label>
         @if (orgs.showOrg()) { <app-org-filter [(value)]="orgId" /> }
@@ -128,7 +128,7 @@
   <form class="form" id="ship-form" (submit)="$event.preventDefault(); ship()" novalidate>
     <div class="field">
       <label for="ship-courier">Courier<span class="req">*</span></label>
-      <input id="ship-courier" class="input" list="couriers" placeholder="Aramex" [value]="courier()" (input)="courier.set($any($event.target).value)"
+      <input id="ship-courier" class="ui-control" list="couriers" placeholder="Aramex" [value]="courier()" (input)="courier.set($any($event.target).value)"
              [class.invalid]="shipSubmitted() && shipErrors().courier" />
       <datalist id="couriers">
         @for (c of couriers; track c) { <option [value]="c"></option> }
@@ -137,7 +137,7 @@
     </div>
     <div class="field">
       <label for="ship-eta">ETA</label>
-      <input id="ship-eta" class="input" type="date" [min]="todayInput" [value]="eta()" (input)="eta.set($any($event.target).value)"
+      <input id="ship-eta" class="ui-control" type="date" [min]="todayInput" [value]="eta()" (input)="eta.set($any($event.target).value)"
              [class.invalid]="!!shipErrors().eta" />
       @if (shipErrors().eta) { <span class="error">{{ shipErrors().eta }}</span> }
       @else { <span class="hint">Optional. Leave empty if the courier hasn’t confirmed a date.</span> }

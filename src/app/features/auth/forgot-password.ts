@@ -81,7 +81,7 @@ const RESEND_AFTER = 30;
           </div>
           <div class="field">
             <label for="fp-email">Email</label>
-            <input #emailInput id="fp-email" class="input" type="email" autocomplete="username" inputmode="email" spellcheck="false"
+            <input #emailInput id="fp-email" class="ui-control" type="email" autocomplete="username" inputmode="email" spellcheck="false"
                    [class.invalid]="tried() && emailError()" [attr.aria-invalid]="tried() && !!emailError()"
                    [value]="email()" (input)="email.set($any($event.target).value)" />
             @if (tried() && emailError()) {

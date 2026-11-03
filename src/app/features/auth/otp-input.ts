@@ -12,7 +12,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, input, model, output, v
       @for (d of digits(); track $index; let i = $index) {
         <input
           #box
-          class="input box num"
+          class="ui-control box num"
           [class.invalid]="invalid()"
           type="text"
           inputmode="numeric"

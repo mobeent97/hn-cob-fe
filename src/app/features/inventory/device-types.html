@@ -16,7 +16,7 @@
       <div class="left">
         <label class="search">
           <app-icon name="search" />
-          <input class="input" type="search" placeholder="Model, make, package or sensor" aria-label="Search device types"
+          <input class="ui-control" type="search" placeholder="Model, make, package or sensor" aria-label="Search device types"
                  [value]="q()" (input)="q.set($any($event.target).value)" />
         </label>
       </div>
@@ -111,13 +111,13 @@
     <div class="form-grid two">
       <div class="field">
         <label for="dt-name">Model name<span class="req">*</span></label>
-        <input id="dt-name" class="input" maxlength="60" [value]="draft().name" (input)="patch({ name: $any($event.target).value })"
+        <input id="dt-name" class="ui-control" maxlength="60" [value]="draft().name" (input)="patch({ name: $any($event.target).value })"
                [class.invalid]="submitted() && errors().name" />
         @if (submitted() && errors().name) { <span class="error">{{ errors().name }}</span> }
       </div>
       <div class="field">
         <label for="dt-make">Make<span class="req">*</span></label>
-        <input id="dt-make" class="input" [value]="draft().make" (input)="patch({ make: $any($event.target).value })"
+        <input id="dt-make" class="ui-control" [value]="draft().make" (input)="patch({ make: $any($event.target).value })"
                [class.invalid]="submitted() && errors().make" />
         @if (submitted() && errors().make) { <span class="error">{{ errors().make }}</span> }
       </div>
@@ -130,19 +130,19 @@
       </div>
       <div class="field">
         <label for="dt-warranty">Warranty (years)<span class="req">*</span></label>
-        <input id="dt-warranty" class="input num" type="number" min="0" max="10" step="1" [value]="draft().warrantyYears"
+        <input id="dt-warranty" class="ui-control num" type="number" min="0" max="10" step="1" [value]="draft().warrantyYears"
                (input)="patch({ warrantyYears: $any($event.target).value })" [class.invalid]="submitted() && errors().warranty" />
         @if (submitted() && errors().warranty) { <span class="error">{{ errors().warranty }}</span> }
       </div>
       <div class="field">
         <label for="dt-price">Unit price (AED)<span class="req">*</span></label>
-        <input id="dt-price" class="input num" type="number" min="0" step="1" [value]="draft().unitPrice"
+        <input id="dt-price" class="ui-control num" type="number" min="0" step="1" [value]="draft().unitPrice"
                (input)="patch({ unitPrice: $any($event.target).value })" [class.invalid]="submitted() && errors().price" />
         @if (submitted() && errors().price) { <span class="error">{{ errors().price }}</span> }
       </div>
       <div class="field">
         <label for="dt-sheet">Data sheet</label>
-        <input id="dt-sheet" class="input" placeholder="FMC130_datasheet.pdf" [value]="draft().dataSheet ?? ''"
+        <input id="dt-sheet" class="ui-control" placeholder="FMC130_datasheet.pdf" [value]="draft().dataSheet ?? ''"
                (input)="patch({ dataSheet: $any($event.target).value })" />
         <span class="hint">Optional. PDF, JPG or PNG up to 5 MB.</span>
       </div>

@@ -138,7 +138,7 @@ interface Rule {
           <div class="field">
             <label for="new-pw">New password</label>
             <div class="pw">
-              <input id="new-pw" class="input" [type]="show() ? 'text' : 'password'" autocomplete="new-password"
+              <input id="new-pw" class="ui-control" [type]="show() ? 'text' : 'password'" autocomplete="new-password"
                      aria-describedby="pw-rules" [value]="pw()" (input)="pw.set($any($event.target).value)" />
               <button type="button" class="reveal" (click)="show.set(!show())"
                       [attr.aria-label]="show() ? 'Hide passwords' : 'Show passwords'" [attr.aria-pressed]="show()">
@@ -149,7 +149,7 @@ interface Rule {
 
           <div class="field">
             <label for="confirm-pw">Confirm new password</label>
-            <input id="confirm-pw" class="input" [type]="show() ? 'text' : 'password'" autocomplete="new-password"
+            <input id="confirm-pw" class="ui-control" [type]="show() ? 'text' : 'password'" autocomplete="new-password"
                    [class.invalid]="mismatch()" [value]="confirm()" (input)="confirm.set($any($event.target).value)" />
             @if (mismatch()) {
               <span class="error">The two passwords don't match yet.</span>

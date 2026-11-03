@@ -33,7 +33,7 @@
       <div class="left">
         <label class="search">
           <app-icon name="search" />
-          <input class="input" type="search" placeholder="ID, IMEI, SIM, plate or customer" aria-label="Search devices"
+          <input class="ui-control" type="search" placeholder="ID, IMEI, SIM, plate or customer" aria-label="Search devices"
                  [value]="q()" (input)="q.set($any($event.target).value)" />
         </label>
         <label class="sr-only" for="inv-pkg">Package</label>
@@ -262,13 +262,13 @@
   <form class="two-col" (submit)="$event.preventDefault(); addDevice()" novalidate id="add-device-form">
     <div class="field">
       <label for="add-id">Device ID<span class="req">*</span></label>
-      <input id="add-id" class="input mono" autocomplete="off" maxlength="20" placeholder="DEV-20001"
+      <input id="add-id" class="ui-control mono" autocomplete="off" maxlength="20" placeholder="DEV-20001"
              [class.invalid]="addTried() && addErrors().id" [value]="form.id()" (input)="form.id.set($any($event.target).value)" />
       @if (addTried() && addErrors().id) { <span class="error">{{ addErrors().id }}</span> }
     </div>
     <div class="field">
       <label for="add-imei">IMEI<span class="req">*</span></label>
-      <input id="add-imei" class="input mono" inputmode="numeric" autocomplete="off" maxlength="15" placeholder="15 digits"
+      <input id="add-imei" class="ui-control mono" inputmode="numeric" autocomplete="off" maxlength="15" placeholder="15 digits"
              [class.invalid]="addTried() && addErrors().imei" [value]="form.imei()" (input)="form.imei.set($any($event.target).value)" />
       @if (addTried() && addErrors().imei) { <span class="error">{{ addErrors().imei }}</span> }
       @else { <span class="hint num">{{ form.imei().length }}/15 digits</span> }
@@ -286,13 +286,13 @@
     </div>
     <div class="field">
       <label for="add-sim">SIM serial number</label>
-      <input id="add-sim" class="input mono" inputmode="numeric" autocomplete="off" maxlength="20"
+      <input id="add-sim" class="ui-control mono" inputmode="numeric" autocomplete="off" maxlength="20"
              [class.invalid]="addTried() && addErrors().sim" [value]="form.simSn()" (input)="form.simSn.set($any($event.target).value)" />
       @if (addTried() && addErrors().sim) { <span class="error">{{ addErrors().sim }}</span> } @else { <span class="hint">Optional. Add it when the SIM is fitted.</span> }
     </div>
     <div class="field">
       <label for="add-msisdn">MSISDN</label>
-      <input id="add-msisdn" class="input mono" inputmode="tel" autocomplete="off" maxlength="16" placeholder="971501234567"
+      <input id="add-msisdn" class="ui-control mono" inputmode="tel" autocomplete="off" maxlength="16" placeholder="971501234567"
              [class.invalid]="addTried() && addErrors().msisdn" [value]="form.msisdn()" (input)="form.msisdn.set($any($event.target).value)" />
       @if (addTried() && addErrors().msisdn) { <span class="error">{{ addErrors().msisdn }}</span> } @else { <span class="hint">Optional</span> }
     </div>

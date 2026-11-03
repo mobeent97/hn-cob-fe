@@ -25,7 +25,7 @@ td.warn {
 .code-row {
   display: flex;
   gap: 8px;
-  .input {
+  .ui-control {
     flex: 1;
   }
 }
@@ -47,11 +47,11 @@ td.warn {
     border-left: 0;
     border-radius: 0 var(--radius-control) var(--radius-control) 0;
   }
-  .input:not(:first-child) {
+  .ui-control:not(:first-child) {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
   }
-  .input:first-child {
+  .ui-control:first-child {
     border-top-left-radius: var(--radius-control);
     border-bottom-left-radius: var(--radius-control);
     border-top-right-radius: 0;

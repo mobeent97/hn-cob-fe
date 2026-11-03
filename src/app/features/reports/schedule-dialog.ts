@@ -42,7 +42,7 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
         <div class="field">
           <label for="sch-to">Recipients</label>
-          <div class="chips input" [class.invalid]="!!error()" (click)="focusInput(inputEl)">
+          <div class="chips ui-control" [class.invalid]="!!error()" (click)="focusInput(inputEl)">
             @for (r of recipients(); track r) {
               <span class="chip">
                 {{ r }}

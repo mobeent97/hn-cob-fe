@@ -1,0 +1,202 @@
+/* Copied from iotility@035c514 (branch qpmc): projects/shared-ui/src/styles/controls.css
+   Keep this file identical to the source so later IoTility fixes can be synced; change COB styles elsewhere. */
+/*
+ * Generic form controls — the one place fields are styled in IoTility and FleetPoint.
+ * Sizes and radius come from the --control-* tokens in theme.css (FleetPoint overrides the radius).
+ *
+ *   .ui-control         text input, textarea, native select — and the base for the two below
+ *   .ui-control-group   a .ui-control box holding an icon/prefix + a borderless <input> (search boxes)
+ *   .ui-select          a .ui-control styled as a select trigger (shared-dropdown applies it itself)
+ *   .ui-control-sm/-lg  compact (inline/card filters) and large (auth screens) sizes
+ *
+ * In @layer components so Tailwind utilities on the element (w-64, text-xs…) can still adjust it.
+ */
+@layer components {
+  .ui-control {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    min-width: 0;
+    height: var(--control-height);
+    padding: 0 var(--control-padding-x);
+    border: 1px solid var(--color-line);
+    border-radius: var(--control-radius);
+    background: #fff;
+    color: var(--color-ink);
+    font-size: var(--control-font-size);
+    line-height: 1.25rem;
+    text-align: left;
+    outline: none;
+    transition:
+      border-color 150ms ease,
+      box-shadow 150ms ease,
+      background-color 150ms ease;
+  }
+  .ui-control::placeholder,
+  .ui-control-group input::placeholder {
+    color: color-mix(in srgb, var(--color-muted) 75%, transparent);
+  }
+  textarea.ui-control {
+    height: auto;
+    min-height: calc(var(--control-height) * 2);
+    padding-block: 0.5rem;
+    resize: vertical;
+  }
+  /* A one-row textarea is a single-line field: same height as an input. */
+  textarea.ui-control[rows='1'] {
+    height: var(--control-height);
+    min-height: 0;
+    overflow: hidden;
+    padding-block: calc((var(--control-height) - 1.25rem - 2px) / 2);
+    resize: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .ui-control:hover:not(:disabled, [aria-disabled='true'], :focus, :focus-within) {
+      border-color: var(--color-brand-300);
+    }
+  }
+  .ui-control:focus,
+  .ui-control:focus-within,
+  .ui-select[aria-expanded='true'] {
+    border-color: var(--color-brand-500);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand-500) 15%, transparent);
+  }
+  .ui-control:disabled,
+  .ui-control[aria-disabled='true'] {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  .ui-control[readonly] {
+    background: var(--color-canvas);
+    color: var(--color-muted);
+  }
+  /* Invalid: explicit aria-invalid, Angular's touched+invalid state, or a field showing an error. */
+  .ui-control[aria-invalid='true'],
+  .ui-control.ng-invalid.ng-touched,
+  .ui-control:has(.ng-invalid.ng-touched),
+  .shared-form-field:has(.field-error) .ui-control {
+    border-color: var(--color-danger);
+  }
+
+  /* Sizes */
+  .ui-control-sm {
+    height: var(--control-height-sm);
+    padding-inline: 0.625rem;
+    border-radius: var(--control-radius-sm);
+    font-size: 0.75rem;
+  }
+  .ui-control-lg {
+    height: var(--control-height-lg);
+    font-size: 0.875rem;
+  }
+
+  /* Icon/prefix + borderless input inside one control box. */
+  .ui-control-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .ui-control-group > input,
+  .ui-control-group > select {
+    min-width: 0;
+    height: 100%;
+    flex: 1;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    outline: none;
+  }
+  .ui-control-group > :is(svg, img, .color-icon) {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    color: var(--color-muted);
+  }
+  .ui-control-group > svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+  }
+
+  /* Search inputs: the browser's native clear button becomes a themed grey ×. */
+  .ui-control-group input[type='search']::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    opacity: 0.55;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E") center / contain no-repeat;
+    transition: opacity 150ms ease;
+  }
+  .ui-control-group input[type='search']::-webkit-search-cancel-button:hover {
+    opacity: 1;
+  }
+
+  /* Select-style trigger (dropdowns, date pickers). */
+  .ui-select {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+  .ui-select > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ui-select > svg {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    color: var(--color-muted);
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+  }
+
+  .dark .ui-control {
+    border-color: var(--color-dark-line);
+    background: var(--color-dark-canvas);
+    color: #fff;
+  }
+  .dark .ui-control[readonly] {
+    color: var(--color-brand-300);
+  }
+  .dark .ui-control::placeholder,
+  .dark .ui-control-group input::placeholder {
+    color: var(--color-brand-300);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .dark .ui-control:hover:not(:disabled, [aria-disabled='true'], :focus, :focus-within) {
+      border-color: var(--color-brand-500);
+    }
+  }
+  /* Browser autofill keeps the field colours instead of Chrome's yellow fill. */
+  .ui-control:is(:-webkit-autofill, :-webkit-autofill:hover, :-webkit-autofill:focus),
+  .ui-control-group input:is(:-webkit-autofill, :-webkit-autofill:hover, :-webkit-autofill:focus) {
+    -webkit-text-fill-color: var(--color-ink);
+    box-shadow: 0 0 0 1000px #fff inset;
+    caret-color: var(--color-ink);
+  }
+  .dark .ui-control:is(:-webkit-autofill, :-webkit-autofill:hover, :-webkit-autofill:focus),
+  .dark .ui-control-group input:is(:-webkit-autofill, :-webkit-autofill:hover, :-webkit-autofill:focus) {
+    -webkit-text-fill-color: #fff;
+    box-shadow: 0 0 0 1000px var(--color-dark-canvas) inset;
+    caret-color: #fff;
+  }
+  .dark .ui-control.ng-invalid.ng-touched,
+  .dark .ui-control[aria-invalid='true'],
+  .dark .shared-form-field:has(.field-error) .ui-control {
+    border-color: var(--color-danger);
+  }
+}
