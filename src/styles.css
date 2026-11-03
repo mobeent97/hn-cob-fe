@@ -3,6 +3,7 @@
  * imported once, by theme.css. IoTility also imports it here, which emits Tailwind's base layer twice.
  * Component stylesheets start with `@reference "<path>/styles.css";` to use these tokens with @apply.
  */
+@import 'maplibre-gl/dist/maplibre-gl.css';
 @import './styles/iotility/theme.css';
 @import './styles/iotility/animations.css';
 @import './styles/iotility/controls.css';

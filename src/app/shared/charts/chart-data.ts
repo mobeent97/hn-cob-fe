@@ -1,7 +1,8 @@
 // The COB's chart data shapes and the adapters that turn them into inputs for IoTility's chart components
 // (ui-bar-chart, ui-line-chart, ui-donut-chart from @iotility/shared-ui). Pages keep building the simple
 // shapes below; the adapters pick the colours from the IoTility chart palette.
-import { ChartPalette, ChartSeries, ChartSlice, ChartValueFormatter, lighten, toRgb } from '@iotility/shared-ui';
+import { ChartPalette, ChartSeries, ChartSlice, ChartValueFormatter, lighten } from '@iotility/shared-ui';
+import { cssColor } from '../ui/css-color';
 
 export interface BarDatum {
   label: string;
@@ -35,25 +36,6 @@ export interface CategoryChart {
 
 const nf = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 });
 export const formatNumber: ChartValueFormatter = (v) => (Number.isFinite(v) ? nf.format(v) : '—');
-
-let probe: HTMLSpanElement | null = null;
-
-/**
- * Resolves any CSS colour, token references and color-mix() included, to rgb() for ECharts' canvas
- * (which can't read custom properties or oklch). Call it inside a computed that reads the chart palette,
- * so the colour is resolved again after a light/dark switch.
- */
-export function cssColor(value: string): string {
-  if (typeof document === 'undefined') return value;
-  if (!probe) {
-    probe = document.createElement('span');
-    probe.style.display = 'none';
-    document.body.appendChild(probe);
-  }
-  probe.style.color = '';
-  probe.style.color = value;
-  return toRgb(getComputedStyle(probe).color);
-}
 
 /** One series in the brand colour; marked bars in a lighter tone of it. */
 export function barChart(data: BarDatum[], name: string, palette: ChartPalette): CategoryChart {

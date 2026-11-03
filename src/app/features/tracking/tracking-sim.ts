@@ -64,7 +64,7 @@ const esc = (s: string) =>
 
 const TONE: Record<VehicleState, string> = { Moving: 'positive', Idle: 'warning', Offline: '' };
 
-/** The popup card. Leaflet takes an HTML string; every value is escaped. */
+/** The popup card. MapLibre takes an HTML string; every value is escaped. */
 export function popupHtml(v: LiveVehicle, customer: string, updated: string, colour: string) {
   const speed = v.state === 'Offline' ? '<span class="dash">—</span>' : `${v.speedKmh}<span class="unit">km/h</span>`;
   return `

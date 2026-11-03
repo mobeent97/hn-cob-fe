@@ -1,0 +1,240 @@
+@reference "../../../styles.css";
+
+/*
+ * Live tracking: a page header, the vehicle panel and the map filling the rest of the content area.
+ * MapLibre builds its own DOM (controls, popups), so those rules alone use ::ng-deep.
+ */
+:host {
+  @apply flex h-full min-h-[480px] flex-col;
+}
+
+.trk-title {
+  @apply items-center px-5 pt-5 pb-4 sm:px-6;
+}
+.trk-fresh {
+  @apply inline-flex items-center gap-1.5 text-xs text-muted dark:text-brand-300;
+}
+.trk-fresh .dot {
+  @apply text-success;
+}
+.trk-fresh.paused .dot {
+  @apply text-muted;
+}
+
+.trk-body {
+  @apply grid min-h-0 flex-1 grid-cols-[340px_minmax(0,1fr)] border-t border-line dark:border-dark-line;
+}
+
+/* ── Panel ── */
+.trk-panel {
+  @apply flex min-h-0 flex-col gap-3 border-r border-line bg-white pt-4 dark:border-dark-line dark:bg-dark-surface;
+}
+.trk-counts {
+  @apply grid-flow-row grid-cols-2 px-4;
+}
+.trk-counts .cc-label {
+  @apply inline-flex items-center gap-1.5;
+}
+.trk-list-toggle {
+  @apply hidden;
+}
+.trk-list-area {
+  @apply flex min-h-0 flex-1 flex-col gap-3;
+}
+.trk-filters {
+  @apply flex flex-col gap-2 px-4;
+}
+.trk-filters .search {
+  @apply w-full;
+}
+.trk-list {
+  @apply m-0 min-h-0 flex-1 list-none overflow-y-auto border-t border-line px-2 pt-1 pb-2 dark:border-dark-line;
+}
+.trk-row {
+  @apply grid cursor-pointer grid-cols-[6px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl px-2.5 py-2;
+  transition: background-color var(--duration-hover) ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .trk-row:hover {
+    @apply bg-canvas dark:bg-dark-canvas;
+  }
+}
+.trk-row.selected {
+  @apply bg-brand-50 dark:bg-brand-600/15;
+}
+.trk-row.skeleton-row {
+  @apply cursor-default;
+}
+.trk-row:focus-visible {
+  outline-offset: -2px;
+}
+.trk-main {
+  @apply flex min-w-0 flex-col;
+}
+.trk-main strong {
+  @apply text-xs font-semibold text-ink dark:text-white;
+}
+.sub {
+  @apply truncate text-[11px] leading-4 text-muted dark:text-brand-300;
+}
+.trk-side {
+  @apply flex flex-col items-end text-right text-xs whitespace-nowrap;
+}
+.trk-side .stale {
+  @apply text-warning;
+}
+.trk-empty {
+  @apply px-2 py-3;
+}
+
+/* ── Map ── */
+.trk-map-wrap {
+  @apply relative isolate min-h-0 min-w-0;
+}
+.trk-map {
+  @apply absolute inset-0 bg-canvas dark:bg-dark-canvas;
+}
+.trk-tile-error {
+  @apply absolute top-4 left-4 z-10 flex max-w-[calc(100%-5rem)] items-center gap-2.5 rounded-xl border border-line bg-white/95 py-2 pr-2 pl-3 text-xs text-ink backdrop-blur dark:border-dark-line dark:bg-dark-surface/95 dark:text-white;
+  box-shadow: var(--shadow-popover);
+}
+.trk-tile-error app-icon {
+  @apply text-warning;
+}
+
+/* Map controls (FleetPoint map-controls.css): one translucent rounded stack. */
+:host ::ng-deep .maplibregl-ctrl-group {
+  @apply overflow-hidden rounded-xl border border-line bg-white/95 p-1.5 backdrop-blur dark:border-dark-line dark:bg-dark-surface/95;
+  box-shadow: var(--shadow-popover);
+}
+:host ::ng-deep .maplibregl-ctrl-group button {
+  @apply size-9 rounded-lg border-0 transition-colors hover:bg-brand-100 dark:hover:bg-dark-line;
+}
+:host ::ng-deep .maplibregl-ctrl-group button + button {
+  @apply mt-1 border-t-0;
+}
+:host-context(.dark) ::ng-deep .maplibregl-ctrl-group .maplibregl-ctrl-icon {
+  filter: invert(1);
+}
+:host ::ng-deep .maplibregl-ctrl-attrib {
+  @apply text-[10px];
+}
+
+/* Vehicle popup (fleet-map.css .maplibregl-popup-content), a card in both themes. */
+:host ::ng-deep .trk-popup .maplibregl-popup-content {
+  @apply min-w-52 rounded-xl border border-line bg-white px-3.5 py-3 font-sans text-xs text-ink dark:border-dark-line dark:bg-dark-surface dark:text-white;
+  box-shadow: var(--shadow-popover);
+}
+:host ::ng-deep .trk-popup .maplibregl-popup-close-button {
+  @apply top-1.5 right-1.5 size-6 rounded-md text-base text-muted hover:bg-canvas dark:text-brand-300 dark:hover:bg-dark-canvas;
+}
+:host ::ng-deep .maplibregl-popup-anchor-top .maplibregl-popup-tip,
+:host ::ng-deep .maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
+:host ::ng-deep .maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
+  border-bottom-color: #fff;
+}
+:host ::ng-deep .maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+:host ::ng-deep .maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+:host ::ng-deep .maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
+  border-top-color: #fff;
+}
+:host ::ng-deep .maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: #fff;
+}
+:host ::ng-deep .maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: #fff;
+}
+:host-context(.dark) ::ng-deep .maplibregl-popup-anchor-top .maplibregl-popup-tip,
+:host-context(.dark) ::ng-deep .maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
+:host-context(.dark) ::ng-deep .maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
+  border-bottom-color: var(--color-dark-surface);
+}
+:host-context(.dark) ::ng-deep .maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+:host-context(.dark) ::ng-deep .maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+:host-context(.dark) ::ng-deep .maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
+  border-top-color: var(--color-dark-surface);
+}
+:host-context(.dark) ::ng-deep .maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: var(--color-dark-surface);
+}
+:host-context(.dark) ::ng-deep .maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: var(--color-dark-surface);
+}
+:host ::ng-deep .trk-pop-head {
+  @apply flex items-center gap-2 pr-5;
+}
+:host ::ng-deep .trk-pop-head strong {
+  @apply text-sm font-semibold;
+}
+:host ::ng-deep .trk-pop-head .pill {
+  @apply ml-auto;
+}
+:host ::ng-deep .trk-pop-sub {
+  @apply mt-0.5 mb-2.5 text-[11px] text-muted dark:text-brand-300;
+}
+:host ::ng-deep .trk-pop dl {
+  @apply m-0 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 border-t border-line pt-2.5 dark:border-dark-line;
+}
+:host ::ng-deep .trk-pop dt {
+  @apply text-muted dark:text-brand-300;
+}
+:host ::ng-deep .trk-pop dd {
+  @apply m-0 text-right;
+}
+
+/* Hover label: the plate. */
+:host ::ng-deep .trk-tip .maplibregl-popup-content {
+  @apply rounded-full border border-line bg-white px-2 py-0.5 font-sans text-[11px] font-semibold text-ink dark:border-dark-line dark:bg-dark-surface dark:text-white;
+  box-shadow: var(--shadow-card);
+}
+
+/* ── Tablet: narrower panel ── */
+@media (max-width: 1024px) {
+  .trk-body {
+    @apply grid-cols-[300px_minmax(0,1fr)];
+  }
+}
+
+/* ── Phone: the map fills the screen, the panel is a bottom sheet ── */
+@media (max-width: 640px) {
+  .trk-title {
+    @apply gap-2 px-4 py-3;
+  }
+  .trk-body {
+    @apply relative block;
+  }
+  .trk-map-wrap {
+    @apply absolute inset-0;
+  }
+  .trk-panel {
+    @apply absolute right-0 bottom-0 left-0 z-20 max-h-[78%] gap-2.5 rounded-t-2xl border border-b-0 border-line pt-3 dark:border-dark-line;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+    box-shadow: var(--shadow-popover);
+    transition: max-height 320ms var(--ease-drawer);
+  }
+  .trk-counts {
+    @apply grid-cols-4 gap-1.5 px-3;
+  }
+  .trk-counts .count-card {
+    @apply px-2 py-1.5;
+  }
+  .trk-counts .cc-label {
+    @apply text-[11px];
+  }
+  .trk-list-toggle {
+    @apply mx-3 inline-flex justify-start self-stretch;
+  }
+  .trk-list-area {
+    @apply hidden;
+  }
+  .list-open .trk-list-area {
+    @apply flex h-[46dvh];
+  }
+  .trk-filters {
+    @apply px-3;
+  }
+  /* Keep the attribution above the collapsed sheet. */
+  :host ::ng-deep .maplibregl-ctrl-bottom-right {
+    bottom: 156px;
+  }
+}

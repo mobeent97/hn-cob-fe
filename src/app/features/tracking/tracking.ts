@@ -1,8 +1,9 @@
 import {
-  ChangeDetectionStrategy, Component, DestroyRef, ElementRef, ViewEncapsulation, afterNextRender, computed, effect,
-  inject, signal, untracked, viewChild,
+  ChangeDetectionStrategy, Component, DestroyRef, ElementRef, afterNextRender, computed, effect, inject, signal, untracked,
+  viewChild,
 } from '@angular/core';
-import * as L from 'leaflet';
+import type { FeatureCollection } from 'geojson';
+import maplibregl, { GeoJSONSource, Map as MapLibreMap, MapLayerMouseEvent } from 'maplibre-gl';
 import { Store } from '../../core/data/store';
 import { Vehicle } from '../../core/data/models';
 import { Icon } from '../../shared/ui/icon';
@@ -11,24 +12,35 @@ import { simulateLoad } from '../../shared/ui/loading';
 import { Theme } from '../../core/theme/theme';
 import { LiveVehicle, StateFilter, VehicleState, clock, popupHtml, relTime, simulateStep } from './tracking-sim';
 import { Select, SelectOption } from '../../shared/ui/select';
+import { cssColor } from '../../shared/ui/css-color';
+import { LatLng, LayerWithoutSource, createIotMap, fitLatLngs, upsertGeoJson } from '../../shared/maps/maplibre';
+import { environment } from '../../../environments/environment';
 
 const TICK_MS = 5000;
 const STATES: VehicleState[] = ['Moving', 'Idle', 'Offline'];
 const STATE_ORDER: Record<VehicleState, number> = { Moving: 0, Idle: 1, Offline: 2 };
+/** Vehicle state colours, as FleetPoint's map legend (vehicle-legend.ts). */
+const STATE_TOKEN: Record<VehicleState, string> = {
+  Moving: 'var(--color-success)',
+  Idle: 'var(--color-warning)',
+  Offline: 'var(--color-muted)',
+};
+const SOURCE = 'trk-vehicles';
+const DOTS = 'trk-dots';
 
 /**
  * Live tracking — "Where is every vehicle right now, and which ones are offline?"
  * Biggest block: the map, one dot per vehicle coloured by state. The left panel filters it
  * (count cards by state, customer, search) and lists the same vehicles. Positions update
  * every 5 s from ONE interval (the legacy screen stacked a new poll on every filter change).
+ * The map is MapLibre on IoTility's OpenFreeMap styles (shared/maps/maplibre.ts); the dots are a circle layer.
  */
 @Component({
   selector: 'app-tracking',
   imports: [Select, SelectOption, Icon, CountUp],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  encapsulation: ViewEncapsulation.None,
   templateUrl: './tracking.html',
-  styleUrl: './tracking.scss',
+  styleUrl: './tracking.css',
 })
 export class Tracking {
   protected readonly store = inject(Store);
@@ -108,22 +120,16 @@ export class Tracking {
   protected rel(iso: string) {
     return relTime(iso, this.now());
   }
-  protected readonly dotColour: Record<VehicleState, string> = {
-    Moving: 'var(--accent)',
-    Idle: 'var(--chart-2)',
-    Offline: 'var(--chart-3)',
-  };
+  protected readonly dotColour = STATE_TOKEN;
 
   // ── Map ───────────────────────────────────────────────────
-  private map?: L.Map;
-  private layer?: L.LayerGroup;
-  private ring?: L.CircleMarker;
-  private popup?: L.Popup;
-  private readonly markers = new Map<string, L.CircleMarker>();
+  private map?: MapLibreMap;
+  private popup?: maplibregl.Popup;
+  private hoverTip?: maplibregl.Popup;
   private readonly mapReady = signal(false);
   private readonly theme = inject(Theme);
-  /** Marker fills and the halo around each dot, read from the theme tokens (see readColours). */
-  private colours: Record<VehicleState, string> = { Moving: '#0a6f96', Idle: '#a86f0c', Offline: '#8a96a0' };
+  /** Dot fills and the halo around each dot, resolved from the theme tokens (see readColours). */
+  private colours: Record<VehicleState, string> = { Moving: '#21a179', Idle: '#e7a92d', Offline: '#6e6a85' };
   private halo = '#ffffff';
   private interval?: ReturnType<typeof setInterval>;
   private fitTimer?: ReturnType<typeof setTimeout>;
@@ -138,7 +144,7 @@ export class Tracking {
       this.startTicking();
     });
 
-    // Markers follow the filtered rows and the live positions.
+    // Dots follow the filtered rows and the live positions.
     effect(() => {
       const rows = this.rows();
       const sel = this.selectedId();
@@ -156,13 +162,13 @@ export class Tracking {
       this.fitTimer = setTimeout(() => this.fit(), 250);
     });
 
-    // Theme switch: re-read the tokens and repaint markers, ring and the open popup.
+    // Theme switch: re-resolve the token colours and repaint the dots and the open popup.
+    // (The base map swaps style by itself, see createIotMap.)
     effect(() => {
       this.theme.version();
       if (!this.mapReady()) return;
       untracked(() => {
         this.readColours();
-        // Hidden markers pick up the new style when they are shown again.
         this.syncMarkers(this.rows(), this.selectedId());
       });
     });
@@ -171,9 +177,10 @@ export class Tracking {
       this.stopTicking();
       clearTimeout(this.fitTimer);
       this.ro?.disconnect();
+      this.popup?.remove();
+      this.hoverTip?.remove();
       this.map?.remove();
-      this.markers.clear();
-      this.map = this.layer = this.ring = this.popup = undefined;
+      this.map = this.popup = this.hoverTip = undefined;
     });
   }
 
@@ -191,101 +198,126 @@ export class Tracking {
   }
 
   private readColours() {
-    const css = getComputedStyle(document.documentElement);
-    const read = (n: string, fb: string) => css.getPropertyValue(n).trim() || fb;
-    this.colours = { Moving: read('--accent', '#0a6f96'), Idle: read('--chart-2', '#a86f0c'), Offline: read('--chart-3', '#8a96a0') };
-    this.halo = read('--surface', '#ffffff');
+    this.colours = {
+      Moving: cssColor(STATE_TOKEN.Moving),
+      Idle: cssColor(STATE_TOKEN.Idle),
+      Offline: cssColor(STATE_TOKEN.Offline),
+    };
+    this.halo = cssColor(this.theme.mode() === 'dark' ? 'var(--color-dark-surface)' : '#fff');
   }
 
   private initMap() {
     this.readColours();
+    const map = createIotMap(this.mapEl().nativeElement, [25.1, 53.4], 6.5);
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+    this.popup = new maplibregl.Popup({ closeButton: true, closeOnClick: true, offset: 12, maxWidth: '280px', className: 'trk-popup' });
+    this.hoverTip = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10, className: 'trk-tip' });
+    this.map = map;
 
-    const map = L.map(this.mapEl().nativeElement, {
-      preferCanvas: true,
-      zoomControl: false,
-      attributionControl: true,
-      zoomSnap: 0.5,
-    }).setView([25.1, 53.4], 7);
-    L.control.zoom({ position: 'topright' }).addTo(map);
-    const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    }).addTo(map);
+    // A light/dark switch swaps the style and drops our source and layers: add them back each time.
+    map.on('style.load', () => {
+      this.addVehicleLayers();
+      if (!this.mapReady()) {
+        this.mapReady.set(true);
+        // First paint: show every vehicle.
+        this.fit(false);
+      }
+    });
+
+    // The background didn't load (offline, blocked tiles): say so; the dots still draw once a style is up.
     let loaded = false;
     let errors = 0;
-    tiles.on('tileload', () => {
+    map.on('load', () => {
       loaded = true;
       if (this.tilesFailed()) this.tilesFailed.set(false);
     });
-    tiles.on('tileerror', () => {
-      if (!loaded && ++errors >= 4) this.tilesFailed.set(true);
+    map.on('error', () => {
+      if (!loaded && ++errors >= 2) this.tilesFailed.set(true);
     });
-    this.tiles = tiles;
 
-    this.layer = L.layerGroup().addTo(map);
-    this.ring = L.circleMarker([0, 0], { radius: 13, weight: 2, fill: false, interactive: false, color: this.colours.Moving });
-    this.popup = L.popup({ closeButton: true, autoPan: true, offset: [0, -6], maxWidth: 280, className: 'trk-popup' });
-    this.map = map;
+    map.on('click', DOTS, (e: MapLayerMouseEvent) => {
+      const id = e.features?.[0]?.properties?.['id'];
+      if (typeof id === 'string') this.select(id, 'map');
+    });
+    map.on('mousemove', DOTS, (e: MapLayerMouseEvent) => {
+      const feature = e.features?.[0];
+      if (!feature || feature.geometry.type !== 'Point') return;
+      map.getCanvas().style.cursor = 'pointer';
+      this.hoverTip
+        ?.setLngLat(feature.geometry.coordinates as [number, number])
+        .setText(String(feature.properties?.['plate'] ?? ''))
+        .addTo(map);
+    });
+    map.on('mouseleave', DOTS, () => {
+      map.getCanvas().style.cursor = '';
+      this.hoverTip?.remove();
+    });
 
     // Until the user takes over the map, keep every vehicle in frame as the layout settles.
     map.on('dragstart', () => (this.autoFit = false));
     this.ro = new ResizeObserver(() => {
-      map.invalidateSize();
-      if (this.autoFit) this.fit(false);
+      map.resize();
+      if (this.autoFit && this.mapReady()) this.fit(false);
     });
     this.ro.observe(this.mapEl().nativeElement);
-
-    this.mapReady.set(true);
-    // First paint: show every vehicle.
-    this.fit(false);
   }
 
-  private tiles?: L.TileLayer;
   protected retryTiles() {
     this.tilesFailed.set(false);
-    this.tiles?.redraw();
+    const style = this.theme.mode() === 'dark' ? environment.mapDarkStyleUrl : environment.mapLightStyleUrl;
+    this.map?.setStyle(style, { diff: false });
   }
 
-  private style(v: LiveVehicle, selected: boolean): L.CircleMarkerOptions {
+  /** One circle per vehicle, plus a ring round the selected one, drawn from a GeoJSON source. */
+  private addVehicleLayers() {
+    if (!this.map) return;
+    const layers: LayerWithoutSource[] = [
+      {
+        id: 'trk-selected-ring',
+        type: 'circle',
+        filter: ['==', ['get', 'selected'], true],
+        paint: {
+          'circle-radius': 13,
+          'circle-color': 'rgba(0,0,0,0)',
+          'circle-stroke-width': 2,
+          'circle-stroke-color': ['get', 'color'],
+        },
+      },
+      {
+        id: DOTS,
+        type: 'circle',
+        paint: {
+          'circle-radius': ['case', ['get', 'selected'], 8, 5.5],
+          'circle-color': ['get', 'color'],
+          'circle-stroke-color': ['get', 'halo'],
+          'circle-stroke-width': ['case', ['get', 'selected'], 2, 1.5],
+        },
+      },
+    ];
+    upsertGeoJson(this.map, SOURCE, this.collection(untracked(this.rows), untracked(this.selectedId)), layers);
+  }
+
+  private collection(rows: LiveVehicle[], sel: string | null): FeatureCollection {
+    // The selected vehicle last, so its dot draws on top.
+    const ordered = sel ? [...rows.filter((v) => v.deviceId !== sel), ...rows.filter((v) => v.deviceId === sel)] : rows;
     return {
-      radius: selected ? 8 : 5.5,
-      color: this.halo,
-      weight: selected ? 2 : 1.5,
-      fillColor: this.colours[v.state],
-      fillOpacity: 1,
-      opacity: 1,
+      type: 'FeatureCollection',
+      features: ordered.map((v) => ({
+        type: 'Feature',
+        properties: { id: v.deviceId, plate: v.plate, selected: v.deviceId === sel, color: this.colours[v.state], halo: this.halo },
+        geometry: { type: 'Point', coordinates: [v.lng, v.lat] },
+      })),
     };
   }
 
   private syncMarkers(rows: LiveVehicle[], sel: string | null) {
-    if (!this.map || !this.layer || !this.ring) return;
-    const visible = new Set<string>();
-    for (const v of rows) {
-      visible.add(v.deviceId);
-      let m = this.markers.get(v.deviceId);
-      if (!m) {
-        m = L.circleMarker([v.lat, v.lng], this.style(v, false));
-        const id = v.deviceId;
-        m.on('click', () => this.select(id, 'map'));
-        m.bindTooltip(v.plate, { direction: 'top', offset: [0, -6], className: 'trk-tip' });
-        this.markers.set(id, m);
-      }
-      m.setLatLng([v.lat, v.lng]);
-      m.setStyle(this.style(v, v.deviceId === sel));
-      if (!this.layer.hasLayer(m)) this.layer.addLayer(m);
-    }
-    for (const [id, m] of this.markers) if (!visible.has(id) && this.layer.hasLayer(m)) this.layer.removeLayer(m);
+    const source = this.map?.getSource(SOURCE) as GeoJSONSource | undefined;
+    if (!this.map || !source) return;
+    source.setData(this.collection(rows, sel));
 
     const s = sel ? rows.find((v) => v.deviceId === sel) : undefined;
-    if (s) {
-      this.ring.setLatLng([s.lat, s.lng]).setStyle({ color: this.colours[s.state] });
-      if (!this.layer.hasLayer(this.ring)) this.layer.addLayer(this.ring);
-      this.markers.get(s.deviceId)?.bringToFront();
-      if (this.popup?.isOpen()) this.popup.setLatLng([s.lat, s.lng]).setContent(this.popupFor(s));
-    } else {
-      this.layer.removeLayer(this.ring);
-      if (sel) this.map.closePopup();
-    }
+    if (s && this.popup?.isOpen()) this.popup.setLngLat([s.lng, s.lat]).setHTML(this.popupFor(s));
+    else if (!s && sel) this.popup?.remove();
   }
 
   private popupFor(v: LiveVehicle) {
@@ -296,10 +328,10 @@ export class Tracking {
     if (!this.map) return;
     const rows = untracked(this.rows);
     if (!rows.length) return;
-    const bounds = L.latLngBounds(rows.map((v) => [v.lat, v.lng] as L.LatLngTuple));
     // On a phone the bottom sheet covers the lower part of the map.
     const bottom = this.phone.matches ? this.panelEl().nativeElement.offsetHeight + 24 : 40;
-    this.map.fitBounds(bounds, { paddingTopLeft: [40, 40], paddingBottomRight: [40, bottom], maxZoom: 14, animate });
+    const points = rows.map((v) => [v.lat, v.lng] as LatLng);
+    fitLatLngs(this.map, points, { top: 40, left: 40, right: 40, bottom }, 14, animate ? 700 : 0);
   }
 
   // ── Selection ─────────────────────────────────────────────
@@ -308,11 +340,11 @@ export class Tracking {
     if (!v || !this.map || !this.popup) return;
     this.selectedId.set(id);
     this.autoFit = false;
-    const at: L.LatLngTuple = [v.lat, v.lng];
+    const at: [number, number] = [v.lng, v.lat];
     if (from === 'list') {
       const zoom = Math.max(this.map.getZoom(), 14);
-      if (this.reduced) this.map.setView(at, zoom, { animate: false });
-      else this.map.flyTo(at, zoom, { duration: 0.6 });
+      if (this.reduced) this.map.jumpTo({ center: at, zoom });
+      else this.map.flyTo({ center: at, zoom, duration: 600 });
     } else {
       // Bring the row into view (after the selection class lands).
       setTimeout(() =>
@@ -321,7 +353,7 @@ export class Tracking {
           ?.scrollIntoView({ block: 'nearest', behavior: this.reduced ? 'auto' : 'smooth' }),
       );
     }
-    this.popup.setLatLng(at).setContent(this.popupFor(v)).openOn(this.map);
+    this.popup.setLngLat(at).setHTML(this.popupFor(v)).addTo(this.map);
     if (from === 'list' && this.phone.matches) this.listOpen.set(false);
   }
 
