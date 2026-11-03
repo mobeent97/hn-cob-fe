@@ -51,25 +51,23 @@
 
   <div class="grid">
     <!-- The screen's question: is the fleet reporting? -->
-    <section class="card span-8">
-      <div class="card-head">
-        <div>
-          <h2>Device-to-cloud messages per hour</h2>
-          <p class="card-sub num">
-            Last 24 hours · {{ fmtNum(messagesToday()) }} since 00:00 ·
-            busiest hour {{ peak().label }}:00 with {{ fmtNum(peak().value) }}
-          </p>
-        </div>
-      </div>
-      <div class="card-body">
-        @if (loading()) {
-          <div class="skeleton" style="width:100%;height:240px"></div>
-        } @else {
-          <app-bar-chart [data]="hourly()" [height]="240" label="Device-to-cloud messages per hour, last 24 hours" />
-          <p class="legend"><span class="sw"></span>Complete hour <span class="sw part"></span>{{ nowLabel }}:00–{{ nowTime }}, in progress</p>
-        }
-      </div>
-    </section>
+    <ui-chart-card
+      class="span-8"
+      title="Device-to-cloud messages per hour"
+      [subtitle]="'Last 24 hours · ' + fmtNum(messagesToday()) + ' since 00:00 · busiest hour ' + peak().label + ':00 with ' + fmtNum(peak().value)"
+      [legend]="hourlyLegend()"
+      [loading]="loading()"
+      [height]="340"
+    >
+      <ui-bar-chart
+        [categories]="hourlyChart().categories"
+        [series]="hourlyChart().series"
+        [legend]="false"
+        [maxVisible]="0"
+        [valueFormatter]="fmtValue"
+        aria-label="Device-to-cloud messages per hour, last 24 hours"
+      />
+    </ui-chart-card>
 
     <section class="card span-4 quota">
       <div class="card-head">

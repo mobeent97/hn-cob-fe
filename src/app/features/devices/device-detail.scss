@@ -705,3 +705,9 @@ dd.neg {
     }
   }
 }
+
+// External voltage chart (ui-line-chart fills its box).
+.volt-chart {
+  display: block;
+  height: 200px;
+}

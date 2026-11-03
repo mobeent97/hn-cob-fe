@@ -2,7 +2,7 @@
 import { CommandRecord, CommandStatus, DeviceTwin, IotDeviceState, TwinValue } from '../../core/data/models';
 import { TODAY, hubHours } from '../../core/data/mock-db';
 import { fmtRelative } from '../../core/data/format';
-import { LinePoint } from '../../shared/charts/charts';
+import { LinePoint } from '../../shared/charts/chart-data';
 
 // ── Twin settings: human labels and editors ───────────────────
 export interface SettingMeta {

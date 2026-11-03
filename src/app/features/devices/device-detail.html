@@ -519,7 +519,17 @@
                 </div>
                 <div class="card-body">
                   @if (loading()) { <span class="skeleton" style="width:100%;height:200px"></span> }
-                  @else if (voltage().length) { <app-line-chart [data]="voltage()" [height]="200" [scale]="true" [names]="['Voltage', '']" label="External voltage over the last 24 hours, in volts" /> }
+                  @else if (voltage().length) {
+                    <ui-line-chart
+                      class="volt-chart"
+                      [categories]="voltageChart().categories"
+                      [series]="voltageChart().series"
+                      [legend]="false"
+                      [overrides]="voltageAxis"
+                      [valueFormatter]="fmtVolts"
+                      aria-label="External voltage over the last 24 hours, in volts"
+                    />
+                  }
                   @else { <div class="empty">The device hasn't reported a voltage yet.</div> }
                 </div>
               </section>

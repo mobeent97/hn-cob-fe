@@ -1,0 +1,60 @@
+@reference "../../../styles.css";
+
+/* Fleet by status: the donut beside its value table. */
+.status {
+  @apply flex items-center gap-5;
+}
+.ring {
+  @apply size-32 shrink-0;
+}
+.legend-table {
+  @apply flex-1;
+}
+.legend-table td {
+  @apply h-8;
+}
+.sw {
+  @apply mr-2 inline-block size-2 rounded-full;
+}
+
+.progress {
+  @apply flex h-12 items-center gap-2.5;
+}
+.progress .meter {
+  @apply w-24;
+}
+
+/* Needs attention list. */
+.attention {
+  @apply m-0 flex list-none flex-col p-0;
+}
+.attention li {
+  @apply flex gap-2.5 border-t border-line py-2.5 first:border-t-0 first:pt-0 dark:border-dark-line;
+}
+.attention app-icon {
+  @apply mt-0.5 text-muted dark:text-brand-300;
+}
+.attention .neg {
+  @apply text-danger;
+}
+.attention li > div {
+  @apply flex min-w-0 flex-col gap-0.5;
+}
+.attention .primary {
+  @apply text-xs font-semibold text-ink underline-offset-3 hover:underline dark:text-white;
+}
+.attention .muted {
+  @apply text-[11px];
+}
+
+@media (max-width: 640px) {
+  .status {
+    @apply flex-col items-stretch;
+  }
+  .ring {
+    @apply self-center;
+  }
+  .card-head {
+    @apply flex-wrap;
+  }
+}

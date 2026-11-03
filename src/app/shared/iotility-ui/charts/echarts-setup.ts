@@ -6,8 +6,21 @@
 import { BarChart, LineChart, PieChart } from 'echarts/charts';
 import { DataZoomComponent, GridComponent, LegendComponent, TooltipComponent } from 'echarts/components';
 import { init, use } from 'echarts/core';
+import { LegacyGridContainLabel } from 'echarts/features';
 import { CanvasRenderer } from 'echarts/renderers';
 
-use([BarChart, LineChart, PieChart, DataZoomComponent, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer]);
+// LegacyGridContainLabel: the bar and line charts set grid.containLabel, which ECharts 6 only honours with
+// this feature registered (without it, it logs a warning and long axis labels can be cut off).
+use([
+  BarChart,
+  LineChart,
+  PieChart,
+  DataZoomComponent,
+  GridComponent,
+  LegendComponent,
+  TooltipComponent,
+  LegacyGridContainLabel,
+  CanvasRenderer,
+]);
 
 export { init };

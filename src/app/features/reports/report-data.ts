@@ -1,7 +1,7 @@
 import { Store } from '../../core/data/store';
 import { MONTHS, fmtDate, fmtMoney, fmtNum } from '../../core/data/format';
 import { Customer, Device, ONBOARDING_STEPS, PackageName } from '../../core/data/models';
-import { BarDatum, LinePoint, RingSegment } from '../../shared/charts/charts';
+import { BarDatum, LinePoint, RingSegment } from '../../shared/charts/chart-data';
 
 /*
  * Report definitions. Every figure is computed from the Store's rows for the chosen filters.
@@ -259,7 +259,8 @@ const pct = (a: number, b: number) => (b ? Math.round((a / b) * 1000) / 10 : 0);
 const sum = <T>(xs: T[], f: (x: T) => number) => xs.reduce((a, x) => a + f(x), 0);
 const plural = (n: number, one: string, many = `${one}s`) => `${fmtNum(n)} ${n === 1 ? one : many}`;
 const price = (store: Store, p: PackageName) => store.packages().find((x) => x.name === p)?.monthlyPrice ?? 0;
-const tint = (i: number) => (i === 0 ? 'var(--chart-1)' : `color-mix(in srgb, var(--chart-1) ${[100, 62, 38, 20, 10][i]}%, var(--surface))`);
+/** Package colours: steps down IoTility's brand scale, strongest first. */
+const tint = (i: number) => `var(--color-brand-${[600, 400, 300, 200, 100][i] ?? 100})`;
 const emptyFor = (what: string, c: Ctx) => `No ${what} in ${c.period.label}${c.scope ? ` for ${c.scope}` : ''}.`;
 
 /** Sum every numeric column of the rows; the caller overwrites ratio columns. */

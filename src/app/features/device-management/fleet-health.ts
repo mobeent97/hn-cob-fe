@@ -7,7 +7,8 @@ import { IotTransport, TwinValue } from '../../core/data/models';
 import { Icon } from '../../shared/ui/icon';
 import { DecimalPipe } from '@angular/common';
 import { CountUp } from '@iotility/shared-ui';
-import { BarChart, BarDatum } from '../../shared/charts/charts';
+import { BarChart, ChartCard, ChartLegendItem, ChartTheme } from '@iotility/shared-ui';
+import { BarDatum, barChart, formatNumber } from '../../shared/charts/chart-data';
 import { Dialog } from '../../shared/ui/dialog';
 import { Toaster } from '../../shared/ui/toast';
 import { simulateLoad } from '../../shared/ui/loading';
@@ -39,7 +40,7 @@ const DAY = 86_400_000;
  */
 @Component({
   selector: 'app-fleethealth',
-  imports: [ReadOnlyNote, RouterLink, Icon, CountUp, DecimalPipe, BarChart, Dialog, DateTimePipe],
+  imports: [ReadOnlyNote, RouterLink, Icon, CountUp, DecimalPipe, BarChart, ChartCard, Dialog, DateTimePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './fleet-health.html',
   styleUrl: './fleet-health.scss',
@@ -96,6 +97,18 @@ export class FleetHealth {
   });
   protected readonly nowLabel = hourLabel(hubHours(this.store.today));
   protected readonly nowTime = `${String(hubHours(this.store.today)).padStart(2, '0')}:${String(hubMinutes(this.store.today)).padStart(2, '0')}`;
+
+  private readonly chartTheme = inject(ChartTheme);
+  protected readonly fmtValue = formatNumber;
+  protected readonly hourlyChart = computed(() => barChart(this.hourly(), 'Messages', this.chartTheme.palette()));
+  protected readonly hourlyLegend = computed<ChartLegendItem[]>(() => {
+    const [series] = this.hourlyChart().series;
+    const partial = series.colors?.at(-1);
+    return [
+      { label: 'Complete hour', color: series.color! },
+      ...(partial ? [{ label: `${this.nowLabel}:00–${this.nowTime}, in progress`, color: partial }] : []),
+    ];
+  });
 
   /** What each tier would need for today's projected volume. */
   protected readonly sizing = computed(() =>

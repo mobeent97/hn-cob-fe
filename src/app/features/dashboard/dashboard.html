@@ -46,52 +46,50 @@
 
   <div class="grid">
     <!-- The screen's question, answered by its biggest block -->
-    <section class="card span-8">
-      <div class="card-head">
-        <div>
-          <h2>Devices activated</h2>
-          <p class="card-sub num">
-            {{ thisMonth() }} so far this month against {{ lastMonth() }} last month ·
-            {{ activationTotal() }} in the last {{ range() }} months
-          </p>
-        </div>
-        <div class="seg" role="group" aria-label="Range">
-          <button [class.on]="range() === 6" (click)="range.set(6)">6 months</button>
-          <button [class.on]="range() === 12" (click)="range.set(12)">12 months</button>
-        </div>
+    <ui-chart-card
+      class="span-8"
+      title="Devices activated"
+      [subtitle]="thisMonth() + ' so far this month against ' + lastMonth() + ' last month · ' + activationTotal() + ' in the last ' + range() + ' months'"
+      [legend]="activationLegend()"
+      [loading]="loading()"
+      [height]="340"
+    >
+      <div chart-actions class="seg" role="group" aria-label="Range">
+        <button [class.on]="range() === 6" (click)="range.set(6)">6 months</button>
+        <button [class.on]="range() === 12" (click)="range.set(12)">12 months</button>
       </div>
-      <div class="card-body">
-        @if (loading()) {
-          <div class="skeleton" style="width:100%;height:240px"></div>
-        } @else {
-          <app-bar-chart [data]="activations()" [height]="240" label="Devices activated per month" />
-          <p class="legend"><span class="sw"></span>Complete month <span class="sw part"></span>This month, in progress</p>
-        }
-      </div>
-    </section>
+      <ui-bar-chart
+        [categories]="activationChart().categories"
+        [series]="activationChart().series"
+        [legend]="false"
+        [valueFormatter]="fmtValue"
+        aria-label="Devices activated per month"
+      />
+    </ui-chart-card>
 
-    <section class="card span-4">
-      <div class="card-head">
-        <div>
-          <h2>Fleet by status</h2>
-          <p class="card-sub num">{{ fmtNum(devices().length) }} devices in total</p>
-        </div>
-        @if (can.inventory()) { <a class="btn ghost sm" routerLink="/inventory">View inventory</a> }
-      </div>
-      <div class="card-body status">
-        <app-ring [segments]="ring()" [size]="128" label="Devices by status" />
+    <ui-chart-card class="span-4" title="Fleet by status" [subtitle]="fmtNum(devices().length) + ' devices in total'">
+      @if (can.inventory()) { <a chart-actions class="btn ghost sm" routerLink="/inventory">View inventory</a> }
+      <div class="status">
+        <ui-donut-chart
+          class="ring"
+          [slices]="ringData()"
+          [legend]="false"
+          centerLabel="Devices"
+          [valueFormatter]="fmtValue"
+          aria-label="Devices by status"
+        />
         <table class="table legend-table">
           <tbody>
-            @for (s of ring(); track s.label) {
+            @for (s of ringData(); track s.label) {
               <tr>
-                <td><span class="sw" [style.background]="s.colour"></span>{{ s.label }}</td>
+                <td><span class="sw" [style.background]="s.color"></span>{{ s.label }}</td>
                 <td class="num">{{ fmtNum(s.value) }}</td>
               </tr>
             }
           </tbody>
         </table>
       </div>
-    </section>
+    </ui-chart-card>
 
     <section class="card span-8">
       <div class="card-head">
@@ -170,18 +168,17 @@
       </div>
     </section>
 
-    <section class="card span-6">
-      <div class="card-head">
-        <div>
-          <h2>Devices in service by package</h2>
-          <p class="card-sub">Customer count in brackets</p>
-        </div>
-        @if (can.packages()) { <a class="btn ghost sm" routerLink="/packages">Packages</a> }
-      </div>
-      <div class="card-body">
-        <app-hbar-chart [rows]="packageRows()" [labelWidth]="120" label="Devices in service by package" />
-      </div>
-    </section>
+    <ui-chart-card class="span-6" title="Devices in service by package" subtitle="Customer count in brackets" [height]="300">
+      @if (can.packages()) { <a chart-actions class="btn ghost sm" routerLink="/packages">Packages</a> }
+      <ui-bar-chart
+        [horizontal]="true"
+        [categories]="packageChart().categories"
+        [series]="packageChart().series"
+        [legend]="false"
+        [valueFormatter]="packageChart().format"
+        aria-label="Devices in service by package"
+      />
+    </ui-chart-card>
 
     <section class="card span-6">
       <div class="card-head">

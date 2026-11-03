@@ -2,9 +2,9 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, input, si
 import { RouterLink } from '@angular/router';
 import { Store } from '../../core/data/store';
 import { fmtDateTime, fmtMoney, fmtNum } from '../../core/data/format';
-import { BarChart, LineChart, Ring, HBarChart } from '../../shared/charts/charts';
 import { DecimalPipe } from '@angular/common';
-import { CountUp } from '@iotility/shared-ui';
+import { BarChart, ChartCard, ChartLegendItem, ChartTheme, CountUp, DonutChart, LineChart } from '@iotility/shared-ui';
+import { barChart, formatNumber, hbarChart, lineChart, ringSlices } from '../../shared/charts/chart-data';
 import { Icon } from '../../shared/ui/icon';
 import { Tabs, TabItem } from '../../shared/ui/tabs';
 import { Toaster } from '../../shared/ui/toast';
@@ -25,7 +25,7 @@ import { Select, SelectOption } from '../../shared/ui/select';
  */
 @Component({
   selector: 'app-reportview',
-  imports: [HBarChart, Select, SelectOption, RouterLink, Icon, Tabs, CountUp, DecimalPipe, BarChart, LineChart, Ring, ScheduleDialog],
+  imports: [Select, SelectOption, RouterLink, Icon, Tabs, CountUp, DecimalPipe, BarChart, ChartCard, DonutChart, LineChart, ScheduleDialog],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './report-view.html',
   styleUrl: './report-view.scss',
@@ -56,6 +56,37 @@ export class ReportView {
   protected readonly result = computed(() => {
     const d = this.def();
     return d ? d.compute(makeCtx(this.store, this.filters(), d.forward)) : null;
+  });
+
+  private readonly chartTheme = inject(ChartTheme);
+  protected readonly fmtValue = formatNumber;
+  /** The report's chart as IoTility chart inputs, with the legend the chart card shows in its header. */
+  protected readonly chartView = computed(() => {
+    const r = this.result();
+    const palette = this.chartTheme.palette();
+    if (!r) return null;
+    const c = r.chart;
+    switch (c.kind) {
+      case 'bars': {
+        const chart = barChart(c.data, r.chartTitle, palette);
+        const [s] = chart.series;
+        const legend: ChartLegendItem[] = c.legend && s.colors
+          ? [{ label: c.legend[0], color: s.color! }, { label: c.legend[1], color: s.colors.at(-1)! }]
+          : [];
+        return { kind: c.kind, ...chart, legend, format: formatNumber, height: 340 };
+      }
+      case 'lines': {
+        const chart = lineChart(c.data, c.compare, c.legend, palette);
+        const legend = chart.series.map((s) => ({ label: s.name, color: s.color! }));
+        return { kind: c.kind, ...chart, legend, format: formatNumber, height: 340 };
+      }
+      case 'hbars': {
+        const chart = hbarChart(c.rows, r.chartTitle, palette);
+        return { kind: c.kind, ...chart, legend: [], height: Math.max(220, c.rows.length * 40 + 90) };
+      }
+      case 'ring':
+        return { kind: c.kind, categories: [], series: [], slices: ringSlices(c.segments), legend: [], format: formatNumber, height: 300 };
+    }
   });
   protected readonly isDefault = computed(() => {
     const f = this.filters();

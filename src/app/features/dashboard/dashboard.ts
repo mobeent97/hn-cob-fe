@@ -6,7 +6,8 @@ import { DatePipe, MONTHS, RelativePipe, daysFrom, fmtNum } from '../../core/dat
 import { DeviceStatus, ONBOARDING_STEPS, PackageName } from '../../core/data/models';
 import { Icon } from '../../shared/ui/icon';
 import { CountUp } from '@iotility/shared-ui';
-import { BarChart, BarDatum, HBarChart, HBarRow, Ring, RingSegment } from '../../shared/charts/charts';
+import { BarChart, ChartCard, ChartLegendItem, ChartTheme, DonutChart } from '@iotility/shared-ui';
+import { BarDatum, HBarRow, RingSegment, barChart, formatNumber, hbarChart, ringSlices } from '../../shared/charts/chart-data';
 import { simulateLoad } from '../../shared/ui/loading';
 
 type Range = 6 | 12;
@@ -18,13 +19,15 @@ type Range = 6 | 12;
  */
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink, Icon, CountUp, BarChart, HBarChart, Ring, DatePipe, RelativePipe],
+  imports: [RouterLink, Icon, CountUp, BarChart, ChartCard, DonutChart, DatePipe, RelativePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard.html',
-  styleUrl: './dashboard.scss',
+  styleUrl: './dashboard.css',
 })
 export class Dashboard {
   protected readonly store = inject(Store);
+  private readonly chartTheme = inject(ChartTheme);
+  protected readonly fmtValue = formatNumber;
   private readonly access = inject(Access);
   /** What the signed-in user may open from here. */
   protected readonly can = {
@@ -84,11 +87,11 @@ export class Dashboard {
   protected readonly ring = computed<RingSegment[]>(() => {
     const s = this.byStatus();
     return [
-      { label: 'In service', value: s.Sold, colour: 'var(--chart-1)' },
-      { label: 'Allocated', value: s.Allocated, colour: 'var(--chart-2)' },
-      { label: 'In stock', value: s.Available, colour: 'var(--chart-3)' },
-      { label: 'Faulty', value: s.Faulty, colour: 'var(--negative)' },
-      { label: 'Deactivated', value: s.Deactivated, colour: 'var(--chart-4)' },
+      { label: 'In service', value: s.Sold, colour: 'var(--color-brand-500)' },
+      { label: 'Allocated', value: s.Allocated, colour: 'var(--color-info)' },
+      { label: 'In stock', value: s.Available, colour: 'var(--color-muted)' },
+      { label: 'Faulty', value: s.Faulty, colour: 'var(--color-danger)' },
+      { label: 'Deactivated', value: s.Deactivated, colour: 'color-mix(in srgb, var(--color-muted) 35%, transparent)' },
     ];
   });
 
@@ -112,6 +115,25 @@ export class Dashboard {
       display: fmtNum(p.devices),
       sub: `${p.customers} ${p.customers === 1 ? 'customer' : 'customers'}`,
     })),
+  );
+
+  // IoTility chart inputs, recoloured from the chart palette on a light/dark switch.
+  protected readonly activationChart = computed(() =>
+    barChart(this.activations(), 'Devices activated', this.chartTheme.palette()),
+  );
+  protected readonly activationLegend = computed<ChartLegendItem[]>(() => {
+    const [series] = this.activationChart().series;
+    return [
+      { label: 'Complete month', color: series.color! },
+      { label: 'This month, in progress', color: series.colors!.at(-1)! },
+    ];
+  });
+  protected readonly ringData = computed(() => {
+    this.chartTheme.palette();
+    return ringSlices(this.ring());
+  });
+  protected readonly packageChart = computed(() =>
+    hbarChart(this.packageRows(), 'Devices in service', this.chartTheme.palette()),
   );
 
   protected readonly finding = computed(() => {

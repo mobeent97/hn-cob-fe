@@ -76,42 +76,35 @@
       </section>
 
       <!-- The block that answers the report's question -->
-      <section class="card main-chart">
-        <div class="card-head">
-          <div>
-            <h2>{{ r.chartTitle }}</h2>
-            <p class="card-sub num">{{ r.chartSub }}</p>
-          </div>
-          @switch (r.chart.kind) {
+      @if (chartView(); as cv) {
+        <ui-chart-card
+          class="main-chart"
+          [title]="r.chartTitle"
+          [subtitle]="r.chartSub"
+          [legend]="cv.legend"
+          [loading]="loading()"
+          [skeleton]="cv.kind === 'lines' ? 'line' : cv.kind === 'hbars' ? 'bar-horizontal' : cv.kind === 'ring' ? 'donut' : 'bar'"
+          [empty]="r.empty"
+          [emptyMessage]="r.emptyText"
+          [height]="cv.height"
+        >
+          @if (r.empty) {
+            <button chart-actions class="btn sm no-print" (click)="reset()" [disabled]="isDefault()">Reset filters</button>
+          }
+          @switch (cv.kind) {
             @case ('bars') {
-              @if (r.chart.legend; as lg) {
-                <p class="legend"><span class="sw"></span>{{ lg[0] }}<span class="sw part"></span>{{ lg[1] }}</p>
-              }
+              <ui-bar-chart [categories]="cv.categories" [series]="cv.series" [legend]="false" [valueFormatter]="cv.format" [attr.aria-label]="r.chartTitle" />
             }
             @case ('lines') {
-              <p class="legend"><span class="sw line"></span>{{ r.chart.legend[0] }}<span class="sw line dashed"></span>{{ r.chart.legend[1] }}</p>
+              <ui-line-chart [categories]="cv.categories" [series]="cv.series" [legend]="false" [valueFormatter]="cv.format" [attr.aria-label]="r.chartTitle" />
             }
-          }
-        </div>
-        <div class="card-body">
-          @if (loading()) {
-            <div class="skeleton" style="width:100%;height:240px"></div>
-          } @else if (r.empty) {
-            <div class="empty">{{ r.emptyText }} <button class="btn sm no-print" (click)="reset()" [disabled]="isDefault()">Reset filters</button></div>
-          } @else {
-            @switch (r.chart.kind) {
-              @case ('bars') {
-                <app-bar-chart [data]="r.chart.data" [height]="240" [label]="r.chartTitle" />
-              }
-              @case ('lines') {
-                <app-line-chart [data]="r.chart.data" [compare]="r.chart.compare" [height]="240" [label]="r.chartTitle" />
-              }
-              @case ('hbars') {
-                <app-hbar-chart [rows]="r.chart.rows" [label]="r.chartTitle" [labelWidth]="210" />
-              }
-              @case ('ring') {
+            @case ('hbars') {
+              <ui-bar-chart [horizontal]="true" [maxVisible]="0" [categories]="cv.categories" [series]="cv.series" [legend]="false" [valueFormatter]="cv.format" [attr.aria-label]="r.chartTitle" />
+            }
+            @case ('ring') {
+              @if (r.chart.kind === 'ring') {
                 <div class="ring-wrap">
-                  <app-ring [segments]="r.chart.segments" [size]="168" [label]="r.chartTitle" />
+                  <ui-donut-chart class="ring" [slices]="cv.slices ?? []" [legend]="false" [showTotal]="false" [valueFormatter]="cv.format" [attr.aria-label]="r.chartTitle" />
                   <div class="table-wrap">
                     <table class="table legend-table">
                       <thead>
@@ -133,8 +126,8 @@
               }
             }
           }
-        </div>
-      </section>
+        </ui-chart-card>
+      }
 
       <!-- Breakdown: totals are summed from the rows shown -->
       @if (table(); as t) {

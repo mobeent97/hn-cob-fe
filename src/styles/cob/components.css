@@ -198,6 +198,31 @@
     @apply w-auto min-w-40;
   }
 
+  /* Segmented control (FleetPoint settings .segmented): one bordered strip, the chosen option in brand. */
+  .seg {
+    @apply inline-flex shrink-0 overflow-hidden rounded-xl border border-line bg-white dark:border-dark-line dark:bg-dark-canvas;
+  }
+  .seg button {
+    @apply h-8 cursor-pointer border-0 bg-transparent px-3 text-xs font-medium whitespace-nowrap text-muted dark:text-brand-300;
+    transition:
+      background-color var(--duration-hover) ease,
+      color var(--duration-hover) ease;
+  }
+  .seg button + button {
+    @apply border-l border-line dark:border-dark-line;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .seg button:not(.on):not(:disabled):hover {
+      @apply text-brand-600 dark:text-white;
+    }
+  }
+  .seg button.on {
+    @apply bg-brand-600 font-semibold text-white;
+  }
+  .seg button:disabled {
+    @apply cursor-not-allowed opacity-50;
+  }
+
   /* Search box: icon inside the control. */
   .search {
     @apply relative flex w-75 max-w-full items-center;

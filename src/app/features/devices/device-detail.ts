@@ -8,8 +8,8 @@ import { Tabs, TabItem } from '../../shared/ui/tabs';
 import { Menu, MenuItem } from '../../shared/ui/menu';
 import { Dialog } from '../../shared/ui/dialog';
 import { Toaster } from '../../shared/ui/toast';
-import { CountUp } from '@iotility/shared-ui';
-import { LineChart } from '../../shared/charts/charts';
+import { ChartTheme, CountUp, LineChart } from '@iotility/shared-ui';
+import { lineChart } from '../../shared/charts/chart-data';
 import { simulateLoad } from '../../shared/ui/loading';
 import { STATUS_LABEL } from '../inventory/device-status';
 import { Access } from '../../core/access/access';
@@ -286,6 +286,11 @@ export class DeviceDetail {
     const vs = this.voltage().map((p) => p.value);
     return vs.length ? { min: Math.min(...vs), max: Math.max(...vs) } : null;
   });
+  private readonly chartTheme = inject(ChartTheme);
+  protected readonly voltageChart = computed(() => lineChart(this.voltage(), [], ['Voltage', ''], this.chartTheme.palette()));
+  protected readonly fmtVolts = (v: number) => `${v.toFixed(1)} V`;
+  /** Voltages sit around 12–14 V: start the axis near the data, not at zero. */
+  protected readonly voltageAxis = { yAxis: { scale: true } };
   protected readonly bars = [1, 2, 3, 4, 5];
   protected readonly signalBars = computed(() => { const v = this.reported()['gsmSignal']; return typeof v === 'number' ? v : null; });
 
