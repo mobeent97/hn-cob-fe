@@ -28,7 +28,7 @@ export interface MenuItem {
         [attr.aria-label]="label()"
         aria-haspopup="menu"
         [attr.aria-expanded]="open()"
-        (click)="$event.stopPropagation(); open.set(!open())"
+        (click)="toggle($event)"
       >
         <ng-content />
       </button>
@@ -38,7 +38,7 @@ export interface MenuItem {
         [attr.aria-label]="label()"
         aria-haspopup="menu"
         [attr.aria-expanded]="open()"
-        (click)="$event.stopPropagation(); open.set(!open())"
+        (click)="toggle($event)"
       >
         <app-icon [name]="icon()" />
       </button>
@@ -79,8 +79,18 @@ export class Menu {
     this.open.set(false);
   }
 
-  @HostListener('click')
-  measure() {
+  /**
+   * Opens below the trigger (or above it near the bottom of the screen), right-aligned to it. Measured here, on the
+   * trigger's own click: the click stops at the trigger so the document listener doesn't close the menu at once,
+   * which means a listener on the host never sees it.
+   */
+  protected toggle(event: MouseEvent) {
+    event.stopPropagation();
+    if (!this.open()) this.measure();
+    this.open.update((v) => !v);
+  }
+
+  private measure() {
     const r = this.host.nativeElement.getBoundingClientRect();
     this.up.set(window.innerHeight - r.bottom < 220);
     this.pos.set({ top: r.bottom + 8, bottom: window.innerHeight - r.top + 8, right: window.innerWidth - r.right });
