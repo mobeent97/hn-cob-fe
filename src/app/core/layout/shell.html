@@ -62,7 +62,7 @@
         [title]="theme.mode() === 'dark' ? 'Light mode' : 'Dark mode'"
         (click)="theme.toggle()"
       >
-        <span class="swap" [class.dark]="theme.mode() === 'dark'">
+        <span class="swap" [class.is-dark]="theme.mode() === 'dark'">
           <app-icon name="moon" [size]="17" class="moon" />
           <app-icon name="sun" [size]="17" class="sun" />
         </span>

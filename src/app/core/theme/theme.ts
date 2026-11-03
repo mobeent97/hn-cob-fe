@@ -3,16 +3,26 @@ import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core'
 export type ThemePref = 'light' | 'dark' | 'system';
 const KEY = 'hn-theme';
 
+function readPref(): ThemePref {
+  try {
+    const saved = localStorage.getItem(KEY);
+    return saved === 'light' || saved === 'system' ? saved : 'dark';
+  } catch {
+    return 'dark';
+  }
+}
+
 /**
- * Light / dark / follow-the-system theme. index.html applies the saved choice before first
- * paint; this service keeps <html data-theme> in sync afterwards and cross-fades the switch
- * with a View Transition (skipped under reduced motion).
+ * Light / dark / follow-the-system theme, dark by default as in IoTility. index.html applies the
+ * saved choice before first paint; this service keeps the `.dark` class on <html> (which every
+ * IoTility token and `dark:` utility keys off) and `color-scheme` in sync afterwards, and
+ * cross-fades the switch with a View Transition (skipped under reduced motion).
  */
 @Injectable({ providedIn: 'root' })
 export class Theme {
   private readonly media = matchMedia('(prefers-color-scheme: dark)');
   private readonly systemDark = signal(this.media.matches);
-  readonly pref = signal<ThemePref>((localStorage.getItem(KEY) as ThemePref) ?? 'system');
+  readonly pref = signal<ThemePref>(readPref());
   readonly mode = computed<'light' | 'dark'>(() =>
     this.pref() === 'system' ? (this.systemDark() ? 'dark' : 'light') : (this.pref() as 'light' | 'dark'),
   );
@@ -31,7 +41,11 @@ export class Theme {
 
   set(pref: ThemePref) {
     this.pref.set(pref);
-    localStorage.setItem(KEY, pref);
+    try {
+      localStorage.setItem(KEY, pref);
+    } catch {
+      /* storage blocked: the choice still applies for this visit */
+    }
     this.apply(true);
   }
 
@@ -41,10 +55,11 @@ export class Theme {
 
   private apply(animate: boolean) {
     const root = document.documentElement;
-    const next = this.mode();
-    if (root.getAttribute('data-theme') === next) return;
+    const dark = this.mode() === 'dark';
+    if (root.classList.contains('dark') === dark && root.style.colorScheme) return;
     const swap = () => {
-      root.setAttribute('data-theme', next);
+      root.classList.toggle('dark', dark);
+      root.style.colorScheme = dark ? 'dark' : 'light';
       this.version.update((v) => v + 1);
     };
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;

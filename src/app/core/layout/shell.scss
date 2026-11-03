@@ -157,12 +157,12 @@ nav {
       transform: rotate(-60deg) scale(0.6);
       filter: blur(var(--blur-small));
     }
-    &.dark .moon {
+    &.is-dark .moon {
       opacity: 0;
       transform: rotate(60deg) scale(0.6);
       filter: blur(var(--blur-small));
     }
-    &.dark .sun {
+    &.is-dark .sun {
       opacity: 1;
       transform: none;
       filter: none;

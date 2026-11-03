@@ -1,7 +1,7 @@
 import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { Store } from './core/data/store';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { provideRouter, withComponentInputBinding, withInMemoryScrolling, withViewTransitions } from '@angular/router';
+import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
 
@@ -12,8 +12,7 @@ export const appConfig: ApplicationConfig = {
       routes,
       withComponentInputBinding(),
       withInMemoryScrolling({ scrollPositionRestoration: 'top' }),
-      // Route changes cross-fade the sheet only (see styles/_base.scss ::view-transition rules).
-      withViewTransitions({ skipInitialTransition: true }),
+      // No router view transitions: the incoming page fades in through IoTility's route-page-in (theme.css).
     ),
     provideHttpClient(withInterceptors([authInterceptor])),
     // Design preview: any URL with ?as=<userId> signs in as that sample user before the first route check.
