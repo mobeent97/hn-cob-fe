@@ -46,6 +46,7 @@ const MERGE_KM = 150;
     <div class="stage" [class.fallback]="fallback()" [class.ready]="ready()">
       @if (!fallback()) {
         <div class="map" #map></div>
+        <span class="loading" aria-hidden="true"><i class="spinner"></i></span>
       }
     </div>
     <p class="caption num">{{ caption() }}</p>

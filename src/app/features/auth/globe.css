@@ -8,49 +8,24 @@
   @apply relative aspect-square;
   width: min(760px, 100%, calc(100dvh - 300px));
 }
-/*
- * Loading: a shaded planet exactly where the map will draw (FILL in globe.ts: the disc is 96% of the stage), with a
- * soft sheen sweeping across it. Both fade out as the map fades in, so nothing is left around the globe.
- */
-.stage::before,
-.stage::after {
-  content: '';
-  @apply pointer-events-none absolute inset-[2%] rounded-full;
-  transition: opacity 600ms var(--ease-out);
+/* While the tiles load: a small spinner where the globe will appear, gone once it has drawn. */
+.loading {
+  @apply pointer-events-none absolute inset-0 grid place-items-center;
+  transition: opacity 300ms var(--ease-out);
 }
-.stage::before {
-  background: radial-gradient(
-    circle at 34% 30%,
-    color-mix(in srgb, var(--color-brand-500) 30%, var(--color-dark-surface)),
-    color-mix(in srgb, var(--color-brand-950) 60%, var(--color-dark-canvas)) 72%
-  );
+.spinner {
+  @apply block size-6 rounded-full border-2 border-brand-300/25 border-t-brand-300;
+  animation: globe-spin 800ms linear infinite;
 }
-.stage::after {
-  background: linear-gradient(
-    100deg,
-    transparent 35%,
-    color-mix(in srgb, var(--color-white) 7%, transparent) 50%,
-    transparent 65%
-  );
-  background-size: 250% 100%;
-  animation: globe-sheen 1.8s ease-in-out infinite;
-}
-.stage.ready::before,
-.stage.ready::after {
+.stage.ready .loading {
   @apply opacity-0;
 }
-.stage.ready::after {
+.stage.ready .spinner {
   animation: none;
 }
-.stage.fallback::after {
-  @apply hidden;
-}
-@keyframes globe-sheen {
-  from {
-    background-position: 120% 0;
-  }
+@keyframes globe-spin {
   to {
-    background-position: -20% 0;
+    rotate: 1turn;
   }
 }
 
@@ -81,11 +56,11 @@
 
 @media (prefers-reduced-motion: reduce) {
   .map,
-  .stage::before,
-  .stage::after {
+  .loading {
     transition: none;
   }
-  .stage::after {
-    animation: none;
+  /* Still shows it is working, just slower. */
+  .spinner {
+    animation-duration: 2s;
   }
 }
