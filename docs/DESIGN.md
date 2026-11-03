@@ -156,9 +156,11 @@ file), through `shared/maps/maplibre.ts`:
 - **Sign-in globe** (`features/auth/globe.ts`): MapLibre's globe projection with its own minimal style on the
   same OpenFreeMap vector tiles (`mapVectorTilesUrl`): land and sea in dark brand tones and thin country borders,
   no labels. It always sits on the black brand panel, so it doesn't follow the theme. Its zoom is solved from
-  MapLibre's camera so the visible disc fills the stage. Customer cities and vehicles are circle layers; it turns
+  MapLibre's camera so the visible disc fills the stage; a shaded placeholder planet with a sheen holds that disc
+  until the tiles have drawn. Customer cities within 150 km merge into one metro marker; vehicles are dots. It turns
   slowly (paused while the user drags or uses the arrow keys, still under reduced motion) and loads MapLibre only
-  on screens wide enough to show the panel.
+  on screens wide enough to show the panel. It carries no map credit because the portal is internal; a public
+  screen would need OpenStreetMap's credit back (`createIotMap(…, { attribution: true })`, the default).
 
 ## Motion
 

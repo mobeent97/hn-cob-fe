@@ -28,6 +28,8 @@ const FILL = 0.96;
 /** MapLibre's default vertical field of view, in degrees. */
 const FOV = 36.87;
 const SOURCE = 'globe-points';
+/** Cities closer than this share one marker, so neighbours (Dubai, Sharjah, Ajman…) don't stack into a knot. */
+const MERGE_KM = 150;
 
 /**
  * The sign-in screen's one live thing: a map on a globe (MapLibre's globe projection on the OpenFreeMap vector
@@ -139,7 +141,9 @@ export class Globe {
           doubleClickZoom: false,
           keyboard: true,
         },
-        'dark',
+        // No map credit: the portal is internal-only. If this screen is ever public, OpenStreetMap's licence
+        // needs it back ("OpenFreeMap © OpenMapTiles Data from OpenStreetMap", linked).
+        { theme: 'dark', attribution: false },
       );
     } catch {
       // No WebGL: the plain disc stands in.
@@ -253,7 +257,7 @@ export class Globe {
     };
   }
 
-  /** Customer cities sized by how many customers they have, then every vehicle. */
+  /** One marker per metro area (cities within MERGE_KM merged), sized by its customers, then every vehicle. */
   private points(): FeatureCollection {
     const live = cssColor('var(--color-brand-300)');
     const offline = cssColor('color-mix(in srgb, var(--color-white) 35%, var(--color-dark-surface))');
@@ -262,14 +266,11 @@ export class Globe {
     return {
       type: 'FeatureCollection',
       features: [
-        ...[...perCity].map(([zone, n]) => {
-          const [lat, lng] = CITIES[zone];
-          return {
-            type: 'Feature' as const,
-            properties: { kind: 'city', r: Math.min(12, 4 + Math.sqrt(n) * 1.8) },
-            geometry: { type: 'Point' as const, coordinates: [lng, lat] },
-          };
-        }),
+        ...metros(perCity).map(({ lat, lng, n }) => ({
+          type: 'Feature' as const,
+          properties: { kind: 'city', r: Math.min(12, 4 + Math.sqrt(n) * 1.8) },
+          geometry: { type: 'Point' as const, coordinates: [lng, lat] },
+        })),
         ...this.store.vehicles().map((v) => ({
           type: 'Feature' as const,
           properties: { kind: v.state === 'Offline' ? 'offline' : 'live', color: v.state === 'Offline' ? offline : live },
@@ -328,4 +329,33 @@ export class Globe {
     this.map?.remove();
     this.map = undefined;
   }
+}
+
+/**
+ * Greedy merge of customer cities into metro areas: biggest city first, each later city joins the first metro
+ * within MERGE_KM of it. A metro sits at its customer-weighted centre and counts all their customers.
+ */
+function metros(perCity: Map<string, number>): { lat: number; lng: number; n: number }[] {
+  const out: { lat: number; lng: number; n: number }[] = [];
+  for (const [zone, n] of [...perCity].sort((a, b) => b[1] - a[1])) {
+    const [lat, lng] = CITIES[zone];
+    const metro = out.find((m) => km(m.lat, m.lng, lat, lng) < MERGE_KM);
+    if (!metro) {
+      out.push({ lat, lng, n });
+      continue;
+    }
+    metro.lat = (metro.lat * metro.n + lat * n) / (metro.n + n);
+    metro.lng = (metro.lng * metro.n + lng * n) / (metro.n + n);
+    metro.n += n;
+  }
+  return out;
+}
+
+/** Great-circle distance in km (haversine). */
+function km(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const rad = Math.PI / 180;
+  const a =
+    Math.sin(((lat2 - lat1) * rad) / 2) ** 2 +
+    Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(((lng2 - lng1) * rad) / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(a));
 }

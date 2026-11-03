@@ -17,14 +17,15 @@ export type LayerWithoutSource<T = maplibregl.LayerSpecification> = T extends { 
 /**
  * A map on the OpenFreeMap style for the current theme. A light/dark switch swaps the style, which drops every
  * custom source and layer: re-add yours on the map's 'style.load' event (it also fires for the first style).
- * `theme: 'dark'` pins the dark style for maps that always sit on a dark surface (the sign-in globe).
+ * `theme: 'dark'` pins the dark style for maps that always sit on a dark surface (the sign-in globe);
+ * `attribution: false` leaves out the credit button for a page that prints the credit itself.
  */
 export function createIotMap(
   container: HTMLElement,
   center: LatLng,
   zoom: number,
   options: Partial<MapOptions> = {},
-  theme: 'follow' | 'dark' = 'follow',
+  { theme = 'follow', attribution = true }: { theme?: 'follow' | 'dark'; attribution?: boolean } = {},
 ): Map {
   const dark = () => theme === 'dark' || isDark();
   const map = new maplibregl.Map({
@@ -38,7 +39,7 @@ export function createIotMap(
     style: dark() ? environment.mapDarkStyleUrl : environment.mapLightStyleUrl,
     ...options,
   });
-  map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
+  if (attribution) map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
   const collapseAttribution = () => {
     const attribution = map
       .getContainer()
