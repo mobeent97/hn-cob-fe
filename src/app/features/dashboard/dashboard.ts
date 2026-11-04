@@ -5,7 +5,7 @@ import { Access } from '../../core/access/access';
 import { DatePipe, MONTHS, RelativePipe, daysFrom, fmtNum } from '../../core/data/format';
 import { DeviceStatus, ONBOARDING_STEPS, PackageName } from '../../core/data/models';
 import { Icon } from '../../shared/ui/icon';
-import { CountUp } from '@iotility/shared-ui';
+import { CountUp, SpotlightBorder } from '@iotility/shared-ui';
 import { BarChart, ChartCard, ChartLegendItem, ChartTheme, DonutChart } from '@iotility/shared-ui';
 import { BarDatum, HBarRow, RingSegment, barChart, formatNumber, hbarChart, ringSlices } from '../../shared/charts/chart-data';
 import { simulateLoad } from '../../shared/ui/loading';
@@ -19,7 +19,7 @@ type Range = 6 | 12;
  */
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink, Icon, CountUp, BarChart, ChartCard, DonutChart, DatePipe, RelativePipe],
+  imports: [RouterLink, Icon, CountUp, SpotlightBorder, BarChart, ChartCard, DonutChart, DatePipe, RelativePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',

@@ -12,32 +12,47 @@
 
   <!-- KPI strip: one container split by hairlines, label over value, baseline named in the caption -->
   <section class="kpi-strip" aria-label="Key figures">
-    <div class="kpi">
-      <span class="kpi-label">Active customers</span>
+    <div class="kpi" sharedSpotlightBorder data-tone="success">
+      <header>
+        <span class="kpi-label">Active customers</span>
+        <i class="kpi-icon"><app-icon name="building-2" /></i>
+      </header>
       @if (loading()) { <span class="skeleton" style="width:56px;height:30px;margin:3px 0"></span> }
       @else { <span class="kpi-value"><span class="num" [uiCountUp]="active()"></span></span> }
       <span class="kpi-caption num">of {{ customers().length }} on the platform</span>
     </div>
-    <div class="kpi">
-      <span class="kpi-label">Devices in service</span>
+    <div class="kpi" sharedSpotlightBorder data-tone="success">
+      <header>
+        <span class="kpi-label">Devices in service</span>
+        <i class="kpi-icon"><app-icon name="cpu" /></i>
+      </header>
       @if (loading()) { <span class="skeleton" style="width:72px;height:30px;margin:3px 0"></span> }
       @else { <span class="kpi-value"><span class="num" [uiCountUp]="byStatus().Sold"></span></span> }
       <span class="kpi-caption num">{{ pct(byStatus().Sold) }}% of all devices</span>
     </div>
-    <div class="kpi">
-      <span class="kpi-label">Awaiting installation</span>
+    <div class="kpi" sharedSpotlightBorder data-tone="warning" [attr.data-zero]="byStatus().Allocated === 0 || null">
+      <header>
+        <span class="kpi-label">Awaiting installation</span>
+        <i class="kpi-icon"><app-icon name="clock" /></i>
+      </header>
       @if (loading()) { <span class="skeleton" style="width:48px;height:30px;margin:3px 0"></span> }
       @else { <span class="kpi-value"><span class="num" [uiCountUp]="byStatus().Allocated"></span></span> }
       <span class="kpi-caption">allocated, not yet active</span>
     </div>
-    <div class="kpi">
-      <span class="kpi-label">In stock</span>
+    <div class="kpi" sharedSpotlightBorder data-tone="neutral">
+      <header>
+        <span class="kpi-label">In stock</span>
+        <i class="kpi-icon"><app-icon name="boxes" /></i>
+      </header>
       @if (loading()) { <span class="skeleton" style="width:48px;height:30px;margin:3px 0"></span> }
       @else { <span class="kpi-value"><span class="num" [uiCountUp]="byStatus().Available"></span></span> }
       <span class="kpi-caption num">{{ byStatus().Faulty }} faulty, held for RMA</span>
     </div>
-    <div class="kpi">
-      <span class="kpi-label">Contracts ending</span>
+    <div class="kpi" sharedSpotlightBorder data-tone="warning" [attr.data-zero]="expiring().length === 0 || null">
+      <header>
+        <span class="kpi-label">Contracts ending</span>
+        <i class="kpi-icon"><app-icon name="calendar-clock" /></i>
+      </header>
       @if (loading()) { <span class="skeleton" style="width:32px;height:30px;margin:3px 0"></span> }
       @else { <span class="kpi-value"><span class="num" [uiCountUp]="expiring().length"></span></span> }
       <span class="kpi-caption">within the next 60 days</span>

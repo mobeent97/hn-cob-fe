@@ -91,12 +91,12 @@
     </div>
 
     <div class="count-cards" role="group" aria-label="Filter by registration state">
-      <button class="count-card" [class.selected]="filter() === 'all'" (click)="filter.set('all')" [attr.aria-pressed]="filter() === 'all'">
+      <button class="count-card" sharedSpotlightBorder [class.selected]="filter() === 'all'" (click)="filter.set('all')" [attr.aria-pressed]="filter() === 'all'">
         <span class="cc-label">All identities</span>
         <span class="cc-value">@if (loading()) { <span class="skeleton" style="width:40px;height:18px"></span> } @else { <span class="num" [uiCountUp]="counts().all"></span> }</span>
       </button>
       @for (r of registrations; track r) {
-        <button class="count-card" [class.selected]="filter() === r" (click)="filter.set(filter() === r ? 'all' : r)" [attr.aria-pressed]="filter() === r">
+        <button class="count-card" sharedSpotlightBorder [class.selected]="filter() === r" (click)="filter.set(filter() === r ? 'all' : r)" [attr.aria-pressed]="filter() === r">
           <span class="cc-label">{{ r }}</span>
           <span class="cc-value" [class.neg]="r === 'Attestation failed' && counts()[r]">
             @if (loading()) { <span class="skeleton" style="width:32px;height:18px"></span> } @else { <span class="num" [uiCountUp]="counts()[r]"></span> }

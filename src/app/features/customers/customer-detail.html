@@ -48,26 +48,38 @@
         }
 
         <section class="kpi-strip smooth-reveal" style="--reveal-delay: 80ms" aria-label="Devices">
-          <div class="kpi">
-            <span class="kpi-label">In service</span>
+          <div class="kpi" sharedSpotlightBorder data-tone="success">
+            <header>
+              <span class="kpi-label">In service</span>
+              <i class="kpi-icon"><app-icon name="cpu" /></i>
+            </header>
             @if (loading()) { <span class="skeleton" style="width:48px;height:30px;margin:3px 0"></span> }
             @else { <span class="kpi-value"><span class="num" [uiCountUp]="counts().Sold"></span></span> }
             <span class="kpi-caption num">@if (c.stepsDone < 7 && !devices().length) { hardware not assigned yet } @else { of {{ devices().length }} assigned devices }</span>
           </div>
-          <div class="kpi">
-            <span class="kpi-label">Allocated</span>
+          <div class="kpi" sharedSpotlightBorder data-tone="warning" [attr.data-zero]="counts().Allocated === 0 || null">
+            <header>
+              <span class="kpi-label">Allocated</span>
+              <i class="kpi-icon"><app-icon name="clock" /></i>
+            </header>
             @if (loading()) { <span class="skeleton" style="width:40px;height:30px;margin:3px 0"></span> }
             @else { <span class="kpi-value"><span class="num" [uiCountUp]="counts().Allocated"></span></span> }
             <span class="kpi-caption">waiting for installation</span>
           </div>
-          <div class="kpi">
-            <span class="kpi-label">Faulty</span>
+          <div class="kpi" sharedSpotlightBorder data-tone="danger" [attr.data-zero]="counts().Faulty === 0 || null">
+            <header>
+              <span class="kpi-label">Faulty</span>
+              <i class="kpi-icon"><app-icon name="alert" /></i>
+            </header>
             @if (loading()) { <span class="skeleton" style="width:32px;height:30px;margin:3px 0"></span> }
             @else { <span class="kpi-value" [class.neg]="counts().Faulty > 0"><span class="num" [uiCountUp]="counts().Faulty"></span></span> }
             <span class="kpi-caption">held for RMA</span>
           </div>
-          <div class="kpi">
-            <span class="kpi-label">Monthly subscription</span>
+          <div class="kpi" sharedSpotlightBorder data-tone="brand">
+            <header>
+              <span class="kpi-label">Monthly subscription</span>
+              <i class="kpi-icon"><app-icon name="receipt" /></i>
+            </header>
             @if (loading()) { <span class="skeleton" style="width:96px;height:30px;margin:3px 0"></span> }
             @else { <span class="kpi-value"><span class="unit-lead">AED</span> <span class="num" [uiCountUp]="monthly()"></span></span> }
             <span class="kpi-caption num">{{ fmtMoney(price(), 'AED') }} × devices in service</span>

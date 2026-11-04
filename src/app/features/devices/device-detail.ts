@@ -8,7 +8,7 @@ import { Tabs, TabItem } from '../../shared/ui/tabs';
 import { Menu, MenuItem } from '../../shared/ui/menu';
 import { Dialog } from '../../shared/ui/dialog';
 import { Toaster } from '../../shared/ui/toast';
-import { ChartTheme, CountUp, LineChart } from '@iotility/shared-ui';
+import { ChartTheme, CountUp, LineChart, SpotlightBorder } from '@iotility/shared-ui';
 import { lineChart } from '../../shared/charts/chart-data';
 import { simulateLoad } from '../../shared/ui/loading';
 import { STATUS_LABEL } from '../inventory/device-status';
@@ -19,6 +19,8 @@ import {
   since, syncTone, validateSetting, voltageSeries,
 } from './device-meta';
 import { Select, SelectOption } from '../../shared/ui/select';
+
+const SYNC_CARD_TONE: Record<string, string> = { positive: 'success', warning: 'warning', negative: 'danger', info: 'info' };
 
 type Tab = 'overview' | 'configuration' | 'commands' | 'telemetry' | 'history';
 const TABS: Tab[] = ['overview', 'configuration', 'commands', 'telemetry', 'history'];
@@ -33,7 +35,7 @@ interface ConfigRow { key: string; meta: SettingMeta; desired: TwinValue; report
  */
 @Component({
   selector: 'app-device-detail',
-  imports: [Select, SelectOption, RouterLink, Icon, Tabs, Menu, Dialog, CountUp, LineChart, DatePipe, DateTimePipe, RelativePipe, TonePipe, ReadOnlyNote],
+  imports: [Select, SelectOption, RouterLink, Icon, Tabs, Menu, Dialog, CountUp, SpotlightBorder, LineChart, DatePipe, DateTimePipe, RelativePipe, TonePipe, ReadOnlyNote],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './device-detail.html',
   styleUrl: './device-detail.css',
@@ -81,6 +83,10 @@ export class DeviceDetail {
   protected readonly connected = computed(() => this.iot()?.connection === 'Connected');
   protected readonly sync = computed<SyncState>(() => { const t = this.twin(); return t ? this.store.twinSync(t) : 'Not configured'; });
   protected readonly syncTone = computed(() => (this.neverConnected() && this.sync() !== 'Not configured' ? 'info' : syncTone(this.sync())));
+  /** The Configuration card's tone (its chip and border glow), from the same sync state as its label. */
+  protected readonly syncCardTone = computed(
+    () => SYNC_CARD_TONE[this.syncTone()] ?? 'neutral',
+  );
   protected readonly syncLabel = computed(() => (this.neverConnected() && this.sync() !== 'Not configured' ? 'Waiting' : this.sync()));
   protected readonly profile = computed(() => {
     const pid = this.twin()?.desired.props['$profile'];

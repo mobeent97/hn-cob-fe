@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { Store } from '../../core/data/store';
 import { fmtDateTime, fmtMoney, fmtNum } from '../../core/data/format';
 import { DecimalPipe } from '@angular/common';
-import { BarChart, ChartCard, ChartLegendItem, ChartTheme, CountUp, DonutChart, LineChart } from '@iotility/shared-ui';
+import { BarChart, ChartCard, ChartLegendItem, ChartTheme, CountUp, DonutChart, LineChart, SpotlightBorder } from '@iotility/shared-ui';
 import { barChart, formatNumber, hbarChart, lineChart, ringSlices } from '../../shared/charts/chart-data';
 import { Icon } from '../../shared/ui/icon';
 import { Tabs, TabItem } from '../../shared/ui/tabs';
@@ -25,7 +25,7 @@ import { Select, SelectOption } from '../../shared/ui/select';
  */
 @Component({
   selector: 'app-reportview',
-  imports: [Select, SelectOption, RouterLink, Icon, Tabs, CountUp, DecimalPipe, BarChart, ChartCard, DonutChart, LineChart, ScheduleDialog],
+  imports: [Select, SelectOption, RouterLink, Icon, Tabs, CountUp, SpotlightBorder, DecimalPipe, BarChart, ChartCard, DonutChart, LineChart, ScheduleDialog],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './report-view.html',
   styleUrl: './report-view.css',

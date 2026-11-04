@@ -9,7 +9,7 @@ import { Pager, pageOf } from '../../shared/ui/pager';
 import { Menu, MenuItem } from '../../shared/ui/menu';
 import { Dialog } from '../../shared/ui/dialog';
 import { Toaster } from '../../shared/ui/toast';
-import { CountUp } from '@iotility/shared-ui';
+import { CountUp, SpotlightBorder } from '@iotility/shared-ui';
 import { simulateLoad } from '../../shared/ui/loading';
 import { fmtSize } from './onboarding';
 import { OrgTag, ReadOnlyNote, orgContext, writeAccess } from '../tenancy';
@@ -27,7 +27,7 @@ const DAY = 86400000;
  */
 @Component({
   selector: 'app-customer-detail',
-  imports: [RouterLink, Icon, Tabs, Pager, Menu, Dialog, CountUp, DatePipe, DateTimePipe, RelativePipe, TonePipe, OrgTag, ReadOnlyNote],
+  imports: [RouterLink, Icon, Tabs, Pager, Menu, Dialog, CountUp, SpotlightBorder, DatePipe, DateTimePipe, RelativePipe, TonePipe, OrgTag, ReadOnlyNote],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './customer-detail.html',
   styleUrl: './customer-detail.css',

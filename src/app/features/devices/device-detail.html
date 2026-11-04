@@ -48,8 +48,11 @@
       <!-- Overview ──────────────────────────────────────────── -->
       @case ('overview') {
         <section class="kpi-strip smooth-reveal" style="--reveal-delay: 80ms" aria-label="Device health">
-          <div class="kpi">
-            <span class="kpi-label">Connection</span>
+          <div class="kpi" sharedSpotlightBorder [attr.data-tone]="connected() ? 'success' : 'neutral'">
+            <header>
+              <span class="kpi-label">Connection</span>
+              <i class="kpi-icon"><app-icon [name]="connected() ? 'wifi' : 'wifi-off'" /></i>
+            </header>
             @if (loading()) { <span class="skeleton" style="width:120px;height:30px;margin:3px 0"></span> }
             @else { <span class="kpi-value text-value" [class.pos]="connected()">{{ connected() ? 'Connected' : iot()?.registration === 'Registered' ? 'Disconnected' : (iot()?.registration ?? 'No identity') }}</span> }
             <span class="kpi-caption num">
@@ -58,21 +61,30 @@
               @else { never connected }
             </span>
           </div>
-          <div class="kpi">
-            <span class="kpi-label">Last message</span>
+          <div class="kpi" sharedSpotlightBorder data-tone="info">
+            <header>
+              <span class="kpi-label">Last message</span>
+              <i class="kpi-icon"><app-icon name="clock" /></i>
+            </header>
             @if (loading()) { <span class="skeleton" style="width:90px;height:30px;margin:3px 0"></span> }
             @else if (iot()?.lastActivity) { <span class="kpi-value text-value">{{ iot()?.lastActivity | rel }}</span> }
             @else { <span class="kpi-value dash">—</span> }
             <span class="kpi-caption">device-to-cloud, any message</span>
           </div>
-          <div class="kpi">
-            <span class="kpi-label">Messages today</span>
+          <div class="kpi" sharedSpotlightBorder data-tone="info">
+            <header>
+              <span class="kpi-label">Messages today</span>
+              <i class="kpi-icon"><app-icon name="activity" /></i>
+            </header>
             @if (loading()) { <span class="skeleton" style="width:60px;height:30px;margin:3px 0"></span> }
             @else { <span class="kpi-value"><span class="num" [uiCountUp]="iot()?.messagesToday ?? 0"></span></span> }
             <span class="kpi-caption">since 00:00{{ isDashcam() ? ', events only' : '' }}</span>
           </div>
-          <div class="kpi">
-            <span class="kpi-label">Configuration</span>
+          <div class="kpi" sharedSpotlightBorder [attr.data-tone]="syncCardTone()">
+            <header>
+              <span class="kpi-label">Configuration</span>
+              <i class="kpi-icon"><app-icon name="sliders" /></i>
+            </header>
             @if (loading()) { <span class="skeleton" style="width:100px;height:30px;margin:3px 0"></span> }
             @else { <span class="kpi-value text-value" [class]="'tone-' + syncTone()">{{ syncLabel() }}</span> }
             @if (hubView()) {

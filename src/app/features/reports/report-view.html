@@ -49,8 +49,11 @@
 
       <section class="kpi-strip smooth-reveal" aria-label="Key figures">
         @for (k of r.kpis; track k.label) {
-          <div class="kpi">
-            <span class="kpi-label">{{ k.label }}</span>
+          <div class="kpi" sharedSpotlightBorder [attr.data-tone]="k.tone ?? 'neutral'" [attr.data-zero]="k.value === 0 || null">
+            <header>
+              <span class="kpi-label">{{ k.label }}</span>
+              @if (k.icon) { <i class="kpi-icon"><app-icon [name]="k.icon" /></i> }
+            </header>
             @if (loading()) {
               <span class="skeleton" style="width:72px;height:30px;margin:3px 0"></span>
             } @else {

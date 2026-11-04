@@ -2,6 +2,7 @@ import { Store } from '../../core/data/store';
 import { MONTHS, fmtDate, fmtMoney, fmtNum } from '../../core/data/format';
 import { Customer, Device, ONBOARDING_STEPS, PackageName } from '../../core/data/models';
 import { BarDatum, LinePoint, RingSegment } from '../../shared/charts/chart-data';
+import type { IconName } from '../../shared/ui/icon';
 
 /*
  * Report definitions. Every figure is computed from the Store's rows for the chosen filters.
@@ -41,6 +42,10 @@ export type Fmt = 'n' | 'money' | 'pct' | 'days' | 'text' | 'date' | 'delta';
 
 export interface Kpi {
   label: string;
+  /** Icon in the card's chip. */
+  icon?: IconName;
+  /** Colour carries meaning: a tone for a status or severity, neutral (the default) for plain counts. */
+  tone?: 'brand' | 'info' | 'success' | 'warning' | 'danger' | 'neutral';
   value: number | null;
   decimals?: number;
   prefix?: string;
@@ -325,17 +330,19 @@ const onboardingFunnel: ReportDef = {
       headline: days == null ? 'No finished onboardings' : `Median ${days} days to onboard`,
       headlineSub: `customers who started in ${c.period.label}`,
       kpis: [
-        { label: 'Customers started', value: started, change: { n: started - prevRows.length, prev: prevRows.length, better: 'up', vs: c.vs } },
-        { label: 'Finished all nine', value: done[8], caption: `${pct(done[8], started)}% of those started` },
+        { label: 'Customers started', icon: 'building-2', tone: 'neutral', value: started, change: { n: started - prevRows.length, prev: prevRows.length, better: 'up', vs: c.vs } },
+        { label: 'Finished all nine', icon: 'circle-check', tone: 'success', value: done[8], caption: `${pct(done[8], started)}% of those started` },
         {
           label: 'Median time to onboard',
+          icon: 'clock',
+          tone: 'neutral',
           value: days,
           suffix: ' days',
           ...(days != null && prevDays != null
             ? { change: { n: days - prevDays, prev: prevDays, better: 'down' as const, fmt: 'days' as const, vs: `vs ${prevDays} days in ${c.prev.label}` } }
             : { caption: days == null ? 'no one finished in this period' : `no finished onboardings in ${c.prev.label}` }),
         },
-        { label: 'Still onboarding', value: stuck.length, caption: stuck.length ? `waiting on their next section` : 'no one is part-way through' },
+        { label: 'Still onboarding', icon: 'history', tone: 'warning', value: stuck.length, caption: stuck.length ? `waiting on their next section` : 'no one is part-way through' },
       ],
       chartTitle: 'Customers completing each section',
       chartSub: `Of ${plural(started, 'customer')} who started in ${c.period.label}`,
@@ -420,10 +427,10 @@ const activations: ReportDef = {
       headline: `${plural(inP.length, 'device')} activated`,
       headlineSub: `in ${c.period.label}, ${signed(inP.length - inPrev.length, inPrev.length)} ${c.vs}`,
       kpis: [
-        { label: 'Devices activated', value: inP.length, change: { n: inP.length - inPrev.length, prev: inPrev.length, better: 'up', vs: c.vs } },
-        { label: `Average per ${unit}`, value: avg, decimals: avg % 1 ? 1 : 0, caption: `across ${plural(complete, `complete ${unit}`)}` },
-        { label: `Busiest ${unit}`, value: inP.length ? counts[best] : null, caption: inP.length ? `${unit === 'week' ? 'week of ' : ''}${c.buckets[best].label}` : '—' },
-        { label: 'In service now', value: inService, caption: 'devices reporting today' },
+        { label: 'Devices activated', icon: 'zap', tone: 'success', value: inP.length, change: { n: inP.length - inPrev.length, prev: inPrev.length, better: 'up', vs: c.vs } },
+        { label: `Average per ${unit}`, icon: 'chart-line', tone: 'neutral', value: avg, decimals: avg % 1 ? 1 : 0, caption: `across ${plural(complete, `complete ${unit}`)}` },
+        { label: `Busiest ${unit}`, icon: 'trending-up', tone: 'neutral', value: inP.length ? counts[best] : null, caption: inP.length ? `${unit === 'week' ? 'week of ' : ''}${c.buckets[best].label}` : '—' },
+        { label: 'In service now', icon: 'cpu', tone: 'success', value: inService, caption: 'devices reporting today' },
       ],
       chartTitle: `Devices activated per ${unit}`,
       chartSub: last?.marked ? `${fmtNum(counts.at(-1)!)} so far in ${last.label}, against ${fmtNum(counts.at(-2) ?? 0)} in ${c.buckets.at(-2)?.label ?? 'the month before'}` : `${fmtNum(inP.length)} in ${c.period.label}`,
@@ -509,10 +516,10 @@ const inventory: ReportDef = {
       headline: cover == null ? `${fmtNum(stock)} devices in stock` : `${cover} weeks of stock cover`,
       headlineSub: `${fmtNum(stock)} in stock, at the activation pace of ${c.period.label}`,
       kpis: [
-        { label: 'Stock cover', value: cover, decimals: 1, suffix: ' weeks', caption: `in stock ÷ ${Math.round(perWeek * 10) / 10} activations a week` },
-        { label: 'In stock now', value: stock, caption: 'available to allocate' },
-        { label: 'Received', value: cur.totals.received, change: { n: cur.totals.received - prev.totals.received, prev: prev.totals.received, better: 'up', vs: c.vs } },
-        { label: 'Activated', value: cur.totals.activated, change: { n: cur.totals.activated - prev.totals.activated, prev: prev.totals.activated, better: 'up', vs: c.vs } },
+        { label: 'Stock cover', icon: 'calendar-clock', tone: 'neutral', value: cover, decimals: 1, suffix: ' weeks', caption: `in stock ÷ ${Math.round(perWeek * 10) / 10} activations a week` },
+        { label: 'In stock now', icon: 'boxes', tone: 'neutral', value: stock, caption: 'available to allocate' },
+        { label: 'Received', icon: 'download', tone: 'neutral', value: cur.totals.received, change: { n: cur.totals.received - prev.totals.received, prev: prev.totals.received, better: 'up', vs: c.vs } },
+        { label: 'Activated', icon: 'zap', tone: 'success', value: cur.totals.activated, change: { n: cur.totals.activated - prev.totals.activated, prev: prev.totals.activated, better: 'up', vs: c.vs } },
       ],
       chartTitle: `Received against activated, per ${unit}`,
       chartSub: `${fmtNum(cur.totals.received)} received and ${fmtNum(cur.totals.activated)} activated in ${c.period.label}${partial ? ` · ${partial.label} so far is in the table` : ''}`,
@@ -592,13 +599,15 @@ const portfolio: ReportDef = {
       kpis: [
         {
           label: 'Monthly recurring revenue',
+          icon: 'receipt',
+          tone: 'brand',
           value: mrr,
           prefix: 'AED ',
           change: { n: mrr - start, prev: start, better: 'up', fmt: 'money', vs: `since ${fmtDate(c.period.from.toISOString())}` },
         },
-        { label: 'Devices in service', value: devices, caption: `across ${plural(paying, 'customer')}` },
-        { label: 'Average per device', value: devices ? Math.round((mrr / devices) * 100) / 100 : null, decimals: 2, prefix: 'AED ', caption: 'a month, blended across packages' },
-        { label: 'Annual run rate', value: mrr * 12, prefix: 'AED ', caption: 'this month’s MRR × 12' },
+        { label: 'Devices in service', icon: 'cpu', tone: 'success', value: devices, caption: `across ${plural(paying, 'customer')}` },
+        { label: 'Average per device', icon: 'tag', tone: 'neutral', value: devices ? Math.round((mrr / devices) * 100) / 100 : null, decimals: 2, prefix: 'AED ', caption: 'a month, blended across packages' },
+        { label: 'Annual run rate', icon: 'trending-up', tone: 'brand', value: mrr * 12, prefix: 'AED ', caption: 'this month’s MRR × 12' },
       ],
       chartTitle: 'MRR by package',
       chartSub: `${fmtMoney(mrr)} a month from ${plural(devices, 'device')} in service`,
@@ -678,10 +687,10 @@ const renewals: ReportDef = {
       headline: `${fmtMoney(atRisk)} MRR up for renewal`,
       headlineSub: `${plural(rows.length, 'contract')} ending in ${c.period.label}`,
       kpis: [
-        { label: 'Contracts ending', value: rows.length, caption: `of ${plural(live.length, 'active contract')}` },
-        { label: 'MRR at risk', value: atRisk, prefix: 'AED ', caption: `${pct(atRisk, totalMrr)}% of ${fmtMoney(totalMrr)} a month` },
-        { label: 'Devices covered', value: sum(rows, (r) => r['devices'] as number), caption: 'in service on these contracts' },
-        { label: 'First to end', value: soon ? (soon['left'] as number) : null, suffix: ' days', caption: soon ? `${soon['company']}` : 'nothing ends in this window' },
+        { label: 'Contracts ending', icon: 'calendar-clock', tone: 'warning', value: rows.length, caption: `of ${plural(live.length, 'active contract')}` },
+        { label: 'MRR at risk', icon: 'alert', tone: 'warning', value: atRisk, prefix: 'AED ', caption: `${pct(atRisk, totalMrr)}% of ${fmtMoney(totalMrr)} a month` },
+        { label: 'Devices covered', icon: 'shield', tone: 'neutral', value: sum(rows, (r) => r['devices'] as number), caption: 'in service on these contracts' },
+        { label: 'First to end', icon: 'calendar', tone: 'neutral', value: soon ? (soon['left'] as number) : null, suffix: ' days', caption: soon ? `${soon['company']}` : 'nothing ends in this window' },
       ],
       chartTitle: 'Contracts ending per month',
       chartSub: `Next 12 months · ${plural(sum(perMonth, (n) => n), 'contract')}`,
@@ -783,10 +792,10 @@ const hardwareOrders: ReportDef = {
       headline: avgShip == null ? 'No shipped orders' : `${avgShip} days on average to ship`,
       headlineSub: `${onTime} of ${plural(shipped.length, 'order')} within ${SHIP_TARGET} days, in ${c.period.label}`,
       kpis: [
-        { label: 'Orders', value: inP.length, change: { n: inP.length - inPrev.length, prev: inPrev.length, better: 'up', vs: c.vs } },
-        { label: 'Order value', value: totalValue, prefix: 'AED ', change: { n: totalValue - prevValue, prev: prevValue, better: 'up', fmt: 'money', vs: c.vs } },
-        { label: 'Average days to ship', value: avgShip, decimals: 1, suffix: ' days', caption: shipped.length ? `${onTime} of ${shipped.length} within the ${SHIP_TARGET}-day target` : 'nothing shipped in this period' },
-        { label: 'Open past target', value: late.length, caption: `of ${plural(open.length, 'order')} waiting to ship` },
+        { label: 'Orders', icon: 'truck', tone: 'neutral', value: inP.length, change: { n: inP.length - inPrev.length, prev: inPrev.length, better: 'up', vs: c.vs } },
+        { label: 'Order value', icon: 'receipt', tone: 'neutral', value: totalValue, prefix: 'AED ', change: { n: totalValue - prevValue, prev: prevValue, better: 'up', fmt: 'money', vs: c.vs } },
+        { label: 'Average days to ship', icon: 'clock', tone: 'neutral', value: avgShip, decimals: 1, suffix: ' days', caption: shipped.length ? `${onTime} of ${shipped.length} within the ${SHIP_TARGET}-day target` : 'nothing shipped in this period' },
+        { label: 'Open past target', icon: 'alert', tone: 'warning', value: late.length, caption: `of ${plural(open.length, 'order')} waiting to ship` },
       ],
       chartTitle: `Units ordered per ${unit}`,
       chartSub: `${plural(sum(inP, (o) => o.quantity), 'unit')} across ${plural(inP.length, 'order')} in ${c.period.label}`,
@@ -879,14 +888,16 @@ const deviceHealth: ReportDef = {
       kpis: [
         {
           label: 'Faulty rate',
+          icon: 'percent',
+          tone: 'danger',
           value: rate,
           decimals: 1,
           suffix: '%',
           change: { n: Math.round((rate - prevRate) * 10) / 10, prev: prevRate, better: 'down', fmt: 'pct', vs: `vs ${prevRate.toFixed(1)}% in ${c.prev.label}` },
         },
-        { label: 'Faulty devices', value: faulty.length, caption: `of ${plural(devs.length, 'device')} received` },
-        { label: 'Worst type', value: worst ? worst.rate : null, decimals: 1, suffix: '%', caption: worst ? `${worst.t.name}, ${worst.f} of ${worst.n}` : '—' },
-        { label: 'Vehicles offline now', value: offline.length, caption: `of ${plural(vehicles.length, 'tracked vehicle')}` },
+        { label: 'Faulty devices', icon: 'circle-x', tone: 'danger', value: faulty.length, caption: `of ${plural(devs.length, 'device')} received` },
+        { label: 'Worst type', icon: 'layers', tone: 'neutral', value: worst ? worst.rate : null, decimals: 1, suffix: '%', caption: worst ? `${worst.t.name}, ${worst.f} of ${worst.n}` : '—' },
+        { label: 'Vehicles offline now', icon: 'wifi-off', tone: 'warning', value: offline.length, caption: `of ${plural(vehicles.length, 'tracked vehicle')}` },
       ],
       chartTitle: 'Faulty rate by device type',
       chartSub: `Devices received in ${c.period.label}, highest rate first`,

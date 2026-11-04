@@ -8,7 +8,7 @@ import { Pager, pageOf } from '../../shared/ui/pager';
 import { Menu, MenuItem } from '../../shared/ui/menu';
 import { Dialog } from '../../shared/ui/dialog';
 import { Toaster } from '../../shared/ui/toast';
-import { CountUp } from '@iotility/shared-ui';
+import { CountUp, SpotlightBorder } from '@iotility/shared-ui';
 import { downloadCsv } from '../../shared/ui/csv';
 import { Access } from '../../core/access/access';
 import { OrgFilter, OrgTag, ReadOnlyNote, orgContext, writeAccess } from '../tenancy';
@@ -43,7 +43,7 @@ const FROM: Record<BulkAction | 'allocate', DeviceStatus[]> = {
  */
 @Component({
   selector: 'app-inventory-list',
-  imports: [Select, SelectOption, RouterLink, Icon, Pager, Menu, Dialog, CountUp, DatePipe, DateTimePipe, RelativePipe, TonePipe, OrgTag, OrgFilter, ReadOnlyNote],
+  imports: [Select, SelectOption, RouterLink, Icon, Pager, Menu, Dialog, CountUp, SpotlightBorder, DatePipe, DateTimePipe, RelativePipe, TonePipe, OrgTag, OrgFilter, ReadOnlyNote],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './inventory-list.html',
   styleUrl: './inventory-list.css',

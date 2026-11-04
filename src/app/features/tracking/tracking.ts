@@ -7,7 +7,7 @@ import maplibregl, { GeoJSONSource, Map as MapLibreMap, MapLayerMouseEvent } fro
 import { Store } from '../../core/data/store';
 import { Vehicle } from '../../core/data/models';
 import { Icon } from '../../shared/ui/icon';
-import { CountUp } from '@iotility/shared-ui';
+import { CountUp, SpotlightBorder } from '@iotility/shared-ui';
 import { simulateLoad } from '../../shared/ui/loading';
 import { Theme } from '../../core/theme/theme';
 import { LiveVehicle, StateFilter, VehicleState, clock, popupHtml, relTime, simulateStep } from './tracking-sim';
@@ -37,7 +37,7 @@ const DOTS = 'trk-dots';
  */
 @Component({
   selector: 'app-tracking',
-  imports: [Select, SelectOption, Icon, CountUp],
+  imports: [Select, SelectOption, Icon, CountUp, SpotlightBorder],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './tracking.html',
   styleUrl: './tracking.css',

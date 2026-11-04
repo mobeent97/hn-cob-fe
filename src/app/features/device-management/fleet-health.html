@@ -17,32 +17,47 @@
   </div>
 
   <section class="kpi-strip smooth-reveal" style="--reveal-delay: 40ms" aria-label="Key figures">
-    <div class="kpi">
-      <span class="kpi-label">Connected now</span>
+    <div class="kpi" sharedSpotlightBorder data-tone="success">
+      <header>
+        <span class="kpi-label">Connected now</span>
+        <i class="kpi-icon"><app-icon name="wifi" /></i>
+      </header>
       @if (loading()) { <span class="skeleton" style="width:64px;height:30px;margin:3px 0"></span> }
       @else { <span class="kpi-value"><span class="num" [uiCountUp]="connected()"></span></span> }
       <span class="kpi-caption num">of {{ fmtNum(live().length) }} live devices · {{ connectedPct() }}%</span>
     </div>
-    <div class="kpi">
-      <span class="kpi-label">Messages today</span>
+    <div class="kpi" sharedSpotlightBorder data-tone="info">
+      <header>
+        <span class="kpi-label">Messages today</span>
+        <i class="kpi-icon"><app-icon name="activity" /></i>
+      </header>
       @if (loading()) { <span class="skeleton" style="width:110px;height:30px;margin:3px 0"></span> }
       @else { <span class="kpi-value"><span class="num" [uiCountUp]="messagesToday()"></span></span> }
       <span class="kpi-caption num">{{ quotaPct() }}% of {{ compact(hub().dailyQuota) }} quota · {{ compact(projected()) }} projected at today's pace</span>
     </div>
-    <div class="kpi">
-      <span class="kpi-label">Config in sync</span>
+    <div class="kpi" sharedSpotlightBorder data-tone="success">
+      <header>
+        <span class="kpi-label">Config in sync</span>
+        <i class="kpi-icon"><app-icon name="check-check" /></i>
+      </header>
       @if (loading()) { <span class="skeleton" style="width:72px;height:30px;margin:3px 0"></span> }
       @else { <span class="kpi-value"><span class="num" [uiCountUp]="twinStates().pct | number: '1.1-1'"></span><span class="unit">%</span></span> }
       <span class="kpi-caption num">{{ fmtNum(twinStates().inSync) }} of {{ fmtNum(twinStates().profiled) }} live twins with a profile · {{ twinStates().pending }} pending</span>
     </div>
-    <div class="kpi">
-      <span class="kpi-label">Commands failed</span>
+    <div class="kpi" sharedSpotlightBorder data-tone="danger" [attr.data-zero]="failed24().length === 0 || null">
+      <header>
+        <span class="kpi-label">Commands failed</span>
+        <i class="kpi-icon"><app-icon name="circle-x" /></i>
+      </header>
       @if (loading()) { <span class="skeleton" style="width:32px;height:30px;margin:3px 0"></span> }
       @else { <span class="kpi-value"><span class="num" [uiCountUp]="failed24().length"></span></span> }
       <span class="kpi-caption num">of {{ commands24().length }} sent in the last 24 h · {{ timedOut24() }} timed out</span>
     </div>
-    <div class="kpi">
-      <span class="kpi-label">C2D queued</span>
+    <div class="kpi" sharedSpotlightBorder data-tone="warning" [attr.data-zero]="c2dTotal() === 0 || null">
+      <header>
+        <span class="kpi-label">C2D queued</span>
+        <i class="kpi-icon"><app-icon name="inbox" /></i>
+      </header>
       @if (loading()) { <span class="skeleton" style="width:40px;height:30px;margin:3px 0"></span> }
       @else { <span class="kpi-value"><span class="num" [uiCountUp]="c2dTotal()"></span></span> }
       <span class="kpi-caption num">messages for {{ c2dDevices().length }} offline {{ c2dDevices().length === 1 ? 'device' : 'devices' }}</span>

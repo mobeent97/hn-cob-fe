@@ -409,16 +409,59 @@
     @apply text-xs text-muted dark:text-brand-300;
   }
 
-  /* ── KPI tiles (FleetPoint stat-card: uppercase label, bold value, shadow-card, spotlight-ready) ── */
+  /*
+   * ── KPI tiles (FleetPoint stat-card: uppercase label, tone icon chip, bold value, caption) ──
+   * On hover, [sharedSpotlightBorder] lights the border nearest the cursor (theme.css .has-spotlight) in the
+   * card's tone. Colour carries meaning, as in FleetPoint: data-tone for a status or severity, neutral for
+   * plain counts, and data-zero drops any tone to neutral so a red "0 faulty" asks for no attention.
+   */
   .kpi-strip {
     @apply grid grid-cols-2 gap-4 min-[761px]:auto-cols-fr min-[761px]:grid-flow-col min-[761px]:grid-cols-none;
   }
   .kpi-strip .kpi {
+    --card-tone: var(--color-brand-500);
+    --spotlight-color: var(--card-tone);
     @apply relative flex min-h-24 min-w-0 flex-col justify-between gap-1 rounded-[14px] border border-line bg-white p-3.5 text-left dark:border-dark-line dark:bg-dark-surface;
     box-shadow: var(--shadow-card);
     transition:
       box-shadow 180ms ease,
       border-color var(--duration-hover) ease;
+  }
+  .kpi-strip .kpi[data-tone='info'] {
+    --card-tone: var(--color-info);
+  }
+  .kpi-strip .kpi[data-tone='success'] {
+    --card-tone: var(--color-success);
+  }
+  .kpi-strip .kpi[data-tone='warning'] {
+    --card-tone: var(--color-warning);
+  }
+  .kpi-strip .kpi[data-tone='danger'] {
+    --card-tone: var(--color-danger);
+  }
+  .kpi-strip .kpi[data-tone='neutral'],
+  .kpi-strip .kpi[data-zero] {
+    --card-tone: var(--color-muted);
+  }
+  .kpi-strip .kpi {
+    container-type: inline-size;
+  }
+  .kpi-strip .kpi > header {
+    @apply flex items-start justify-between gap-2;
+  }
+  .kpi-strip .kpi-icon {
+    @apply grid size-7 flex-none place-items-center rounded-[7px] not-italic;
+    color: var(--card-tone);
+    background: color-mix(in srgb, var(--card-tone) 12%, transparent);
+    transition:
+      color 300ms ease,
+      background-color 300ms ease;
+  }
+  /* A tile too narrow for its label and the chip (five in a row on a small laptop) keeps the label. */
+  @container (width < 7.5rem) {
+    .kpi-strip .kpi-icon {
+      @apply hidden;
+    }
   }
   .kpi-strip button.kpi {
     @apply cursor-pointer;
@@ -437,18 +480,41 @@
   .kpi-strip .kpi:last-child:nth-child(odd) {
     @apply max-[760px]:col-span-2;
   }
+  /* Up to two lines beside the icon chip, so a long label stays readable when five tiles share a row. */
   .kpi-strip .kpi-label {
-    @apply truncate text-[10px] leading-[1.35] font-bold tracking-[0.08em] text-muted uppercase dark:text-brand-300;
+    @apply line-clamp-2 min-w-0 text-[10px] leading-[1.35] font-bold tracking-[0.08em] text-muted uppercase dark:text-brand-300;
   }
+  /* The value blur-rises into place when it first replaces the skeleton. */
   .kpi-strip .kpi-value {
     @apply mt-2.5 text-xl leading-none font-[750] tracking-[-0.025em] text-ink dark:text-white;
     font-variant-numeric: proportional-nums;
+    transition:
+      opacity 260ms var(--ease-out),
+      transform 260ms var(--ease-out),
+      filter 260ms var(--ease-out);
+    @starting-style {
+      opacity: 0;
+      transform: translateY(4px);
+      filter: blur(2px);
+    }
+  }
+  /* Live updates: while the number counts to its new value (uiCountUp), the card glows once in its tone. */
+  .kpi-strip .kpi:has([data-trend]) {
+    animation: kpi-flash 1.2s var(--ease-out);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .kpi-strip .kpi-value {
+      transition-property: opacity;
+    }
+    .kpi-strip .kpi:has([data-trend]) {
+      animation: none;
+    }
   }
   .kpi-strip .kpi-caption {
     @apply text-[11px] text-muted dark:text-brand-300;
   }
 
-  /* ── Count cards that filter a list (FleetPoint filter chips, card-sized) ── */
+  /* ── Count cards that filter a list (FleetPoint filter chips, card-sized, with the KPI tiles' spotlight border) ── */
   .count-cards {
     @apply grid grid-cols-2 gap-2 min-[761px]:auto-cols-fr min-[761px]:grid-flow-col min-[761px]:grid-cols-none;
   }
@@ -461,11 +527,6 @@
       border-color var(--duration-hover) ease,
       background-color var(--duration-hover) ease,
       scale var(--duration-press) var(--ease-out);
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .count-cards .count-card:hover {
-      @apply border-brand-300 dark:border-brand-500;
-    }
   }
   .count-cards .count-card.selected {
     @apply border-brand-500 bg-brand-50 dark:border-brand-500 dark:bg-brand-600/15;
@@ -617,5 +678,14 @@
   }
   .table.stack tr td.hide-sm {
     @apply hidden;
+  }
+}
+
+/* KPI tile live-update glow (.kpi-strip .kpi:has([data-trend])), in the card's tone. */
+@keyframes kpi-flash {
+  0% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--card-tone) 55%, transparent),
+      0 0 24px -6px color-mix(in srgb, var(--card-tone) 55%, transparent);
   }
 }

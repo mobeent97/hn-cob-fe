@@ -16,12 +16,12 @@
 
   <!-- Count cards are the status filter -->
   <div class="count-cards smooth-reveal" style="--reveal-delay: 40ms" role="group" aria-label="Filter by status">
-    <button class="count-card" [class.selected]="status() === 'all'" (click)="status.set('all')" [attr.aria-pressed]="status() === 'all'">
+    <button class="count-card" sharedSpotlightBorder [class.selected]="status() === 'all'" (click)="status.set('all')" [attr.aria-pressed]="status() === 'all'">
       <span class="cc-label">All devices</span>
       <span class="cc-value">@if (loading()) { <span class="skeleton" style="width:40px;height:18px"></span> } @else { <span class="num" [uiCountUp]="counts().all"></span> }</span>
     </button>
     @for (s of statuses; track s) {
-      <button class="count-card" [class.selected]="status() === s" (click)="status.set(status() === s ? 'all' : s)" [attr.aria-pressed]="status() === s">
+      <button class="count-card" sharedSpotlightBorder [class.selected]="status() === s" (click)="status.set(status() === s ? 'all' : s)" [attr.aria-pressed]="status() === s">
         <span class="cc-label">{{ label[s] }}</span>
         <span class="cc-value">@if (loading()) { <span class="skeleton" style="width:32px;height:18px"></span> } @else { <span class="num" [uiCountUp]="counts()[s]"></span> }</span>
       </button>

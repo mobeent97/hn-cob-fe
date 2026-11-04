@@ -15,12 +15,12 @@
 
   <!-- Count cards are the package filter -->
   <div class="count-cards smooth-reveal" style="--reveal-delay: 40ms" role="group" aria-label="Filter by package">
-    <button class="count-card" [class.selected]="pkg() === 'all'" (click)="pkg.set('all')" [attr.aria-pressed]="pkg() === 'all'">
+    <button class="count-card" sharedSpotlightBorder [class.selected]="pkg() === 'all'" (click)="pkg.set('all')" [attr.aria-pressed]="pkg() === 'all'">
       <span class="cc-label">All packages</span>
       <span class="cc-value"><span class="num" [uiCountUp]="packageCounts().all"></span></span>
     </button>
     @for (p of packages; track p) {
-      <button class="count-card" [class.selected]="pkg() === p" (click)="pkg.set(pkg() === p ? 'all' : p)" [attr.aria-pressed]="pkg() === p">
+      <button class="count-card" sharedSpotlightBorder [class.selected]="pkg() === p" (click)="pkg.set(pkg() === p ? 'all' : p)" [attr.aria-pressed]="pkg() === p">
         <span class="cc-label">{{ p }}</span>
         <span class="cc-value"><span class="num" [uiCountUp]="packageCounts()[p]"></span></span>
       </button>

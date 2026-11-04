@@ -9,7 +9,7 @@ import { Pager, pageOf } from '../../shared/ui/pager';
 import { Menu, MenuItem } from '../../shared/ui/menu';
 import { Dialog } from '../../shared/ui/dialog';
 import { Toaster } from '../../shared/ui/toast';
-import { CountUp } from '@iotility/shared-ui';
+import { CountUp, SpotlightBorder } from '@iotility/shared-ui';
 import { downloadCsv } from '../../shared/ui/csv';
 import { simulateLoad } from '../../shared/ui/loading';
 import { OrgFilter, OrgTag, ReadOnlyNote, orgContext, writeAccess } from '../tenancy';
@@ -25,7 +25,7 @@ type Confirm = { kind: 'deactivate' | 'activate' | 'delete' | 'cancel-delete'; c
  */
 @Component({
   selector: 'app-customer-list',
-  imports: [Select, SelectOption, RouterLink, Icon, Tabs, Pager, Menu, Dialog, CountUp, DatePipe, TonePipe, OrgTag, OrgFilter, ReadOnlyNote],
+  imports: [Select, SelectOption, RouterLink, Icon, Tabs, Pager, Menu, Dialog, CountUp, SpotlightBorder, DatePipe, TonePipe, OrgTag, OrgFilter, ReadOnlyNote],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './customer-list.html',
   styleUrl: './customer-list.css',

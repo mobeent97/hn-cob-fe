@@ -43,26 +43,38 @@
       <!-- Profile ───────────────────────────────────────────── -->
       @case ('profile') {
         <section class="kpi-strip smooth-reveal" style="--reveal-delay: 80ms" aria-label="Usage">
-          <div class="kpi">
-            <span class="kpi-label">Customers</span>
+          <div class="kpi" sharedSpotlightBorder data-tone="neutral">
+            <header>
+              <span class="kpi-label">Customers</span>
+              <i class="kpi-icon"><app-icon name="building-2" /></i>
+            </header>
             @if (loading()) { <span class="skeleton" style="width:48px;height:30px;margin:3px 0"></span> }
             @else { <span class="kpi-value"><span class="num" [uiCountUp]="stats().customers"></span></span> }
             <span class="kpi-caption num">@if (o.limits.maxCustomers) { of {{ o.limits.maxCustomers }} allowed } @else { no limit }</span>
           </div>
-          <div class="kpi">
-            <span class="kpi-label">Devices in service</span>
+          <div class="kpi" sharedSpotlightBorder data-tone="success">
+            <header>
+              <span class="kpi-label">Devices in service</span>
+              <i class="kpi-icon"><app-icon name="cpu" /></i>
+            </header>
             @if (loading()) { <span class="skeleton" style="width:48px;height:30px;margin:3px 0"></span> }
             @else { <span class="kpi-value"><span class="num" [uiCountUp]="stats().inService"></span></span> }
             <span class="kpi-caption num">of {{ stats().devices }} devices it holds</span>
           </div>
-          <div class="kpi">
-            <span class="kpi-label">Users</span>
+          <div class="kpi" sharedSpotlightBorder data-tone="neutral">
+            <header>
+              <span class="kpi-label">Users</span>
+              <i class="kpi-icon"><app-icon name="users" /></i>
+            </header>
             @if (loading()) { <span class="skeleton" style="width:40px;height:30px;margin:3px 0"></span> }
             @else { <span class="kpi-value"><span class="num" [uiCountUp]="stats().users"></span></span> }
             <span class="kpi-caption num">@if (o.limits.maxUsers) { of {{ o.limits.maxUsers }} allowed } @else { no limit }</span>
           </div>
-          <div class="kpi">
-            <span class="kpi-label">Features</span>
+          <div class="kpi" sharedSpotlightBorder data-tone="brand">
+            <header>
+              <span class="kpi-label">Features</span>
+              <i class="kpi-icon"><app-icon name="sparkles" /></i>
+            </header>
             @if (loading()) { <span class="skeleton" style="width:40px;height:30px;margin:3px 0"></span> }
             @else { <span class="kpi-value"><span class="num" [uiCountUp]="featureTotal().on"></span></span> }
             <span class="kpi-caption num">of {{ featureTotal().of }} it could have</span>

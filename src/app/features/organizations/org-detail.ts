@@ -10,7 +10,7 @@ import { Dialog } from '../../shared/ui/dialog';
 import { Tabs, TabItem } from '../../shared/ui/tabs';
 import { Toaster } from '../../shared/ui/toast';
 import { simulateLoad } from '../../shared/ui/loading';
-import { CountUp } from '@iotility/shared-ui';
+import { CountUp, SpotlightBorder } from '@iotility/shared-ui';
 import {
   EMAIL_RE, FEATURES_BY_AREA, GRANTABLE, LEVELS, ORG_SWATCHES, PHONE_RE, addAdministrator, emailTaken, featureCount, levelLabel, orgTone, rank,
 } from './org-util';
@@ -33,7 +33,7 @@ interface ProfileDraft {
 /** One organization: profile, entitlements, limits, people and roles. Shown in place of the list (?org=<id>). */
 @Component({
   selector: 'app-org-detail',
-  imports: [Icon, Menu, Dialog, Tabs, CountUp, DatePipe, DateTimePipe, RelativePipe, TonePipe],
+  imports: [Icon, Menu, Dialog, Tabs, CountUp, SpotlightBorder, DatePipe, DateTimePipe, RelativePipe, TonePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './org-detail.html',
   styleUrls: ['./org-shared.css', './org-detail.css'],
