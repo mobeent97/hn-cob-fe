@@ -19,7 +19,7 @@
 
 /* Organization group headings inside the roles table. */
 .roles .group-row th {
-  @apply h-auto px-0 pt-5.5 pb-2 text-left text-xs font-semibold tracking-normal text-ink dark:text-white;
+  @apply h-auto px-4 pt-5.5 pb-2 text-left text-xs font-semibold tracking-normal text-ink dark:text-white;
 }
 .roles tbody:first-of-type .group-row th {
   @apply pt-2.5;

@@ -336,6 +336,11 @@
   .table-wrap {
     @apply overflow-x-auto;
   }
+  /* A table on the page itself sits on a white card, like iotility's data-table (.table-card).
+     One already inside a card, dialog or chart card keeps that surface. */
+  .table-wrap:not(.card *, app-dialog *, ui-chart-card *) {
+    @apply rounded-2xl border border-line bg-white dark:border-dark-line dark:bg-dark-surface;
+  }
   .table {
     @apply w-full border-collapse text-left text-xs;
   }
@@ -368,6 +373,16 @@
   .table th:last-child,
   .table td:last-child {
     @apply pr-0;
+  }
+  /* Inside that card the outer columns keep iotility's 16px inset and the header clears the top edge. */
+  .table-wrap:not(.card *, app-dialog *, ui-chart-card *) .table th {
+    @apply pt-3;
+  }
+  .table-wrap:not(.card *, app-dialog *, ui-chart-card *) .table :is(th, td):first-child {
+    @apply pl-4;
+  }
+  .table-wrap:not(.card *, app-dialog *, ui-chart-card *) .table :is(th, td):last-child {
+    @apply pr-4;
   }
   .table tbody tr {
     transition: background-color var(--duration-hover) ease;
@@ -646,6 +661,9 @@
   }
   .table.stack tr {
     @apply relative grid grid-cols-[1fr_auto] gap-x-3 gap-y-0.5 border-b border-line py-3 dark:border-dark-line;
+  }
+  .table-wrap:not(.card *, app-dialog *, ui-chart-card *) .table.stack tr {
+    @apply px-4;
   }
   .table.stack tbody tr:last-child {
     @apply border-b-0;

@@ -16,7 +16,7 @@
   @apply block font-normal;
 }
 .matrix .group-row th {
-  @apply border-t border-line px-0 pt-5 pb-2 text-left text-xs font-semibold text-ink dark:border-dark-line dark:text-white;
+  @apply border-t border-line px-4 pt-5 pb-2 text-left text-xs font-semibold text-ink dark:border-dark-line dark:text-white;
 }
 .matrix tbody:first-of-type .group-row th {
   @apply pt-2;
