@@ -4,7 +4,8 @@ import { Observable, catchError, finalize, firstValueFrom, map, shareReplay, tap
 import { environment } from '../../../environments/environment';
 import { Store } from '../data/store';
 import {
-  ApiEnvelope, AuthError, AuthUser, ForgotPasswordData, LoginData, NETWORK_ERROR_MESSAGE, TokenPair, VerifyCodeData,
+  ApiEnvelope, AuthError, AuthUser, ForgotPasswordData, LoginData, MeAccess, NETWORK_ERROR_MESSAGE, SetPasswordInfo, TokenPair,
+  VerifyCodeData,
 } from './auth.models';
 import { TokenStorageService } from './token-storage.service';
 
@@ -121,10 +122,53 @@ export class AuthService {
     );
   }
 
+  // ── My account (USERS_API "/auth/me/…") ──
+  /** The server's effective access per feature; Access uses it as the answer. */
+  async loadAccess(): Promise<MeAccess> {
+    const access = await this.call(this.http.get<ApiEnvelope<MeAccess>>(`${this.base}/me/access/`));
+    this.store.access.set(access);
+    return access;
+  }
+
+  /** Saves my name and phone; the session picks up the new details. */
+  async updateMe(body: { full_name?: string; phone?: string }): Promise<AuthUser> {
+    const user = await this.call(this.http.patch<ApiEnvelope<AuthUser>>(`${this.base}/me/`, body));
+    this.setUser(user);
+    return user;
+  }
+
+  /** Other sessions are signed out; this one continues with the returned pair. */
+  async changePassword(current: string, next: string, confirm: string): Promise<void> {
+    const pair = await this.call(
+      this.http.post<ApiEnvelope<TokenPair>>(`${this.base}/me/change-password/`, {
+        current_password: current,
+        new_password: next,
+        confirm_password: confirm,
+      }),
+    );
+    this.tokens.save(pair.access, pair.refresh);
+  }
+
+  // ── Set-password links (public): invitations and admin-triggered resets ──
+  verifySetPasswordLink(token: string): Promise<SetPasswordInfo> {
+    return this.call(this.http.post<ApiEnvelope<SetPasswordInfo>>(`${this.base}/set-password/verify/`, { token }));
+  }
+
+  async setPassword(token: string, newPassword: string, confirmPassword: string): Promise<void> {
+    await this.call(
+      this.http.post<ApiEnvelope<unknown>>(`${this.base}/set-password/`, {
+        token,
+        new_password: newPassword,
+        confirm_password: confirmPassword,
+      }),
+    );
+  }
+
   /** Forgets the tokens and the user locally (no server call). */
   clearSession(): void {
     this.tokens.clear();
     this._user.set(null);
+    this.store.setSession(null);
   }
 
   // ── Reset token hand-off between /forgot-password and /reset-password (this tab only) ──
@@ -157,9 +201,8 @@ export class AuthService {
 
   private setUser(user: AuthUser) {
     this._user.set(user);
-    // TODO(api): roles, organizations and feature access will come from the API. Until then the rest of
-    // the app runs on the mock Store, so a real superuser gets the mock superuser's session and access.
-    if (user.is_superuser) this.store.signInAs(1);
+    // The store derives the session (current user, organization, tenant scope, access) from the real user.
+    this.store.setSession(user);
   }
 
   /** Unwraps the envelope's data, mapping any failure to an AuthError. */

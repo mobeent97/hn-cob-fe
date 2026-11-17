@@ -1,37 +1,45 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { Store } from '../../core/data/store';
 import { Access } from '../../core/access/access';
 import { RelativePipe, TonePipe } from '../../core/data/format';
 import { AdminUser, Group, Organization } from '../../core/data/models';
+import { UserCode, UserCounts, UserQuery, UsersApi } from '../../core/api/users.api';
+import { RolesApi } from '../../core/api/roles.api';
+import { AuditApi } from '../../core/api/audit.api';
+import { ApiError, errorText } from '../../core/api/api-client';
+import { SessionLoader } from '../../core/auth/session-loader';
 import { Icon } from '../../shared/ui/icon';
 import { Tabs, TabItem } from '../../shared/ui/tabs';
-import { Pager, pageOf } from '../../shared/ui/pager';
+import { Pager } from '../../shared/ui/pager';
 import { Menu, MenuItem } from '../../shared/ui/menu';
 import { Dialog } from '../../shared/ui/dialog';
 import { Toaster } from '../../shared/ui/toast';
-import { simulateLoad } from '../../shared/ui/loading';
+import { LoadError, loadState } from '../../shared/ui/load-state';
 import { Select, SelectOption } from '../../shared/ui/select';
 
-type View = 'all' | 'Active' | 'Inactive' | 'never';
-type Draft = { id: number | null; orgId: number | null; name: string; email: string; username: string; groups: string[]; manager: string };
-type Errors = Partial<Record<keyof Draft, string>>;
+type View = 'all' | 'Active' | 'Inactive' | 'Invited' | 'never';
+type Draft = { id: number | null; orgId: number | null; name: string; email: string; phone: string; roleIds: number[]; managerId: number | null };
+type Errors = Partial<Record<'orgId' | 'name' | 'email' | 'phone' | 'roles' | 'manager' | 'form', string>>;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
-const USERNAME_RE = /^[a-z][a-z0-9._-]{2,31}$/;
+/** USERS_API: `+<1–4 digit country code> <6–15 digits, spaces or dashes>`. */
+const PHONE_RE = /^\+\d{1,4}[ -][0-9][0-9 -]{4,18}[0-9]$/;
+const NO_COUNTS: UserCounts = { all: 0, active: 0, inactive: 0, invited: 0, never_signed_in: 0 };
 export const SUPERUSER_REASON = 'Superusers are managed with manage.py createsuperuser';
 
-/** An "admin role" lets its members manage users. Losing the last one locks you out of this screen. */
-export const isAdminRole = (g: Group) => g.permissions['Users'] === 'RW' && g.status === 'Active';
+/** An "admin role" lets its members manage users (ROLES_API `is_admin`: Active with Users read & write). */
+export const isAdminRole = (g: Pick<Group, 'isAdmin'>) => g.isAdmin;
 
 /**
  * Users — "Who can sign in to this organization, with which roles, and how many seats are left?"
- * Users belong to one organization and get their access from that organization's roles.
- * Superusers come from `manage.py createsuperuser` and can't be changed here. You can't
- * deactivate yourself or remove your own last admin role.
+ * GET /users/ with the tab, search, role, organization and page as query params; the tab badges come
+ * from `counts` and the seats line from `seats`. Users belong to one organization and get their access
+ * from that organization's roles (by id). Superusers come from `manage.py createsuperuser` and can't be
+ * changed here. Active and invited users hold a seat. Deleting goes through the deletion audit.
  */
 @Component({
   selector: 'app-users',
-  imports: [Select, SelectOption, Icon, Tabs, Pager, Menu, Dialog, RelativePipe, TonePipe],
+  imports: [Select, SelectOption, Icon, Tabs, Pager, Menu, Dialog, RelativePipe, TonePipe, LoadError],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './users.html',
   styleUrl: './users.css',
@@ -39,15 +47,28 @@ export const isAdminRole = (g: Group) => g.permissions['Users'] === 'RW' && g.st
 export class Users {
   protected readonly store = inject(Store);
   protected readonly access = inject(Access);
+  private readonly api = inject(UsersApi);
+  private readonly rolesApi = inject(RolesApi);
+  private readonly audit = inject(AuditApi);
+  private readonly session = inject(SessionLoader);
   private readonly toast = inject(Toaster);
-  protected readonly loading = simulateLoad('users');
+  protected readonly state = loadState();
 
   protected readonly view = signal<View>('all');
   protected readonly q = signal('');
-  protected readonly group = signal('all');
+  /** The search actually sent, 250 ms after typing stops. */
+  private readonly qSent = signal('');
+  protected readonly role = signal<'all' | number>('all');
   protected readonly org = signal<'all' | number>('all');
   protected readonly page = signal(1);
   protected readonly size = computed(() => this.store.settings().pagination.pageSize);
+
+  protected readonly rows = signal<AdminUser[]>([]);
+  protected readonly count = signal(0);
+  protected readonly counts = signal<UserCounts>(NO_COUNTS);
+  protected readonly seatsData = signal<{ used: number; max: number | null } | null>(null);
+  /** Roles for the filter (this scope's own roles, never templates). */
+  protected readonly roleOptions = signal<Group[]>([]);
 
   /** Platform user looking across every tenant: show the Organization column and filter. */
   protected readonly allOrgs = computed(() => this.store.crossTenant() && this.store.scopeOrgId() == null);
@@ -57,93 +78,130 @@ export class Users {
     return id == null ? '' : (this.orgById().get(id)?.name ?? '');
   }
 
+  /** The organization the list is narrowed to, as the API param (never one the user didn't choose). */
+  private readonly orgParam = computed<number | null>(() => {
+    if (!this.store.crossTenant()) return null;
+    if (this.allOrgs()) return this.org() === 'all' ? null : (this.org() as number);
+    return this.store.scopeOrgId();
+  });
+
   constructor() {
+    // Typing waits for a pause; every other filter applies at once.
+    let t: ReturnType<typeof setTimeout> | undefined;
+    effect(() => {
+      const q = this.q();
+      clearTimeout(t);
+      t = setTimeout(() => this.qSent.set(q.trim()), 250);
+    });
+    inject(DestroyRef).onDestroy(() => clearTimeout(t));
+    // A filter change goes back to page 1.
     effect(() => {
       this.view();
-      this.q();
-      this.group();
+      this.qSent();
+      this.role();
       this.org();
-      this.page.set(1);
+      this.store.scopeOrgId();
+      untracked(() => this.page.set(1));
+    });
+    effect(() => {
+      const query = this.query();
+      untracked(() => void this.load(query));
+    });
+    effect(() => {
+      const org = this.orgParam();
+      untracked(() => void this.loadRoleOptions(org));
     });
     // Leaving "All organizations" drops the organization filter.
     effect(() => {
-      if (!this.allOrgs()) this.org.set('all');
+      if (!this.allOrgs()) untracked(() => this.org.set('all'));
     });
   }
 
+  private readonly query = computed<UserQuery>(() => {
+    const v = this.view();
+    const size = this.size();
+    return {
+      search: this.qSent() || undefined,
+      status: v === 'Active' || v === 'Inactive' || v === 'Invited' ? v : undefined,
+      never_signed_in: v === 'never' ? true : undefined,
+      role: this.role() === 'all' ? undefined : (this.role() as number),
+      organization: this.orgParam(),
+      offset: (this.page() - 1) * size,
+      limit: size,
+    };
+  });
+
+  protected async load(query = this.query()) {
+    const res = await this.state.run(() => this.api.list(query));
+    if (!res) return;
+    this.rows.set(res.rows);
+    this.store.users.all.set(res.rows);
+    this.count.set(res.count);
+    this.counts.set(res.counts ?? NO_COUNTS);
+    this.seatsData.set(res.seats);
+  }
+  protected reload() {
+    return this.load();
+  }
+
+  private async loadRoleOptions(org: number | null) {
+    if (!this.access.can('Roles', 'R')) {
+      this.roleOptions.set([]);
+      return;
+    }
+    try {
+      const res = await this.rolesApi.list({ include_templates: false, organization: org, limit: 100 });
+      this.roleOptions.set(res.rows);
+    } catch {
+      this.roleOptions.set([]);
+    }
+  }
+
   // ── Seats ──────────────────────────────────────────────────
-  /** Active users hold a seat; deactivating someone frees theirs. */
-  protected seatsUsed(orgId: number) {
-    return this.store.allUsers().filter((u) => u.orgId === orgId && u.status === 'Active').length;
-  }
-  protected atLimit(orgId: number | null) {
-    if (orgId == null) return false;
-    const max = this.orgById().get(orgId)?.limits.maxUsers;
-    return max != null && this.seatsUsed(orgId) >= max;
-  }
+  /** Active and invited users hold a seat (`seats` is returned when the list is scoped to one organization). */
   protected readonly seats = computed(() => {
-    const o = this.store.scopeOrg();
-    const max = o?.limits.maxUsers;
-    if (!o || max == null) return null;
-    return { used: this.seatsUsed(o.id), max, org: o };
+    const s = this.seatsData();
+    if (!s || s.max == null) return null;
+    const id = this.orgParam() ?? this.store.currentUser().orgId;
+    return { used: s.used, max: s.max, name: this.orgName(id) || 'This organization' };
   });
   protected readonly createBlocked = computed(() => {
     const s = this.seats();
-    return s && s.used >= s.max ? `${s.org.name} has used all ${s.max} seats in its plan. Deactivate someone or ask HyperNym for more.` : null;
+    return s && s.used >= s.max ? `${s.name} has used all ${s.max} seats in its plan. Deactivate someone or ask HyperNym for more.` : null;
   });
 
   // ── List ───────────────────────────────────────────────────
-  private readonly searched = computed(() => {
-    const q = this.q().trim().toLowerCase();
-    const org = this.org();
-    return this.store
-      .users()
-      .filter((u) => org === 'all' || u.orgId === org)
-      .filter((u) => !q || u.name.toLowerCase().includes(q) || u.username.includes(q) || u.email.toLowerCase().includes(q) || (u.manager ?? '').toLowerCase().includes(q))
-      .filter((u) => this.group() === 'all' || u.groups.includes(this.group()));
-  });
-  private readonly matches = (u: AdminUser, v: View) => v === 'all' || (v === 'never' ? !u.lastLogin : u.status === v);
-
-  /** Role names for the filter: the scope's own roles (templates have no members). */
-  protected readonly roleNames = computed(() => {
-    const org = this.org();
-    const names = this.store
-      .groups()
-      .filter((g) => g.orgId != null && (org === 'all' || g.orgId === org))
-      .map((g) => g.name);
-    return [...new Set(names)].sort((a, b) => a.localeCompare(b));
-  });
-  /** Organizations that have users, for the filter. */
-  protected readonly orgOptions = computed(() => this.store.organizations().filter((o) => this.store.allUsers().some((u) => u.orgId === o.id)));
+  /** Organizations for the filter (all-organizations view). */
+  protected readonly orgOptions = computed(() => this.store.organizations());
 
   protected readonly tabs = computed<TabItem<View>[]>(() => {
-    const rows = this.searched();
-    const n = (v: View) => rows.filter((u) => this.matches(u, v)).length;
+    const c = this.counts();
     return [
-      { id: 'all', label: 'All', count: n('all') },
-      { id: 'Active', label: 'Active', count: n('Active') },
-      { id: 'Inactive', label: 'Inactive', count: n('Inactive') },
-      { id: 'never', label: 'Never signed in', count: n('never') },
+      { id: 'all', label: 'All', count: c.all },
+      { id: 'Active', label: 'Active', count: c.active },
+      { id: 'Invited', label: 'Invited', count: c.invited },
+      { id: 'Inactive', label: 'Inactive', count: c.inactive },
+      { id: 'never', label: 'Never signed in', count: c.never_signed_in },
     ];
   });
 
-  protected readonly rows = computed(() =>
-    this.searched()
-      .filter((u) => this.matches(u, this.view()))
-      .sort((a, b) => a.name.localeCompare(b.name)),
-  );
-  protected readonly pageRows = computed(() => pageOf(this.rows(), this.page(), this.size()));
-  protected readonly activeCount = computed(() => this.store.users().filter((u) => u.status === 'Active').length);
-  protected readonly dormant = computed(() => this.store.users().filter((u) => u.status === 'Active' && !u.lastLogin).length);
-  protected readonly orgCount = computed(() => new Set(this.store.users().map((u) => u.orgId)).size);
   protected readonly cols = computed(() => 6 + (this.allOrgs() ? 1 : 0) + (this.canWrite() ? 1 : 0));
-  protected readonly filtered = computed(() => !!this.q() || this.group() !== 'all' || this.org() !== 'all');
+  protected readonly filtered = computed(() => !!this.q() || this.role() !== 'all' || this.org() !== 'all');
+  protected readonly orgCount = computed(() => new Set(this.rows().map((u) => u.orgId)).size);
 
   protected clearFilters() {
     this.q.set('');
-    this.group.set('all');
+    this.qSent.set('');
+    this.role.set('all');
     this.org.set('all');
     this.view.set('all');
+  }
+  protected pickRole(v: string) {
+    this.role.set(v === 'all' ? 'all' : +v);
+  }
+  protected pickOrg(v: string) {
+    this.org.set(v === 'all' ? 'all' : +v);
+    this.role.set('all');
   }
 
   protected isMe(u: AdminUser) {
@@ -155,6 +213,9 @@ export class Users {
   protected rowClick(u: AdminUser) {
     if (this.editable(u)) this.edit(u);
   }
+  protected roleList(u: AdminUser) {
+    return u.roles.map((r) => r.name).join(', ');
+  }
 
   protected menu(u: AdminUser): MenuItem[] {
     if (u.isSuperuser) {
@@ -165,136 +226,259 @@ export class Users {
         { label: 'Deactivate', icon: 'power', disabled: true, run: () => {} },
       ];
     }
-    const noSeat = u.status !== 'Active' && this.atLimit(u.orgId);
-    return [
-      { label: 'Edit', icon: 'pencil', run: () => this.edit(u) },
-      { label: 'Send password reset link', icon: 'key', disabled: u.status !== 'Active', run: () => this.reset(u) },
-      u.status === 'Active'
-        ? { label: this.isMe(u) ? "Deactivate (that's you)" : 'Deactivate', icon: 'power', danger: true, disabled: this.isMe(u), run: () => this.setStatus(u, 'Inactive') }
-        : { label: noSeat ? 'Activate (no seats left)' : 'Activate', icon: 'power', disabled: noSeat, run: () => this.setStatus(u, 'Active') },
-    ];
+    const items: MenuItem[] = [{ label: 'Edit', icon: 'pencil', run: () => this.edit(u) }];
+    if (u.status === 'Invited') items.push({ label: 'Resend invitation', icon: 'send', run: () => this.resend(u) });
+    else items.push({ label: 'Send password reset link', icon: 'key', disabled: u.status !== 'Active', run: () => this.reset(u) });
+    if (u.status === 'Inactive') {
+      items.push({ label: 'Activate', icon: 'power', run: () => this.setStatus(u, 'activate') });
+    } else {
+      items.push({
+        label: this.isMe(u) ? "Deactivate (that's you)" : 'Deactivate', icon: 'power', danger: true, disabled: this.isMe(u),
+        run: () => this.setStatus(u, 'deactivate'),
+      });
+    }
+    if (u.status !== 'Active' && !this.isMe(u)) items.push({ label: 'Delete…', icon: 'trash', danger: true, run: () => this.askDelete(u) });
+    return items;
   }
 
-  private reset(u: AdminUser) {
-    this.toast.show('Reset link sent', { body: `${u.name} gets a link at ${u.email}. It expires in 24 hours.`, tone: 'info' });
+  private async reset(u: AdminUser) {
+    try {
+      await this.api.sendPasswordReset(u.id);
+      this.toast.show('Reset link sent', { body: `${u.name} gets a link at ${u.email}. It expires in 24 hours.`, tone: 'info' });
+    } catch (err) {
+      this.toast.error("Couldn't send the reset link", errorText(err));
+    }
   }
-  private setStatus(u: AdminUser, status: AdminUser['status']) {
-    this.store.saveUser({ ...u, status });
-    if (status === 'Inactive') {
-      this.toast.show(`${u.name} deactivated`, { body: 'They are signed out and can no longer sign in.', action: { label: 'Undo', run: () => this.store.saveUser(u) } });
-    } else {
-      this.toast.show(`${u.name} activated`);
+  private async resend(u: AdminUser) {
+    try {
+      await this.api.resendInvitation(u.id);
+      this.toast.show('Invitation sent again', { body: `${u.email} has a new link, valid for 7 days. The old one no longer works.`, tone: 'info' });
+    } catch (err) {
+      this.toast.error("Couldn't resend the invitation", errorText(err));
+    }
+  }
+  private async setStatus(u: AdminUser, to: 'activate' | 'deactivate', undo = false) {
+    try {
+      const saved = to === 'deactivate' ? await this.api.deactivate(u.id) : await this.api.activate(u.id);
+      await this.load();
+      if (undo) return;
+      if (to === 'deactivate') {
+        this.toast.show(`${u.name} deactivated`, {
+          body: 'They are signed out and can no longer sign in.',
+          action: { label: 'Undo', run: () => void this.setStatus(saved, 'activate', true) },
+        });
+      } else {
+        this.toast.show(`${u.name} activated`, {
+          body: saved.status === 'Invited' ? 'They never accepted their invitation, so we sent a new one.' : undefined,
+          action: { label: 'Undo', run: () => void this.setStatus(saved, 'deactivate', true) },
+        });
+      }
+    } catch (err) {
+      this.toast.error(to === 'deactivate' ? `Couldn't deactivate ${u.name}` : `Couldn't activate ${u.name}`, errorText(err));
+    }
+  }
+
+  // ── Delete (through the deletion audit) ────────────────────
+  protected readonly deleteOpen = signal(false);
+  protected readonly deleteTarget = signal<AdminUser | null>(null);
+  protected readonly deleteReason = signal('');
+  protected readonly deleteBusy = signal(false);
+  protected readonly deleteError = signal('');
+  private askDelete(u: AdminUser) {
+    this.deleteTarget.set(u);
+    this.deleteReason.set('');
+    this.deleteError.set('');
+    this.deleteOpen.set(true);
+  }
+  protected async requestDelete() {
+    const u = this.deleteTarget();
+    if (!u || this.deleteBusy()) return;
+    this.deleteBusy.set(true);
+    this.deleteError.set('');
+    try {
+      await this.audit.request('user', u.id, this.deleteReason());
+      this.deleteOpen.set(false);
+      this.toast.show('Deletion requested', { body: `Someone else with edit access to the deletion audit approves it. ${u.name} stays until then.` });
+    } catch (err) {
+      this.deleteError.set(errorText(err));
+    } finally {
+      this.deleteBusy.set(false);
     }
   }
 
   // ── Dialog ─────────────────────────────────────────────────
   protected readonly open = signal(false);
   protected readonly tried = signal(false);
+  protected readonly saving = signal(false);
   protected readonly draft = signal<Draft>(this.blank());
   private readonly original = signal<AdminUser | null>(null);
+  protected readonly serverErrors = signal<Errors>({});
+  protected readonly dialogRoles = signal<Group[]>([]);
+  protected readonly managers = signal<AdminUser[]>([]);
+  protected readonly dialogLoading = signal(false);
+  protected readonly dialogLoadError = signal('');
 
   /** Organizations a platform user can add people to from "All organizations". */
   protected readonly orgChoices = computed<Organization[]>(() => this.store.organizations().filter((o) => o.status !== 'Suspended'));
   /** Pick the organization in the dialog only for new users in the all-organizations view. */
-  protected readonly pickOrg = computed(() => this.allOrgs() && this.draft().id == null);
-  /** The draft's organization's own roles (never templates). */
-  protected readonly dialogRoles = computed(() => {
-    const id = this.draft().orgId;
-    return id == null ? [] : this.store.groups.all().filter((g) => g.orgId === id);
-  });
-  protected readonly managers = computed(() => {
-    const d = this.draft();
-    return this.store.allUsers().filter((u) => u.orgId === d.orgId && u.status === 'Active' && u.id !== d.id);
-  });
+  protected readonly pickOrgInDialog = computed(() => this.allOrgs() && this.draft().id == null);
+
   /** Editing yourself: the one admin role you still hold can't be unticked. */
   protected readonly lockedRole = computed(() => {
     const o = this.original();
     if (!o || !this.isMe(o) || o.isSuperuser) return null;
-    const admin = this.dialogRoles().filter((g) => isAdminRole(g) && this.draft().groups.includes(g.name));
-    return admin.length === 1 ? admin[0].name : null;
+    const admin = this.dialogRoles().filter((g) => isAdminRole(g) && this.draft().roleIds.includes(g.id));
+    return admin.length === 1 ? admin[0].id : null;
   });
 
   private blank(): Draft {
-    return { id: null, orgId: this.allOrgs() ? null : this.store.writeOrgId(), name: '', email: '', username: '', groups: [], manager: '' };
+    return {
+      id: null, orgId: this.allOrgs() ? null : this.store.writeOrgId(), name: '', email: '', phone: '', roleIds: [], managerId: null,
+    };
   }
   protected add() {
     if (!this.canWrite() || this.createBlocked()) return;
     this.original.set(null);
     this.draft.set(this.blank());
-    this.tried.set(false);
-    this.open.set(true);
+    this.openDialog();
   }
   protected edit(u: AdminUser) {
     if (!this.editable(u)) return;
     this.original.set(u);
-    this.draft.set({ id: u.id, orgId: u.orgId, name: u.name, email: u.email, username: u.username, groups: [...u.groups], manager: u.manager ?? '' });
+    this.draft.set({ id: u.id, orgId: u.orgId, name: u.name, email: u.email, phone: u.phone, roleIds: u.roles.map((r) => r.id), managerId: u.manager?.id ?? null });
+    this.openDialog();
+  }
+  private openDialog() {
     this.tried.set(false);
+    this.serverErrors.set({});
     this.open.set(true);
+    void this.loadDialogData();
+  }
+  /** The draft organization's roles (never templates) and its active users as managers. */
+  protected async loadDialogData() {
+    const d = this.draft();
+    this.dialogRoles.set([]);
+    this.managers.set([]);
+    this.dialogLoadError.set('');
+    if (d.orgId == null) return;
+    const org = this.store.crossTenant() ? d.orgId : null;
+    this.dialogLoading.set(true);
+    try {
+      const [roles, users] = await Promise.all([
+        this.rolesApi.list({ include_templates: false, organization: org, limit: 100 }),
+        this.api.list({ organization: org, status: 'Active', limit: 100 }),
+      ]);
+      if (this.draft().orgId !== d.orgId) return;
+      this.dialogRoles.set(roles.rows.filter((r) => r.orgId === d.orgId || r.orgId == null).filter((r) => !r.isTemplate));
+      this.managers.set(users.rows.filter((u) => u.id !== d.id));
+    } catch (err) {
+      this.dialogLoadError.set(errorText(err));
+    } finally {
+      this.dialogLoading.set(false);
+    }
   }
   protected set<K extends keyof Draft>(k: K, v: Draft[K]) {
     this.draft.update((d) => ({ ...d, [k]: v }));
+    this.serverErrors.set({});
   }
   /** Roles and managers belong to one organization: changing it clears both. */
   protected setOrg(v: string) {
-    this.draft.update((d) => ({ ...d, orgId: v ? Number(v) : null, groups: [], manager: '' }));
+    this.draft.update((d) => ({ ...d, orgId: v ? Number(v) : null, roleIds: [], managerId: null }));
+    this.serverErrors.set({});
+    void this.loadDialogData();
   }
-  /** Suggest a username from the email while the user hasn't typed one. */
-  protected setEmail(v: string) {
-    this.draft.update((d) => {
-      const auto = !d.username || d.username === d.email.split('@')[0].toLowerCase();
-      return { ...d, email: v.trim(), username: auto && d.id == null ? v.split('@')[0].toLowerCase() : d.username };
-    });
+  protected setManager(v: string) {
+    this.set('managerId', v ? Number(v) : null);
   }
-  protected toggleGroup(name: string, on: boolean) {
-    if (!on && name === this.lockedRole()) return;
-    this.draft.update((d) => ({ ...d, groups: this.dialogRoles().map((g) => g.name).filter((g) => (g === name ? on : d.groups.includes(g))) }));
+  protected toggleRole(id: number, on: boolean) {
+    if (!on && id === this.lockedRole()) return;
+    this.draft.update((d) => ({ ...d, roleIds: on ? [...new Set([...d.roleIds, id])] : d.roleIds.filter((x) => x !== id) }));
+    this.serverErrors.set({});
   }
 
   protected readonly errors = computed<Errors>(() => {
     const d = this.draft();
-    const others = this.store.allUsers().filter((u) => u.id !== d.id);
     const e: Errors = {};
     if (d.orgId == null) e.orgId = 'Choose the organization they work for.';
-    else if (d.id == null && this.atLimit(d.orgId)) e.orgId = `${this.orgName(d.orgId)} has used all its seats.`;
     if (!d.name.trim()) e.name = 'Enter their full name.';
     else if (d.name.trim().length > 120) e.name = 'Keep the name under 120 characters.';
     if (!d.email) e.email = 'Enter their work email.';
-    else if (!EMAIL_RE.test(d.email)) e.email = 'Enter an email such as name@company.com.';
-    else if (others.some((u) => u.email.toLowerCase() === d.email.toLowerCase())) e.email = 'Another user already has this email.';
-    if (!d.username) e.username = 'Enter a username.';
-    else if (!USERNAME_RE.test(d.username)) e.username = '3–32 lower-case letters, digits, dots or dashes, starting with a letter.';
-    else if (others.some((u) => u.username === d.username)) e.username = 'This username is taken.';
-    if (d.orgId != null && !d.groups.length) e.groups = 'Choose at least one role.';
+    else if (!EMAIL_RE.test(d.email) || d.email.length > 254) e.email = 'Enter an email such as name@company.com.';
+    if (d.phone.trim() && !PHONE_RE.test(d.phone.trim())) e.phone = 'Include the country code, like +974 5512 3456.';
+    if (d.orgId != null && !d.roleIds.length) e.roles = 'Choose at least one role.';
     const o = this.original();
-    if (o && this.isMe(o) && o.groups.some((n) => this.dialogRoles().some((g) => g.name === n && isAdminRole(g)))
-        && !d.groups.some((n) => this.dialogRoles().some((g) => g.name === n && isAdminRole(g)))) {
-      e.groups = "You can't remove your own last admin role. Ask another admin.";
+    const admin = (ids: number[]) => ids.some((id) => this.dialogRoles().some((g) => g.id === id && isAdminRole(g)));
+    if (o && this.isMe(o) && !o.isSuperuser && admin(o.roles.map((r) => r.id)) && !admin(d.roleIds)) {
+      e.roles = "You can't remove your own last admin role. Ask another admin.";
     }
-    return e;
+    return { ...e, ...this.serverErrors() };
   });
 
-  protected save() {
+  protected async save() {
     this.tried.set(true);
-    if (Object.keys(this.errors()).length) return;
+    this.serverErrors.set({});
+    if (Object.keys(this.errors()).length || this.saving()) return;
     const d = this.draft();
     const prev = this.original();
-    const u: AdminUser = {
-      orgId: prev?.orgId ?? d.orgId ?? this.store.writeOrgId(),
-      // Superusers only come from `manage.py createsuperuser`; the portal never grants it.
-      isSuperuser: prev?.isSuperuser ?? false,
-      id: d.id ?? Math.max(0, ...this.store.allUsers().map((x) => x.id)) + 1,
-      name: d.name.trim(),
-      email: d.email,
-      username: d.username,
-      groups: d.groups,
-      manager: d.manager || null,
-      // Legacy account type: kept in the data, no longer chosen here (access comes from roles).
-      type: prev?.type ?? 'Admin',
-      status: prev?.status ?? 'Active',
-      lastLogin: prev?.lastLogin ?? null,
-    };
-    this.store.saveUser(u);
-    this.toast.show(prev ? `${u.name} updated` : `${u.name} invited`, prev ? {} : { body: `A link to set a password went to ${u.email}.` });
-    this.open.set(false);
+    this.saving.set(true);
+    try {
+      if (prev) {
+        await this.api.update(prev.id, {
+          full_name: d.name.trim(), phone: d.phone.trim(), role_ids: d.roleIds, manager_id: d.managerId,
+        });
+        this.toast.show(`${d.name.trim()} updated`);
+        // Changing my own roles changes what I can do.
+        if (this.isMe(prev)) void this.session.refreshAccess();
+      } else {
+        await this.api.create({
+          full_name: d.name.trim(),
+          email: d.email.trim().toLowerCase(),
+          ...(d.phone.trim() ? { phone: d.phone.trim() } : {}),
+          role_ids: d.roleIds,
+          ...(d.managerId != null ? { manager_id: d.managerId } : {}),
+          // Only a platform user who picked an organization sends one; partners never do.
+          ...(this.store.crossTenant() && d.orgId != null ? { organization_id: d.orgId } : {}),
+        });
+        this.toast.show(`${d.name.trim()} invited`, { body: `A link to set a password went to ${d.email.trim().toLowerCase()}. It works for 7 days.` });
+      }
+      this.open.set(false);
+      await this.load();
+    } catch (err) {
+      this.serverErrors.set(dialogErrors(err));
+    } finally {
+      this.saving.set(false);
+    }
   }
+}
+
+/** Server refusals → the field they belong to (USERS_API codes and `data.errors`). */
+function dialogErrors(err: unknown): Errors {
+  if (!(err instanceof ApiError)) return { form: errorText(err) };
+  const f = err.fieldErrors;
+  const out: Errors = {};
+  if (f['full_name']) out.name = f['full_name'][0];
+  if (f['email']) out.email = f['email'][0];
+  if (f['phone']) out.phone = f['phone'][0];
+  if (f['role_ids']) out.roles = f['role_ids'][0];
+  if (f['manager_id']) out.manager = f['manager_id'][0];
+  if (f['organization_id']) out.orgId = f['organization_id'][0];
+  switch (err.code) {
+    case UserCode.EmailTaken:
+      out.email = err.message;
+      break;
+    case UserCode.NoRole:
+    case UserCode.BadRole:
+    case UserCode.OwnAdmin:
+      out.roles = err.message;
+      break;
+    case UserCode.BadManager:
+      out.manager = err.message;
+      break;
+    case UserCode.NoSeats:
+    case UserCode.Suspended:
+      out.form = err.message;
+      break;
+  }
+  if (!Object.keys(out).length) out.form = err.message;
+  return out;
 }

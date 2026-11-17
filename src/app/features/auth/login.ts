@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
-import { AuthError } from '../../core/auth/auth.models';
+import { AuthCode, AuthError } from '../../core/auth/auth.models';
+import { SessionLoader } from '../../core/auth/session-loader';
 import { safeReturnUrl } from '../../core/auth/auth.guard';
 import { Icon } from '../../shared/ui/icon';
 import { AuthLayout } from './auth-layout';
@@ -91,9 +92,11 @@ export class Login {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly auth = inject(AuthService);
+  private readonly session = inject(SessionLoader);
   private readonly form = viewChild.required<ElementRef<HTMLFormElement>>('form');
 
-  protected readonly email = signal(localStorage.getItem(REMEMBER_KEY) ?? '');
+  /** After /set-password the email arrives in the navigation state (never in the URL). */
+  protected readonly email = signal(stateEmail() ?? localStorage.getItem(REMEMBER_KEY) ?? '');
   protected readonly password = signal('');
   protected readonly remember = signal(!!localStorage.getItem(REMEMBER_KEY));
   protected readonly show = signal(false);
@@ -126,8 +129,16 @@ export class Login {
     try {
       await this.auth.login(this.email().trim(), this.password());
       this.password.set('');
+      await this.session.load();
       await this.router.navigateByUrl(safeReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl')));
     } catch (err) {
+      // 403 4020: right password, but it has expired. Choose a new one with the token the server returned.
+      if (err instanceof AuthError && err.code === AuthCode.PasswordExpired && typeof err.data?.['reset_token'] === 'string') {
+        this.password.set('');
+        this.auth.stashResetToken(err.data['reset_token'] as string, this.email().trim());
+        await this.router.navigate(['/reset-password'], { state: { expired: true } });
+        return;
+      }
       // A refused sign-in empties the password; a network failure keeps it for another try.
       if (!(err instanceof AuthError) || !err.isNetwork) {
         this.password.set('');
@@ -139,6 +150,11 @@ export class Login {
       this.busy.set(false);
     }
   }
+}
+
+function stateEmail(): string | null {
+  const e = (history.state as { email?: unknown } | null)?.email;
+  return typeof e === 'string' && e ? e : null;
 }
 
 /** 423 names the time the lock ends; everything else shows the server's own message. */

@@ -1,12 +1,25 @@
 <div class="page">
-  @if (org(); as o) {
+  @if (!org() && state.loading()) {
+    <div class="title-row"><div class="title-block">
+      <nav class="breadcrumb" aria-label="Breadcrumb"><a href="" (click)="$event.preventDefault(); back.emit()">Organizations</a></nav>
+      <span class="skeleton" style="width:240px;height:28px"></span>
+      <span class="skeleton" style="width:360px;height:12px;margin-top:8px"></span>
+    </div></div>
+    <span class="skeleton" style="width:100%;height:120px"></span>
+  } @else if (!org() && state.error(); as e) {
+    <div class="title-row"><div class="title-block">
+      <nav class="breadcrumb" aria-label="Breadcrumb"><a href="" (click)="$event.preventDefault(); back.emit()">Organizations</a></nav>
+      <h1>Organization</h1>
+    </div></div>
+    <app-load-error [message]="e" (retry)="load()" />
+  } @else if (org(); as o) {
     <div class="title-row smooth-reveal">
       <div class="title-block">
         <nav class="breadcrumb" aria-label="Breadcrumb">
           <a href="" (click)="$event.preventDefault(); back.emit()">Organizations</a><span aria-hidden="true">/</span><span class="crumb-current">{{ o.name }}</span>
         </nav>
         <div class="name-row">
-          <span class="sw lg" [style.background]="o.brandColour" aria-hidden="true"></span>
+          <app-org-logo [url]="o.logoUrl" [name]="o.name" [colour]="o.brandColour" [size]="28" />
           <h1>{{ o.name }}</h1>
           <span class="pill">{{ o.kind }}</span>
           <span class="pill" [class]="orgTone(o.status)">{{ o.status }}</span>
@@ -27,7 +40,7 @@
       </div>
     } @else if (o.status === 'Invited') {
       <div class="notice info-notice smooth-reveal" style="--reveal-delay: 40ms"><app-icon name="send" />
-        <span class="grow">Invitation pending: {{ admin()?.name ?? o.contact.name }} ({{ admin()?.email ?? o.contact.email }}) hasn't signed in yet.</span>
+        <span class="grow">Invitation pending: {{ admin()?.name ?? o.contact.name }} ({{ admin()?.email ?? o.contact.email }}) hasn't set a password yet.</span>
         @if (canWrite()) { <button class="btn sm" (click)="resend.emit(o)">Resend invitation</button> }
       </div>
     } @else if (o.status === 'Suspended') {
@@ -48,7 +61,7 @@
               <span class="kpi-label">Customers</span>
               <i class="kpi-icon"><app-icon name="building-2" /></i>
             </header>
-            @if (loading()) { <span class="skeleton" style="width:48px;height:30px;margin:3px 0"></span> }
+            @if (state.loading() && !org()) { <span class="skeleton" style="width:48px;height:30px;margin:3px 0"></span> }
             @else { <span class="kpi-value"><span class="num" [uiCountUp]="stats().customers"></span></span> }
             <span class="kpi-caption num">@if (o.limits.maxCustomers) { of {{ o.limits.maxCustomers }} allowed } @else { no limit }</span>
           </div>
@@ -57,7 +70,7 @@
               <span class="kpi-label">Devices in service</span>
               <i class="kpi-icon"><app-icon name="cpu" /></i>
             </header>
-            @if (loading()) { <span class="skeleton" style="width:48px;height:30px;margin:3px 0"></span> }
+            @if (state.loading() && !org()) { <span class="skeleton" style="width:48px;height:30px;margin:3px 0"></span> }
             @else { <span class="kpi-value"><span class="num" [uiCountUp]="stats().inService"></span></span> }
             <span class="kpi-caption num">of {{ stats().devices }} devices it holds</span>
           </div>
@@ -66,16 +79,16 @@
               <span class="kpi-label">Users</span>
               <i class="kpi-icon"><app-icon name="users" /></i>
             </header>
-            @if (loading()) { <span class="skeleton" style="width:40px;height:30px;margin:3px 0"></span> }
-            @else { <span class="kpi-value"><span class="num" [uiCountUp]="stats().users"></span></span> }
-            <span class="kpi-caption num">@if (o.limits.maxUsers) { of {{ o.limits.maxUsers }} allowed } @else { no limit }</span>
+            @if (state.loading() && !org()) { <span class="skeleton" style="width:40px;height:30px;margin:3px 0"></span> }
+            @else { <span class="kpi-value"><span class="num" [uiCountUp]="stats().seatsUsed"></span></span> }
+            <span class="kpi-caption num">@if (o.limits.maxUsers) { of {{ o.limits.maxUsers }} seats } @else { no limit } · active and invited</span>
           </div>
           <div class="kpi" sharedSpotlightBorder data-tone="brand">
             <header>
               <span class="kpi-label">Features</span>
               <i class="kpi-icon"><app-icon name="sparkles" /></i>
             </header>
-            @if (loading()) { <span class="skeleton" style="width:40px;height:30px;margin:3px 0"></span> }
+            @if (state.loading() && !org()) { <span class="skeleton" style="width:40px;height:30px;margin:3px 0"></span> }
             @else { <span class="kpi-value"><span class="num" [uiCountUp]="featureTotal().on"></span></span> }
             <span class="kpi-caption num">of {{ featureTotal().of }} it could have</span>
           </div>
@@ -87,7 +100,7 @@
               @if (canWrite()) { <button class="btn sm" (click)="editProfile()"><app-icon name="pencil" />Edit</button> }
             </div>
             <div class="card-body">
-              @if (loading()) {
+              @if (state.loading() && !org()) {
                 <div class="dl">
                   @for (i of [1, 2, 3, 4, 5, 6]; track i) { <div><span class="skeleton" style="width:60px;height:10px"></span><br /><span class="skeleton" style="width:130px;height:14px"></span></div> }
                 </div>
@@ -99,7 +112,8 @@
                   <div><dt>Countries</dt><dd>{{ countryNames(o.countries) }}</dd></div>
                   <div><dt>Segments</dt><dd>{{ o.segments.includes('B2B') ? 'Businesses (B2B)' : '' }}{{ o.segments.length === 2 ? ' and ' : '' }}{{ o.segments.includes('B2C') ? 'Consumers (B2C)' : '' }}</dd></div>
                   <div><dt>Created</dt><dd class="num">{{ o.createdAt | date }}</dd></div>
-                  <div><dt>Brand colour</dt><dd class="brand-dd"><span class="sw" [style.background]="o.brandColour"></span><span class="mono">{{ o.brandColour }}</span></dd></div>
+                  <div><dt>Administrator</dt><dd>@if (admin(); as a) { {{ a.name }} <span class="muted">· {{ a.status }}</span> } @else { <span class="dash">—</span> }</dd></div>
+                  <div><dt>Brand colour</dt><dd class="brand-dd">@if (o.brandColour) { <span class="sw" [style.background]="o.brandColour"></span><span class="mono">{{ o.brandColour }}</span> } @else { <span class="dash">—</span> }</dd></div>
                 </dl>
               }
             </div>
@@ -112,6 +126,53 @@
                 <div><dt>Email</dt><dd><a class="link" [href]="'mailto:' + o.contact.email">{{ o.contact.email }}</a></dd></div>
                 <div><dt>Phone</dt><dd class="num">@if (o.contact.phone) { {{ o.contact.phone }} } @else { <span class="dash">—</span> }</dd></div>
               </dl>
+            </div>
+          </section>
+          <!-- Brand: logo and colour (BRANDING_MEDIA_EMAIL.md 1.5) ─────────── -->
+          <section class="card span-12" aria-labelledby="brand-h">
+            <div class="card-head">
+              <div>
+                <h2 id="brand-h">Brand</h2>
+                <p class="card-sub">@if (o.kind === 'Platform') { The portal's built-in HyperNym look } @else { Brands the portal and the emails {{ o.name }}’s users get }</p>
+              </div>
+            </div>
+            <div class="card-body brand-body">
+              <div class="logo-block">
+                <app-org-logo class="logo-preview" [url]="o.kind === 'Platform' ? '/assets/hypernym.svg' : o.logoUrl" [name]="o.name" [colour]="o.brandColour" fallback="initials" [size]="72" />
+                <div class="logo-copy">
+                  <strong>Logo</strong>
+                  @if (o.kind === 'Platform') {
+                    <span class="hint">The platform organization always uses the HyperNym logo.</span>
+                  } @else {
+                    <span class="hint">
+                      @if (!o.logoUrl) { No logo yet: its initials stand in. } @else if (o.logoUpdatedAt) { Updated {{ o.logoUpdatedAt | rel }}. }
+                      {{ logoHint }} Up to 512 KB, 64 to 2048 pixels.
+                    </span>
+                    @if (canWrite()) {
+                      <div class="logo-actions">
+                        <input #logoInput type="file" class="sr-only" [accept]="logoAccept" tabindex="-1" aria-hidden="true" (change)="pickLogo($event)" />
+                        <button class="btn sm" [disabled]="logoBusy()" (click)="logoInput.click()">
+                          <app-icon name="upload" />{{ logoBusy() === 'upload' ? 'Uploading…' : o.logoUrl ? 'Replace' : 'Upload logo' }}
+                        </button>
+                        @if (o.logoUrl) {
+                          <button class="btn sm ghost" [disabled]="logoBusy()" (click)="removeLogoOpen.set(true)"><app-icon name="trash" />Remove</button>
+                        }
+                      </div>
+                    }
+                    @if (logoError()) { <p class="inline-error" role="alert"><app-icon name="circle-x" />{{ logoError() }}</p> }
+                  }
+                </div>
+              </div>
+              <div class="colour-block">
+                <strong>Colour</strong>
+                @if (o.kind === 'Platform') {
+                  <span class="hint">Shown as a swatch in lists. It doesn't re-theme the portal.</span>
+                } @else if (o.brandColour) {
+                  <app-brand-preview [colour]="o.brandColour" />
+                } @else {
+                  <span class="hint">No brand colour: users see the HyperNym purple.</span>
+                }
+              </div>
             </div>
           </section>
         </div>
@@ -145,7 +206,7 @@
                         @if (f.platformOnly && o.kind !== 'Platform') { <span class="pill">HyperNym only</span> }
                       </span>
                       <span class="f-desc muted">{{ f.description }}</span>
-                      @if (isStaged(f.key)) { <span class="impact num" [class.down]="impacts()[f.key].startsWith('Lowering') || impacts()[f.key].startsWith('Removing')">{{ impacts()[f.key] }}</span> }
+                      @if (isStaged(f.key)) { <span class="impact num" [class.down]="impacts()[f.key].down">{{ impacts()[f.key].text }}</span> }
                     </div>
                     <div class="seg" role="radiogroup" [attr.aria-label]="f.label + ' entitlement'" [class.locked]="locked">
                       @for (l of levels; track $index) {
@@ -162,10 +223,11 @@
 
         @if (stagedCount()) {
           <div class="save-bar" role="status">
-            <span class="num"><strong>{{ stagedCount() }}</strong> unsaved {{ stagedCount() === 1 ? 'change' : 'changes' }}@if (affectedTotal()) { · affects {{ affectedTotal() }} {{ affectedTotal() === 1 ? 'user' : 'users' }} }</span>
+            <span class="num"><strong>{{ stagedCount() }}</strong> unsaved {{ stagedCount() === 1 ? 'change' : 'changes' }}@if (affectedTotal()) { · {{ affectedTotal() }} {{ affectedTotal() === 1 ? 'user loses' : 'users lose' }} access }
+              @if (featError()) { <span class="save-err">{{ featError() }}</span> }</span>
             <div class="save-actions">
-              <button class="btn sm" (click)="discardFeatures()">Discard</button>
-              <button class="btn sm primary" (click)="saveFeatures()">Save entitlements</button>
+              <button class="btn sm" [disabled]="featSaving()" (click)="discardFeatures()">Discard</button>
+              <button class="btn sm primary" [disabled]="featSaving()" (click)="saveFeatures()">{{ featSaving() ? 'Saving…' : 'Save entitlements' }}</button>
             </div>
           </div>
         }
@@ -203,13 +265,13 @@
             <div class="card-head"><div><h2>Users</h2><p class="card-sub">People who can sign in to {{ o.name }}</p></div></div>
             <div class="card-body limit">
               <div class="usage-line num">
-                <span class="big">{{ stats().users }}</span>
-                <span class="muted">@if (limitDraft().maxUsers) { of {{ limitDraft().maxUsers }} } @else { · no limit }</span>
+                <span class="big">{{ stats().seatsUsed }}</span>
+                <span class="muted">@if (limitDraft().maxUsers) { of {{ limitDraft().maxUsers }} seats } @else { · no limit }</span>
               </div>
-              <span class="meter" [class.over]="limitDraft().maxUsers && stats().users >= limitDraft().maxUsers!" aria-hidden="true">
-                <span [style.width.%]="limitDraft().maxUsers ? pct(stats().users, limitDraft().maxUsers) : 0"></span>
+              <span class="meter" [class.over]="limitDraft().maxUsers && stats().seatsUsed >= limitDraft().maxUsers!" aria-hidden="true">
+                <span [style.width.%]="limitDraft().maxUsers ? pct(stats().seatsUsed, limitDraft().maxUsers) : 0"></span>
               </span>
-              <p class="muted small num">{{ stats().activeUsers }} active, {{ stats().users - stats().activeUsers }} inactive.</p>
+              <p class="muted small num">{{ stats().activeUsers }} active and {{ stats().invitedUsers }} invited hold a seat; {{ stats().users - stats().activeUsers - stats().invitedUsers }} inactive don't.</p>
               @if (editable()) {
                 <div class="field">
                   <label for="lim-u">Maximum users</label>
@@ -218,8 +280,8 @@
                   @if (limitErrors().users) { <span class="error">{{ limitErrors().users }}</span> }
                   @else { <span class="hint">Leave empty for no limit.</span> }
                 </div>
-                @if (limitDraft().maxUsers && limitDraft().maxUsers! < stats().users) {
-                  <div class="notice"><app-icon name="alert" /><span>{{ o.name }} already has {{ stats().users }} users. Nobody is removed, but they can't invite anyone until they're under {{ limitDraft().maxUsers }}.</span></div>
+                @if (limitDraft().maxUsers && limitDraft().maxUsers! < stats().seatsUsed) {
+                  <div class="notice"><app-icon name="alert" /><span>{{ o.name }} already uses {{ stats().seatsUsed }} seats. Nobody is removed, but they can't invite anyone until they're under {{ limitDraft().maxUsers }}.</span></div>
                 }
               }
             </div>
@@ -229,10 +291,10 @@
           <p class="muted small">The platform organization has no limits.</p>
         } @else if (editable() && limitsChanged()) {
           <div class="save-bar" role="status">
-            <span>Unsaved limits</span>
+            <span>Unsaved limits @if (limitsError()) { <span class="save-err">{{ limitsError() }}</span> }</span>
             <div class="save-actions">
-              <button class="btn sm" (click)="cancelLimits()">Discard</button>
-              <button class="btn sm primary" [disabled]="!limitsValid()" (click)="saveLimits()">Save limits</button>
+              <button class="btn sm" [disabled]="limitsSaving()" (click)="cancelLimits()">Discard</button>
+              <button class="btn sm primary" [disabled]="!limitsValid() || limitsSaving()" (click)="saveLimits()">{{ limitsSaving() ? 'Saving…' : 'Save limits' }}</button>
             </div>
           </div>
         }
@@ -243,13 +305,13 @@
         <div class="list smooth-reveal" style="--reveal-delay: 80ms">
           <div class="toolbar">
             <div class="left">
-              <span class="count num">{{ members().length }} {{ members().length === 1 ? 'person' : 'people' }}@if (o.limits.maxUsers) { of {{ o.limits.maxUsers }} allowed }</span>
+              <span class="count num">{{ stats().users }} {{ stats().users === 1 ? 'person' : 'people' }} · {{ stats().seatsUsed }}@if (o.limits.maxUsers) { of {{ o.limits.maxUsers }} } seats used</span>
             </div>
             <div class="right">
               @if (o.kind === 'Platform') {
                 <button class="btn" (click)="openStaff()"><app-icon name="users" />Manage HyperNym staff</button>
               } @else if (canWrite()) {
-                @if (atUserLimit()) { <span class="muted small">At its limit of {{ o.limits.maxUsers }} users. Raise it in Limits first.</span> }
+                @if (atUserLimit()) { <span class="muted small">All {{ o.limits.maxUsers }} seats are used. Raise the limit in Limits first.</span> }
                 <button class="btn primary" [disabled]="atUserLimit()" (click)="openInvite()"><app-icon name="mail" />Invite administrator</button>
               }
             </div>
@@ -263,29 +325,42 @@
             <table class="table stack">
               <thead><tr><th>Name</th><th>Email</th><th>Roles</th><th>Status</th><th class="num">Last sign-in</th></tr></thead>
               <tbody>
-                @for (u of members(); track u.id) {
-                  <tr>
-                    <td><span class="primary-cell">{{ u.name }}</span><span class="sub mono desk-only">{{ u.username }}</span></td>
-                    <td class="phone-only">{{ u.email }} · {{ u.isSuperuser ? 'Superuser' : u.groups.join(', ') }}</td>
-                    <td class="desk-only"><a class="link" [href]="'mailto:' + u.email">{{ u.email }}</a></td>
-                    <td class="desk-only">
-                      @if (u.isSuperuser) { <span class="pill info">Superuser</span> }
-                      @else { {{ u.groups.join(', ') || '—' }} }
-                    </td>
-                    <td class="keep">
-                      @if (u.status === 'Active' && !u.lastLogin) { <span class="pill info">Invited</span> }
-                      @else { <span class="pill" [class]="u.status | tone">{{ u.status }}</span> }
-                    </td>
-                    <td class="num desk-only" [title]="u.lastLogin ? (u.lastLogin | datetime) : ''">
-                      @if (u.lastLogin) { {{ u.lastLogin | rel }} } @else { <span class="dash">—</span> }
-                    </td>
-                  </tr>
-                } @empty {
-                  <tr><td colspan="5" class="empty-row">
-                    <div class="empty">No one at {{ o.name }} can sign in yet. Invite an administrator to get them started.
-                      @if (canWrite() && o.kind !== 'Platform') { <button class="btn sm" (click)="openInvite()">Invite administrator</button> }
-                    </div>
-                  </td></tr>
+                @if (!canSeeUsers()) {
+                  <tr><td colspan="5" class="empty-row"><div class="empty">You need read access to Users to see who works here.</div></td></tr>
+                } @else if (peopleState.error(); as e) {
+                  <tr><td colspan="5" class="empty-row"><app-load-error [message]="e" (retry)="loadPeople()" /></td></tr>
+                } @else if (peopleState.loading() && !members().length) {
+                  @for (i of [1, 2, 3]; track i) {
+                    <tr>
+                      <td><span class="skeleton" style="width:140px;height:14px"></span></td>
+                      <td class="desk-only"><span class="skeleton" style="width:180px;height:14px"></span></td>
+                      <td class="desk-only"><span class="skeleton" style="width:110px;height:14px"></span></td>
+                      <td><span class="skeleton" style="width:54px;height:20px"></span></td>
+                      <td class="desk-only"><span class="skeleton" style="width:60px;height:14px"></span></td>
+                    </tr>
+                  }
+                } @else {
+                  @for (u of members(); track u.id) {
+                    <tr>
+                      <td><span class="primary-cell">{{ u.name }}</span><span class="sub desk-only">{{ u.phone }}</span></td>
+                      <td class="phone-only">{{ u.email }} · {{ u.isSuperuser ? 'Superuser' : roleNames(u) }}</td>
+                      <td class="desk-only"><a class="link" [href]="'mailto:' + u.email">{{ u.email }}</a></td>
+                      <td class="desk-only">
+                        @if (u.isSuperuser) { <span class="pill info">Superuser</span> }
+                        @else { {{ roleNames(u) || '—' }} }
+                      </td>
+                      <td class="keep"><span class="pill" [class]="u.status | tone">{{ u.status }}</span></td>
+                      <td class="num desk-only" [title]="u.lastLogin ? (u.lastLogin | datetime) : ''">
+                        @if (u.lastLogin) { {{ u.lastLogin | rel }} } @else { <span class="dash">—</span> }
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="5" class="empty-row">
+                      <div class="empty">No one at {{ o.name }} can sign in yet. Invite an administrator to get them started.
+                        @if (canWrite() && o.kind !== 'Platform') { <button class="btn sm" (click)="openInvite()">Invite administrator</button> }
+                      </div>
+                    </td></tr>
+                  }
                 }
               </tbody>
             </table>
@@ -297,23 +372,39 @@
       @case ('roles') {
         <div class="list smooth-reveal" style="--reveal-delay: 80ms">
           <div class="toolbar">
-            <div class="left"><span class="count num">{{ roles().length }} {{ roles().length === 1 ? 'role' : 'roles' }} · capped by the entitlements above</span></div>
+            <div class="left"><span class="count num">{{ stats().roles }} {{ stats().roles === 1 ? 'role' : 'roles' }} · capped by the entitlements</span></div>
             <div class="right"><button class="btn" (click)="openRoles()"><app-icon name="external" />Open in Roles</button></div>
           </div>
           <div class="table-wrap">
             <table class="table stack">
               <thead><tr><th>Role</th><th class="num">Members</th><th>Permissions</th><th>Status</th></tr></thead>
               <tbody>
-                @for (r of roles(); track r.id) {
-                  <tr class="clickable" (click)="openRoles()">
-                    <td><span class="primary-cell">{{ r.name }}</span><span class="sub desk-only">{{ r.description }}</span></td>
-                    <td class="phone-only num">{{ r.members }} {{ r.members === 1 ? 'member' : 'members' }} · {{ r.rw }} read & write · {{ r.r }} read</td>
-                    <td class="num desk-only">{{ r.members }}</td>
-                    <td class="desk-only muted"><span class="num">{{ r.rw }} read & write · {{ r.r }} read</span></td>
-                    <td class="keep"><span class="pill" [class]="r.status | tone">{{ r.status }}</span></td>
-                  </tr>
-                } @empty {
-                  <tr><td colspan="4" class="empty-row"><div class="empty">No roles yet. Inviting an administrator adds the Organization admin role.</div></td></tr>
+                @if (!canSeeRoles()) {
+                  <tr><td colspan="4" class="empty-row"><div class="empty">You need read access to Roles to see this organization's roles.</div></td></tr>
+                } @else if (rolesState.error(); as e) {
+                  <tr><td colspan="4" class="empty-row"><app-load-error [message]="e" (retry)="loadRoles()" /></td></tr>
+                } @else if (rolesState.loading() && !roles().length) {
+                  @for (i of [1, 2, 3]; track i) {
+                    <tr>
+                      <td><span class="skeleton" style="width:140px;height:14px"></span></td>
+                      <td class="desk-only"><span class="skeleton" style="width:20px;height:14px"></span></td>
+                      <td class="desk-only"><span class="skeleton" style="width:160px;height:14px"></span></td>
+                      <td><span class="skeleton" style="width:54px;height:20px"></span></td>
+                    </tr>
+                  }
+                } @else {
+                  @for (r of roles(); track r.id) {
+                    @let sum = roleSum(r);
+                    <tr class="clickable" (click)="openRoles()">
+                      <td><span class="primary-cell">{{ r.name }}</span><span class="sub desk-only">{{ r.description }}</span></td>
+                      <td class="phone-only num">{{ r.members.total }} {{ r.members.total === 1 ? 'member' : 'members' }} · {{ sum.rw }} read & write · {{ sum.r }} read</td>
+                      <td class="num desk-only">{{ r.members.total }}</td>
+                      <td class="desk-only muted"><span class="num">{{ sum.rw }} read & write · {{ sum.r }} read</span></td>
+                      <td class="keep"><span class="pill" [class]="r.status | tone">{{ r.status }}</span></td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="4" class="empty-row"><div class="empty">No roles yet. Inviting an administrator adds the Organization admin role.</div></td></tr>
+                  }
                 }
               </tbody>
             </table>
@@ -329,12 +420,12 @@
       <div class="form">
         <div class="field">
           <label for="p-name">Name<span class="req">*</span></label>
-          <input id="p-name" class="ui-control" maxlength="60" [value]="p.name" (input)="setP('name', $any($event.target).value)" [class.invalid]="profileTried() && e.name" />
+          <input id="p-name" class="ui-control" maxlength="150" [value]="p.name" (input)="setP('name', $any($event.target).value)" [class.invalid]="profileTried() && e.name" />
           @if (profileTried() && e.name) { <span class="error">{{ e.name }}</span> }
         </div>
         <div class="field">
           <label for="p-legal">Legal name<span class="req">*</span></label>
-          <input id="p-legal" class="ui-control" maxlength="120" [value]="p.legalName" (input)="setP('legalName', $any($event.target).value)" [class.invalid]="profileTried() && e.legalName" />
+          <input id="p-legal" class="ui-control" maxlength="255" [value]="p.legalName" (input)="setP('legalName', $any($event.target).value)" [class.invalid]="profileTried() && e.legalName" />
           @if (profileTried() && e.legalName) { <span class="error">{{ e.legalName }}</span> }
         </div>
         <fieldset class="field">
@@ -381,16 +472,35 @@
                 @if (p.brandColour === sw) { <app-icon name="check" [size]="14" /> }
               </button>
             }
-            @if (!swatches.includes(p.brandColour)) {
-              <button type="button" class="swatch" role="radio" aria-checked="true" [style.background]="p.brandColour" [attr.aria-label]="p.brandColour"><app-icon name="check" [size]="14" /></button>
+            @if (customColour()) {
+              <button type="button" class="swatch" role="radio" aria-checked="true" [style.background]="customColour()" [attr.aria-label]="customColour()"><app-icon name="check" [size]="14" /></button>
             }
           </div>
-          <span class="hint">Marks the organization in the switcher and lists.</span>
+          <div class="colour-input">
+            <input type="color" class="colour-well" aria-label="Pick any colour" [value]="validColour() ?? '#000000'" (input)="setP('brandColour', $any($event.target).value)" />
+            <input id="p-colour" class="ui-control mono" maxlength="7" spellcheck="false" aria-label="Brand colour, hex" placeholder="#a81c26"
+                   [value]="p.brandColour" (input)="setP('brandColour', $any($event.target).value)" [class.invalid]="(profileTried() || p.brandColour.length >= 7) && e.brandColour" />
+          </div>
+          @if ((profileTried() || p.brandColour.length >= 7) && e.brandColour) { <span class="error">{{ e.brandColour }}</span> }
+          @else if (validColour(); as c) {
+            @if (!isPlatform()) { <app-brand-preview [colour]="c" /> }
+          }
+          <span class="hint">@if (isPlatform()) { Marks HyperNym in the switcher and lists; it doesn't re-theme the portal. } @else { Brands the portal and emails for {{ o.name }}’s users, and marks it in the switcher and lists. }</span>
         </fieldset>
+        @if (e.form) { <p class="inline-error" role="alert"><app-icon name="circle-x" />{{ e.form }}</p> }
       </div>
       <ng-container slot="footer">
         <button class="btn" (click)="editOpen.set(false)">Cancel</button>
-        <button class="btn primary" (click)="saveProfile()">Save profile</button>
+        <button class="btn primary" [disabled]="profileSaving()" (click)="saveProfile()">{{ profileSaving() ? 'Saving…' : 'Save profile' }}</button>
+      </ng-container>
+    </app-dialog>
+
+    <!-- Remove logo ───────────────────────────────────────── -->
+    <app-dialog [(open)]="removeLogoOpen" heading="Remove the logo?" width="460px">
+      <p class="confirm-body">{{ o.name }}’s users and emails show its initials instead. You can upload a logo again at any time.</p>
+      <ng-container slot="footer">
+        <button class="btn" (click)="removeLogoOpen.set(false)">Keep the logo</button>
+        <button class="btn danger" [disabled]="logoBusy()" (click)="removeLogo()">{{ logoBusy() === 'remove' ? 'Removing…' : 'Remove logo' }}</button>
       </ng-container>
     </app-dialog>
 
@@ -401,22 +511,28 @@
       <div class="form">
         <div class="field">
           <label for="i-name">Full name<span class="req">*</span></label>
-          <input id="i-name" class="ui-control" maxlength="80" [value]="iv.name" (input)="invite.set({ name: $any($event.target).value, email: iv.email })" [class.invalid]="inviteTried() && ie.name" />
+          <input id="i-name" class="ui-control" maxlength="120" [value]="iv.name" (input)="setInvite('name', $any($event.target).value)" [class.invalid]="inviteTried() && ie.name" />
           @if (inviteTried() && ie.name) { <span class="error">{{ ie.name }}</span> }
         </div>
         <div class="field">
           <label for="i-email">Work email<span class="req">*</span></label>
-          <input id="i-email" class="ui-control" type="email" [value]="iv.email" (input)="invite.set({ name: iv.name, email: $any($event.target).value })" [class.invalid]="inviteTried() && ie.email" />
+          <input id="i-email" class="ui-control" type="email" [value]="iv.email" (input)="setInvite('email', $any($event.target).value)" [class.invalid]="inviteTried() && ie.email" />
           @if (inviteTried() && ie.email) { <span class="error">{{ ie.email }}</span> }
-          @else { <span class="hint">We email them a sign-in link, valid for 7 days.</span> }
+          @else { <span class="hint">We email them a link to set their password, valid for 7 days.</span> }
         </div>
+        <div class="field">
+          <label for="i-phone">Mobile</label>
+          <input id="i-phone" class="ui-control num" type="tel" placeholder="+974 5512 3456" [value]="iv.phone" (input)="setInvite('phone', $any($event.target).value)" [class.invalid]="inviteTried() && ie.phone" />
+          @if (inviteTried() && ie.phone) { <span class="error">{{ ie.phone }}</span> }
+        </div>
+        @if (ie.form) { <p class="inline-error" role="alert"><app-icon name="circle-x" />{{ ie.form }}</p> }
       </div>
       <ng-container slot="footer">
         <button class="btn" (click)="inviteOpen.set(false)">Cancel</button>
-        <button class="btn primary" (click)="sendInvite()"><app-icon name="send" />Send invitation</button>
+        <button class="btn primary" [disabled]="inviteSaving()" (click)="sendInvite()"><app-icon name="send" />{{ inviteSaving() ? 'Sending…' : 'Send invitation' }}</button>
       </ng-container>
     </app-dialog>
-  } @else {
+  } @else if (notFound()) {
     <div class="title-row smooth-reveal"><div class="title-block">
       <nav class="breadcrumb" aria-label="Breadcrumb"><a href="" (click)="$event.preventDefault(); back.emit()">Organizations</a></nav>
       <h1>Organization not found</h1>

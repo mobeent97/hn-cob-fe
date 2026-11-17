@@ -179,3 +179,7 @@
     @apply grid-cols-1;
   }
 }
+
+.err-list {
+  @apply m-0 mt-1 list-disc pl-4;
+}

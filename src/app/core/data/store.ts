@@ -1,41 +1,71 @@
 import { Injectable, computed, signal } from '@angular/core';
-import * as db from './mock-db';
-import * as iot from './iot-mock';
-import { nowIso } from './mock-db';
+import * as ref from './reference';
+import { TODAY, nowIso } from './clock';
+import { HUB_NAME, matchesTarget, twinSync } from './iot-rules';
 import { scoped } from './scoped';
 import {
   AdminUser, AppNotification, Consumer, Customer, CustomerStatus, Device, DeviceEvent, DeviceStatus, Group,
   HardwareOrder, NotificationPrefs, OrderStatus, PortalSettings, Voucher, Organization, DeletionAudit, Vehicle,
   CommandRecord, ConfigProfile, DeviceTwin, EnrollmentGroup, IotDeviceState, IotRegistration, TwinValue,
+  ConnectionEvent, DeviceAction, DeviceType, DiagnosticParam, FeatureGroup, HubMetrics, PackageConfig, Sensor, UseCase,
 } from './models';
+import type { AuthUser, MeAccess } from '../auth/auth.models';
+import { FEATURE_KEYS } from '../access/features';
+
+/** Shown before /auth/me/ answers; owns nothing and can open nothing. */
+const GUEST: AdminUser = {
+  id: 0, orgId: 0, orgName: '', isSuperuser: false, name: '', email: '', phone: '', roles: [], manager: null,
+  status: 'Inactive', lastLogin: null, invitedAt: null, createdAt: null,
+};
+const NO_ORG: Organization = {
+  id: 0, name: '', legalName: '', kind: 'Partner', status: 'Active', countries: [], segments: [], features: {},
+  limits: { maxCustomers: null, maxUsers: null }, contact: { name: '', email: '', phone: '' }, brandColour: '', createdAt: '',
+};
+const EMPTY_HUB: HubMetrics = {
+  hubName: HUB_NAME, region: '', tier: '', units: 0, dailyQuota: 0, messagesPerHour: [], throttledToday: 0, routes: [],
+};
 
 /**
- * In-memory store for the design phase. Screens read signals and call these methods;
- * when the Django API exists, each method becomes an HTTP call with the same shape.
+ * Client state for every screen. Lists start empty and are filled from the Django API, one module at
+ * a time (docs/ROADMAP.md). Methods marked TODO(API) still only change local state; each becomes an
+ * HTTP call with the same shape when its endpoint exists.
  */
 @Injectable({ providedIn: 'root' })
 export class Store {
-  readonly countries = db.COUNTRIES;
-  readonly industries = db.INDUSTRIES;
-  readonly packages = signal(db.PACKAGES);
-  readonly deviceTypes = signal(db.DEVICE_TYPES);
-  readonly sensors = signal(db.SENSORS);
-  readonly featureGroups = signal(db.FEATURE_GROUPS);
-  readonly useCases = signal(db.USE_CASES);
-  readonly featurePermissions = db.FEATURE_PERMISSIONS;
+  // Reference data shipped with the portal (core/data/reference.ts).
+  readonly countries = ref.COUNTRIES;
+  readonly industries = ref.INDUSTRIES;
+  readonly featurePermissions = ref.FEATURE_PERMISSIONS;
+
+  // Catalogue — TODO(API): GET /catalogue/packages/, /catalogue/device-types/, /catalogue/sensors/,
+  // /catalogue/feature-groups/, /catalogue/use-cases/ (see docs/ROADMAP.md).
+  readonly packages = signal<PackageConfig[]>([]);
+  readonly deviceTypes = signal<DeviceType[]>([]);
+  readonly sensors = signal<Sensor[]>([]);
+  readonly featureGroups = signal<FeatureGroup[]>([]);
+  readonly useCases = signal<UseCase[]>([]);
 
   // ── Session and tenant scope ──────────────────────────────
-  readonly organizations = signal<Organization[]>(db.ORGANIZATIONS);
-  /** Who is signed in (design phase: switchable with "Preview as"). */
-  readonly sessionUserId = signal(db.CURRENT_USER.id);
+  /**
+   * Organizations known to the client: GET /organizations/options/ at sign-in (the user's own, or all of
+   * them for platform users), upgraded to full objects by the Organizations screen (`mergeOrganizations`).
+   */
+  readonly organizations = signal<Organization[]>([]);
   /** For platform users: the organization being viewed, or null for all organizations. */
   readonly activeOrgId = signal<number | null>(null);
 
-  private readonly _users = signal<AdminUser[]>(db.USERS);
-  readonly currentUser = computed(() => this._users().find((u) => u.id === this.sessionUserId()) ?? this._users()[0]);
-  readonly currentOrg = computed(() => this.organizations().find((o) => o.id === this.currentUser().orgId)!);
+  /** GET /auth/me/access/: the server's effective level per feature (Access reads it). */
+  readonly access = signal<MeAccess | null>(null);
+
+  /** The signed-in user, set by AuthService from GET /auth/me/. */
+  private readonly sessionUser = signal<AdminUser | null>(null);
+  readonly signedIn = computed(() => this.sessionUser() !== null);
+  readonly currentUser = computed(() => this.sessionUser() ?? GUEST);
+  readonly currentOrg = computed(
+    () => this.organizations().find((o) => o.id === this.currentUser().orgId) ?? NO_ORG,
+  );
   /** Platform staff (HyperNym) can look across tenants; partner users never leave their own. */
-  readonly crossTenant = computed(() => this.currentOrg().kind === 'Platform');
+  readonly crossTenant = computed(() => this.currentOrg().kind === 'Platform' || this.currentUser().isSuperuser);
   /** The organization every list is filtered to, or null for "all organizations". */
   readonly scopeOrgId = computed(() => (this.crossTenant() ? this.activeOrgId() : this.currentUser().orgId));
   readonly scopeOrg = computed(() => this.organizations().find((o) => o.id === this.scopeOrgId()) ?? null);
@@ -56,8 +86,11 @@ export class Store {
     return id == null ? () => true : (r: { orgId: number | null }) => r.orgId === id || (platform && r.orgId === null);
   });
 
-  private readonly _customers = signal<Customer[]>(db.CUSTOMERS);
-  private readonly _devices = signal<Device[]>(db.DEVICES);
+  // Tenant data — every list starts empty and fills from its API (docs/ROADMAP.md).
+  /** The rows the Users screen last loaded (GET /users/, one page). */
+  private readonly _users = signal<AdminUser[]>([]);
+  private readonly _customers = signal<Customer[]>([]); // TODO(API): GET /customers/
+  private readonly _devices = signal<Device[]>([]); // TODO(API): GET /inventory/devices/
   private readonly deviceOrg = computed(() => new Map(this._devices().map((d) => [d.id, d.orgId])));
   private readonly customerOrg = computed(() => new Map(this._customers().map((c) => [c.id, c.orgId])));
   private readonly byDevice = computed(() => {
@@ -67,38 +100,45 @@ export class Store {
   });
 
   readonly customers = scoped(this._customers, this.byOrg);
-  readonly consumers = scoped(signal<Consumer[]>(db.CONSUMERS), this.byOrg);
+  readonly consumers = scoped(signal<Consumer[]>([]), this.byOrg); // TODO(API): GET /consumers/
   readonly devices = scoped(this._devices, this.byOrg);
   readonly users = scoped(this._users, this.byOrg);
-  readonly groups = scoped(signal<Group[]>(db.GROUPS), this.byOrgOrShared);
-  readonly audit = scoped(signal<DeletionAudit[]>(db.DELETION_AUDIT), this.byOrg);
-  readonly orders = scoped(signal<HardwareOrder[]>(db.ORDERS), this.byOrg);
-  readonly vouchers = scoped(signal<Voucher[]>(db.VOUCHERS), this.byOrgOrShared);
-  readonly params = signal(db.DIAGNOSTIC_PARAMS);
-  readonly actions = signal(db.DEVICE_ACTIONS);
-  readonly vehicles = scoped(signal<Vehicle[]>(db.VEHICLES), computed(() => {
+  /** GET /roles/?limit=100 (Roles screen, Users dialog). Templates have orgId null. */
+  readonly groups = scoped(signal<Group[]>([]), this.byOrgOrShared);
+  /** The audit page last loaded (GET /audit/deletions/). Organization deletions belong to the platform's trail. */
+  readonly audit = scoped(signal<DeletionAudit[]>([]), computed(() => {
+    const id = this.scopeOrgId();
+    return id == null ? () => true : (r: DeletionAudit) => r.orgId === id;
+  }));
+  readonly orders = scoped(signal<HardwareOrder[]>([]), this.byOrg); // TODO(API): GET /orders/
+  readonly vouchers = scoped(signal<Voucher[]>([]), this.byOrgOrShared); // TODO(API): GET /vouchers/
+  readonly params = signal<DiagnosticParam[]>([]); // TODO(API): GET /diagnostics/parameters/
+  readonly actions = signal<DeviceAction[]>([]); // TODO(API): GET /diagnostics/actions/
+  readonly vehicles = scoped(signal<Vehicle[]>([]), computed(() => { // TODO(API): live positions stream
     const id = this.scopeOrgId();
     const m = this.customerOrg();
     return id == null ? () => true : (v: Vehicle) => m.get(v.customerId) === id;
   }));
-  readonly settings = signal<PortalSettings>(db.SETTINGS);
-  readonly today = db.TODAY;
-  readonly notifications = scoped(signal<AppNotification[]>(db.NOTIFICATIONS), this.byOrgOrPlatform);
-  readonly notificationPrefs = signal<NotificationPrefs>(db.NOTIFICATION_PREFS);
+  /** GET /settings/ at sign-in (page size, password rules, session); defaults until it answers. */
+  readonly settings = signal<PortalSettings>(ref.DEFAULT_SETTINGS);
+  readonly today = TODAY;
+  readonly notifications = scoped(signal<AppNotification[]>([]), this.byOrgOrPlatform); // TODO(API): GET /notifications/
+  /** The signed-in user's own preferences (GET /notifications/preferences/, loaded by Profile). */
+  readonly notificationPrefs = signal<NotificationPrefs>(ref.DEFAULT_NOTIFICATION_PREFS);
   readonly unread = computed(() => this.notifications().filter((n) => !n.read).length);
 
-  // ── Azure IoT Hub (device management) ─────────────────────
-  readonly hub = signal(iot.HUB_METRICS);
-  readonly iotStates = scoped(signal<IotDeviceState[]>(iot.IOT_STATES), this.byDevice);
-  readonly twins = scoped(signal<DeviceTwin[]>(iot.TWINS), this.byDevice);
-  readonly commands = scoped(signal<CommandRecord[]>(iot.COMMANDS), this.byDevice);
-  readonly profiles = signal<ConfigProfile[]>(iot.CONFIG_PROFILES);
-  readonly enrollments = signal<EnrollmentGroup[]>(iot.ENROLLMENT_GROUPS);
-  readonly connectionEvents = scoped(signal(iot.CONNECTION_EVENTS), this.byDevice);
+  // ── Azure IoT Hub (device management) — TODO(API): /iot/* (docs/ROADMAP.md) ──
+  readonly hub = signal<HubMetrics>(EMPTY_HUB);
+  readonly iotStates = scoped(signal<IotDeviceState[]>([]), this.byDevice);
+  readonly twins = scoped(signal<DeviceTwin[]>([]), this.byDevice);
+  readonly commands = scoped(signal<CommandRecord[]>([]), this.byDevice);
+  readonly profiles = signal<ConfigProfile[]>([]);
+  readonly enrollments = signal<EnrollmentGroup[]>([]);
+  readonly connectionEvents = scoped(signal<ConnectionEvent[]>([]), this.byDevice);
   readonly iotById = computed(() => new Map(this.iotStates().map((s) => [s.deviceId, s])));
   readonly twinById = computed(() => new Map(this.twins().map((t) => [t.deviceId, t])));
-  readonly matchesTarget = iot.matchesTarget;
-  readonly twinSync = iot.twinSync;
+  readonly matchesTarget = matchesTarget;
+  readonly twinSync = twinSync;
 
   /** Devices per customer, computed once per change of the device list. */
   readonly devicesByCustomer = computed(() => {
@@ -135,7 +175,7 @@ export class Store {
     return c;
   }
   nextCustomerId() {
-    return Math.max(...this._customers().map((c) => c.id)) + 1;
+    return Math.max(0, ...this._customers().map((c) => c.id)) + 1;
   }
   setCustomerStatus(id: number, status: CustomerStatus) {
     this.customers.update((xs) => xs.map((x) => (x.id === id ? { ...x, status } : x)));
@@ -160,27 +200,16 @@ export class Store {
   }
   allocate(ids: string[], customerId: number) {
     const set = new Set(ids);
-    const orgId = this.customerOrg().get(customerId) ?? 1;
+    const orgId = this.customerOrg().get(customerId) ?? this.currentUser().orgId;
     this.devices.update((xs) => xs.map((d) => (set.has(d.id) ? { ...d, customerId, orgId, status: 'Allocated' } : d)));
   }
   addDevices(devs: Device[]) {
     this.devices.update((xs) => [...devs, ...xs]);
   }
 
-  /** A believable lifecycle for a device, derived from its current state. */
-  deviceHistory(d: Device): DeviceEvent[] {
-    const out: DeviceEvent[] = [{ at: d.createdAt, status: 'Available', note: 'Received into stock', by: 'Usman Siddiqui' }];
-    const step = (days: number) => new Date(new Date(d.createdAt).getTime() + days * 86400000).toISOString();
-    const owner = d.customerId ? this.customer(d.customerId)?.company : d.consumerId ? 'Consumer account' : null;
-    if (d.status !== 'Available' && owner) {
-      out.push({ at: step(2), status: 'Allocated', note: `Allocated to ${owner}`, by: 'Hira Qureshi' });
-    }
-    if ((d.status === 'Sold' || d.status === 'Deactivated') && owner) {
-      out.push({ at: step(6), status: 'Sold', note: d.plate ? `Installed on ${d.plate}` : 'Activated', by: 'Ahmed Al Hashimi' });
-    }
-    if (d.status === 'Deactivated') out.push({ at: step(40), status: 'Deactivated', note: 'Customer account deactivated', by: 'Mobeen Tahir' });
-    if (d.status === 'Faulty') out.push({ at: step(9), status: 'Faulty', note: 'No GPS fix after installation, returned for RMA', by: 'Grace Okafor' });
-    return out.reverse();
+  /** Lifecycle events for a device. TODO(API): GET /inventory/devices/{id}/history/. */
+  deviceHistory(_d: Device): DeviceEvent[] {
+    return [];
   }
 
   // ── Notifications ──────────────────────────────────────────
@@ -201,46 +230,24 @@ export class Store {
     return full;
   }
 
-  // ── IoT Hub operations (design-phase simulation of the service SDK) ──
-  /**
-   * Invoke a direct method / send a C2D message. Resolves like IoT Hub would: a connected device
-   * answers in about a second; a disconnected one times out (direct method) or queues (C2D).
-   */
-  sendCommand(deviceId: string, method: string, kind: CommandRecord['kind'], payload: Record<string, TwinValue>, ok = 'OK'): CommandRecord {
+  // ── IoT Hub operations — TODO(API): POST /iot/devices/{id}/commands/, PATCH /iot/devices/{id}/twin/ ──
+  /** Records a command as Pending. The API will invoke the direct method / C2D message and report the outcome. */
+  sendCommand(deviceId: string, method: string, kind: CommandRecord['kind'], payload: Record<string, TwinValue>, _ok = 'OK'): CommandRecord {
     const id = Math.max(0, ...this.commands.all().map((c) => c.id)) + 1;
-    const connected = this.iotById().get(deviceId)?.connection === 'Connected';
     const rec: CommandRecord = {
       id, deviceId, method, kind, payload, status: 'Pending', responseCode: null, response: null, latencyMs: null,
       sentAt: nowIso(), sentBy: this.currentUser().name,
     };
     this.commands.update((xs) => [rec, ...xs]);
-    const settle = (patch: Partial<CommandRecord>) => this.commands.update((xs) => xs.map((c) => (c.id === id ? { ...c, ...patch } : c)));
-    if (kind === 'C2D message' && !connected) {
-      setTimeout(() => settle({ status: 'Queued', response: 'Queued until the device reconnects (expires in 48 h)' }), 400);
-      this.iotStates.update((xs) => xs.map((s) => (s.deviceId === deviceId ? { ...s, c2dQueued: s.c2dQueued + 1 } : s)));
-    } else if (!connected) {
-      setTimeout(() => settle({ status: 'Timed out', responseCode: 504, response: 'Device did not respond within 30 s', latencyMs: 30000 }), 2200);
-    } else {
-      const ms = 500 + Math.round(Math.random() * 900);
-      setTimeout(() => settle({ status: 'Succeeded', responseCode: 200, response: ok, latencyMs: ms }), ms);
-    }
     return rec;
   }
 
-  /** Patch desired properties; a connected device reports them back a moment later. */
+  /** Patch desired properties locally. The device's reported state only changes when the API reports it. */
   setDesired(deviceId: string, patch: Record<string, TwinValue>) {
     const now = nowIso();
     this.twins.update((xs) => xs.map((t) => (t.deviceId === deviceId
       ? { ...t, desired: { version: t.desired.version + 1, props: { ...t.desired.props, ...patch }, updatedAt: now } }
       : t)));
-    if (this.iotById().get(deviceId)?.connection === 'Connected') {
-      setTimeout(() => this.twins.update((xs) => xs.map((t) => {
-        if (t.deviceId !== deviceId) return t;
-        const props = { ...t.reported.props, ...patch };
-        delete props['$configError'];
-        return { ...t, reported: { version: t.reported.version + 1, props, updatedAt: nowIso() } };
-      })), 1600);
-    }
   }
 
   setRegistration(deviceIds: string[], registration: IotRegistration) {
@@ -258,7 +265,7 @@ export class Store {
       const group = dev ? this.enrollments().find((g) => g.deviceTypeId === dev.typeId) : undefined;
       const dashcam = dev ? this.deviceType(dev.typeId).category === 'Dashcam' : false;
       return {
-        deviceId: id, hubName: iot.HUB_NAME, registration: 'Awaiting first connection', connection: 'Disconnected',
+        deviceId: id, hubName: HUB_NAME, registration: 'Awaiting first connection', connection: 'Disconnected',
         lastActivity: null, connectedSince: null, transport: dashcam ? 'Gateway · JT/T 808' : 'Gateway · Codec 8E',
         auth: group?.attestation ?? 'Symmetric key', enrollmentGroup: group?.id ?? 'individual', messagesToday: 0, c2dQueued: 0,
       };
@@ -283,13 +290,78 @@ export class Store {
 
   // ── Organizations & session ────────────────────────────────
   saveOrganization(o: Organization) {
-    this.organizations.update((xs) => (xs.some((x) => x.id === o.id) ? xs.map((x) => (x.id === o.id ? o : x)) : [...xs, o]));
+    this.organizations.update((xs) => (xs.some((x) => x.id === o.id) ? xs.map((x) => (x.id === o.id ? { ...x, ...o } : x)) : [...xs, o]));
   }
-  /** Design-phase "Preview as": sign in as another sample user. */
-  signInAs(userId: number) {
-    this.sessionUserId.set(userId);
-    this.activeOrgId.set(null);
+  /**
+   * Replaces the known organizations with `rows` (options or the full list), keeping profile fields a
+   * fuller copy already had (an options row has no legal name, countries or contact).
+   */
+  mergeOrganizations(rows: Organization[]) {
+    const old = new Map(this.organizations().map((o) => [o.id, o]));
+    this.organizations.set(
+      rows.map((o) => {
+        const prev = old.get(o.id);
+        if (!prev || o.legalName) return o;
+        return { ...prev, ...o, legalName: prev.legalName, countries: prev.countries, contact: prev.contact, createdAt: prev.createdAt || o.createdAt };
+      }),
+    );
   }
+  /**
+   * Called by AuthService with the user from /auth/login/ or /auth/me/ (null on sign-out).
+   * Seeds the user's own organization so the shell can draw at once; GET /organizations/options/
+   * then replaces it (SessionLoader). The platform organization is entitled to every feature.
+   */
+  setSession(user: AuthUser | null) {
+    if (!user) {
+      this.activeOrgId.set(null);
+      this.sessionUser.set(null);
+      this.organizations.set([]);
+      this.access.set(null);
+      this._users.set([]);
+      this.groups.all.set([]);
+      this.audit.all.set([]);
+      this.settings.set(ref.DEFAULT_SETTINGS);
+      this.notificationPrefs.set(ref.DEFAULT_NOTIFICATION_PREFS);
+      return;
+    }
+    const prevId = this.sessionUser()?.id;
+    if (prevId !== user.id) this.activeOrgId.set(null);
+    const org = user.organization;
+    const platform = org?.kind === 'Platform';
+    if (org && !this.organizations().some((o) => o.id === org.id)) {
+      this.organizations.update((xs) => [...xs, {
+        ...NO_ORG,
+        id: org.id,
+        name: org.name,
+        kind: platform ? 'Platform' : 'Partner',
+        status: org.status as Organization['status'],
+        features: platform ? Object.fromEntries(FEATURE_KEYS.map((k) => [k, 'RW' as const])) : {},
+        brandColour: org.brand_colour ?? '',
+        logoUrl: org.logo_url ?? null,
+      }]);
+    } else if (org && org.logo_url !== undefined) {
+      // A fresh /auth/me/ carries a newer SAS URL (and brand) for the user's own organization.
+      this.organizations.update((xs) =>
+        xs.map((o) => (o.id === org.id ? { ...o, brandColour: org.brand_colour ?? '', logoUrl: org.logo_url ?? null } : o)),
+      );
+    }
+    this.sessionUser.set({
+      id: user.id,
+      orgId: org?.id ?? 0,
+      orgName: org?.name ?? '',
+      isSuperuser: user.is_superuser,
+      name: user.full_name,
+      email: user.email,
+      phone: user.phone ?? '',
+      roles: (user.roles ?? []).map((r) => ({ id: r.id, name: r.name, isAdmin: r.is_admin })),
+      manager: user.manager ? { id: user.manager.id, name: user.manager.full_name, email: user.manager.email } : null,
+      status: user.status === 'Active' ? 'Active' : user.status === 'Invited' ? 'Invited' : 'Inactive',
+      lastLogin: user.last_login,
+      invitedAt: null,
+      createdAt: null,
+    });
+  }
+
   /** Every user across tenants (platform screens only). */
   readonly allUsers = this._users.asReadonly();
 

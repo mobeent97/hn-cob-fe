@@ -1,6 +1,6 @@
 // Helpers shared by the customer wizard, the customer detail screen and the consumer list.
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
-import { TODAY } from '../../core/data/mock-db';
+import { TODAY } from '../../core/data/clock';
 
 export const DOC_KINDS = ['Trade licence', 'Contract', 'ID copy', 'Passport', 'Other'] as const;
 export const USER_GROUP_OPTIONS = ['Customer admin', 'Fleet manager', 'Dispatcher', 'Read only'];

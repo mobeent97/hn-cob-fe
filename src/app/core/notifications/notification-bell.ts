@@ -6,7 +6,7 @@ import { Store } from '../data/store';
 import { RelativePipe } from '../data/format';
 import { AppNotification } from '../data/models';
 import { Icon } from '../../shared/ui/icon';
-import { KIND_META, NotificationFeed } from './notification-feed';
+import { KIND_META } from './notification-feed';
 
 /**
  * Top-bar bell. The unread badge slides on and pops when the count rises
@@ -58,7 +58,7 @@ import { KIND_META, NotificationFeed } from './notification-feed';
         </ul>
         <footer>
           <a routerLink="/notifications" (click)="open.set(false)">View all notifications</a>
-          <a routerLink="/settings" [queryParams]="{ section: 'notifications' }" (click)="open.set(false)" class="muted">Preferences</a>
+          <a routerLink="/profile" [queryParams]="{ section: 'notifications' }" (click)="open.set(false)" class="muted">Preferences</a>
         </footer>
       </section>
     }
@@ -76,7 +76,6 @@ export class NotificationBell {
   protected readonly latest = computed(() => this.store.notifications().slice(0, 6));
 
   constructor() {
-    inject(NotificationFeed).start(inject(DestroyRef));
     let last = this.unread();
     effect(() => {
       const n = this.unread();

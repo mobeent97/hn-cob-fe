@@ -59,6 +59,12 @@ All from `theme.css`. Use the Tailwind names in templates and `@apply`, the CSS 
   `<html>`. Nothing saved means **dark**, as in IoTility. The pre-paint script in `index.html` does the same
   before Angular boots; those are the only two places that touch the theme.
 - A switch cross-fades the window once (View Transitions). `Theme.version()` bumps after every switch.
+- **Organization brand** (`hn-cob-be/docs/BRANDING_MEDIA_EMAIL.md` 1.4): `BrandTheme` (`core/theme/brand.ts`) sets
+  the whole `--color-brand-*` scale inline on `<html>` for a partner user with a brand colour, derived by the pure
+  `brandScale()` (`core/theme/brand-scale.ts`, tested against `brand_vectors.json`, shared with the backend). Platform
+  users and superusers keep the purple. The last brand is kept in `localStorage['hn-brand']` (colour and scale
+  only) for the pre-paint script and the login page. So **never hard-code purple**: every brand use goes through
+  `brand-*`. Organization swatches and logos (`<app-org-logo>`) are data, not theme.
 - **Canvas and WebGL code** (ECharts, MapLibre) can't read tokens or oklch: resolve colours with
   `cssColor('var(--color-…)')` (`shared/ui/css-color.ts`) and resolve again when the theme changes.
 
@@ -75,7 +81,8 @@ All from `theme.css`. Use the Tailwind names in templates and `@apply`, the CSS 
 
 FleetPoint's shell (`core/layout/shell.*`):
 
-- Full-height sidebar on the purple gradient (`#0a0a0f → #1e0a3c → #4c1d95`): HyperNym logo, the tenant
+- Full-height sidebar on the brand gradient (`#0a0a0f → brand-950 → brand-900`): HyperNym logo (a partner user's
+  organization logo and name instead), the tenant
   scope switcher, grouped nav in white / `brand-300`, the active item on a sliding pill
   (`[sharedTabIndicator] tabIndicatorVariant="pill"`) and a hover pill that glides between items.
   It collapses to a 5rem icon rail (remembered) with tooltips.
@@ -93,9 +100,10 @@ FleetPoint's shell (`core/layout/shell.*`):
 2. **Page header:** `.title-row` → `.title-block` (h1 + `.subline` with the one finding) and `.actions`
    (primary action on the right).
 3. **Data from the store.** `inject(Store)` gives signals. Counts and totals are `computed()` from the rows.
-4. **States:** loading (`simulateLoad('key')` with `.skeleton` / `ui-skeleton` at the real size), empty (a
-   dashed `.empty` box with one sentence and an action), zero (`0`), missing (`.dash` —), error (inside the
-   block that failed, with Retry).
+4. **States:** loading (`loadState()` from `shared/ui/load-state.ts` on screens that read the API —
+   `simulateLoad('key')` only where the module isn't connected yet — with `.skeleton` at the real size),
+   empty (a dashed `.empty` box with one sentence and an action), zero (`0`), missing (`.dash` —), error
+   (`<app-load-error [message] (retry)>` inside the block that failed).
 5. **Entrances:** top-level sections may use `.smooth-reveal` with a small `--reveal-delay` stagger.
 6. **Phone (≤640px):** tables get `table stack` (two-line rows; `keep` for the status cell, `hide-sm` for
    secondary cells). KPI tiles fold to two columns.
@@ -193,7 +201,10 @@ IoTility's tokens: `--duration-press` (160ms), `--duration-hover` (150), `--dura
 
 - **Data:** `Store.notifications` holds the list and `unread` the count. Use `markRead`,
   `markAllRead`, `removeNotifications` and `pushNotification`. Preferences live in
-  `Store.notificationPrefs`, with in-app and email settings per kind, a digest and quiet hours.
+  `Store.notificationPrefs` (GET/PUT `/notifications/preferences/`), with in-app and email settings per
+  kind, a digest, quiet hours and a time zone. Every user edits their own on **My profile → Notifications**
+  (`/profile?section=notifications`, the bell's *Preferences* link); the platform-only Settings page
+  doesn't show them.
 - **Labels:** `KIND_META` (`core/notifications/notification-feed.ts`) gives each kind its label,
   icon and description.
 - **Bell:** in the header, FleetPoint's bell and panel. The badge pops and the bell swings when the count
@@ -222,11 +233,11 @@ IoTility's tokens: `--duration-press` (160ms), `--duration-hover` (150), `--dura
   - Show an *Organization* column or filter only when `store.crossTenant() && store.scopeOrgId() == null`.
 - **Routing.** `featureGuard` blocks routes without read access, and `/new` and `/edit` routes
   without read/write, and sends the user to `/forbidden`.
-- **Design preview.** Account menu → *Preview as another user*, or add `?as=<userId>` to any URL:
-  - `1` is the superuser.
-  - `101` is Vodafone's admin, `102` a Vodafone onboarding agent, `103` a Vodafone support viewer.
-  - `104` is MTN's admin.
-  - `2` is HyperNym onboarding staff.
+- **Effective access** comes from the server: `GET /auth/me/access/` (loaded at sign-in, on window focus
+  and after role or entitlement saves) fills `Store.access`, and `Access.levels` uses it. The same rule is
+  computed locally only while it loads.
+- **Organizations** for the switcher, pickers and the Roles caps come from `GET /organizations/options/`
+  at sign-in (`SessionLoader`); the Organizations screen upgrades them to full objects.
 
 ## Authentication
 
@@ -244,9 +255,16 @@ IoTility's tokens: `--duration-press` (160ms), `--duration-hover` (150), `--dura
   and calls that fail at the same time share that refresh, then the request is retried. If the refresh fails,
   the session is cleared and the user goes to `/login?returnUrl=…`.
 - **Start-up:** an app initializer calls `restoreSession()` (`GET /auth/me/`) when tokens exist. If that
-  fails, the tokens are cleared quietly. The `?as=` design preview is applied after it.
+  fails, the tokens are cleared quietly. Then `SessionLoader.load()` reads `/auth/me/access/`, `/settings/`
+  and `/organizations/options/`; the sign-in screen calls it after a login too.
+- **Password expired:** a login refused with 403 `4020` stores `data.reset_token` and opens
+  `/reset-password`, which says the password has expired.
+- **Set-password links** (`/set-password?token=`, public): invitations and admin-triggered resets.
+  `POST /auth/set-password/verify/` then `POST /auth/set-password/`, then `/login` with the email filled in
+  (navigation state, never the URL).
 - **Routes:** `authGuard` protects the shell. `guestGuard` sends a signed-in user away from `/login`.
   `resetTokenGuard` sends visitors without a reset token from `/reset-password` to `/forgot-password`.
-- **Still mock:** only the auth screens and the header's name and role use the API. Every other screen,
-  and roles and feature access, still use the mock `Store`. A real superuser gets the mock superuser
-  session (`store.signInAs(1)`). Roles and organizations will come from the API later.
+- **Connected modules** (typed services in `core/api/<module>.api.ts`, which unwrap the envelope and throw
+  `ApiError` with the server's message and `fieldErrors`): Users, Roles, Organizations, Deletion audit,
+  Settings and notification preferences, plus My profile (`/auth/me/…`). Users are identified by email;
+  there are no usernames. Every other module's list still starts empty (`TODO(API)` in `store.ts`).

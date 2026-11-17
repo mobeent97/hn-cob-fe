@@ -3,7 +3,7 @@
     <div class="title-block">
       <h1>My profile</h1>
       <p class="subline">
-        Signed in as {{ me().username }}
+        Signed in as {{ me().email }}
         @if (me().lastLogin) { · last sign-in {{ me().lastLogin | rel }} }
       </p>
     </div>
@@ -18,15 +18,12 @@
           <span class="avatar" aria-hidden="true">{{ initials() }}</span>
           <div>
             <span class="strong">{{ org().name }}</span>
-            <span class="muted small">{{ me().isSuperuser ? 'Superuser' : (me().groups.join(', ') || 'No role') }}</span>
+            <span class="muted small">{{ me().isSuperuser ? 'Superuser' : (roleNames() || 'No role') }}</span>
           </div>
         </div>
       </div>
       <div class="panel">
-        @if (loading()) {
-          <span class="skeleton" style="width:100%;height:150px"></span>
-        } @else {
-          <div class="fields two">
+        <div class="fields two">
             <div class="field">
               <label for="pf-name">Full name</label>
               <input id="pf-name" class="ui-control" maxlength="120" autocomplete="name" [value]="name()" (input)="name.set($any($event.target).value)"
@@ -36,30 +33,31 @@
             <div class="field">
               <label for="pf-email">Email</label>
               <input id="pf-email" class="ui-control" readonly [value]="me().email" />
-              <span class="hint">Your sign-in. An administrator can change it from Users.</span>
+              <span class="hint">Your sign-in. It can't be changed.</span>
             </div>
             <div class="field">
               <label for="pf-phone">Mobile</label>
               <div class="input-group">
-                <app-select aria-label="Country code" [value]="dial()" (valueChange)="dial.set($event)">
-                  @for (c of store.countries; track c.code) { <app-option [value]="c.dial" [selected]="c.dial === dial()">{{ c.dial }}</app-option> }
+                <app-select aria-label="Country code" [value]="dial()" (valueChange)="dial.set($event); detailsServer.set({})">
+                  @for (d of dials(); track d) { <app-option [value]="d" [selected]="d === dial()">{{ d }}</app-option> }
                 </app-select>
-                <input id="pf-phone" class="ui-control num" inputmode="tel" autocomplete="tel-national" [value]="phone()" (input)="phone.set($any($event.target).value)"
+                <input id="pf-phone" class="ui-control num" inputmode="tel" autocomplete="tel-national" [value]="phone()" (input)="phone.set($any($event.target).value); detailsServer.set({})"
                        [class.invalid]="detailsTried() && detailErrors().phone" />
               </div>
               @if (detailsTried() && detailErrors().phone) { <span class="error">{{ detailErrors().phone }}</span> }
-              @else { <span class="hint">Used for one-time codes when you reset your password.</span> }
+              @else { <span class="hint">Shown to administrators in your organization.</span> }
             </div>
             <div class="field">
-              <label for="pf-user">Username</label>
-              <input id="pf-user" class="ui-control" readonly [value]="me().username" />
+              <label for="pf-mgr">Manager</label>
+              <input id="pf-mgr" class="ui-control" readonly [value]="me().manager?.name ?? 'No manager'" />
+              <span class="hint">Set by an administrator in Users.</span>
             </div>
           </div>
+          @if (detailsServer().form; as f) { <p class="inline-error" role="alert"><app-icon name="circle-x" />{{ f }}</p> }
           <div class="panel-foot">
-            @if (detailsDirty()) { <button class="btn ghost" (click)="discardDetails()">Discard</button> }
-            <button class="btn" [class.primary]="detailsDirty()" [disabled]="!detailsDirty()" (click)="saveDetails()">Save details</button>
+            @if (detailsDirty()) { <button class="btn ghost" [disabled]="detailsSaving()" (click)="discardDetails()">Discard</button> }
+            <button class="btn" [class.primary]="detailsDirty()" [disabled]="!detailsDirty() || detailsSaving()" (click)="saveDetails()">{{ detailsSaving() ? 'Saving…' : 'Save details' }}</button>
           </div>
-        }
       </div>
     </section>
 
@@ -70,8 +68,10 @@
         <p class="small muted num">{{ accessSum().rw }} read &amp; write · {{ accessSum().r }} read · {{ accessSum().total - accessSum().rw - accessSum().r }} none</p>
       </div>
       <div class="panel">
-        @if (loading()) {
+        @if (accessState.loading() && !access.fromServer()) {
           <span class="skeleton" style="width:100%;height:240px"></span>
+        } @else if (accessState.error(); as e) {
+          <app-load-error [message]="e" (retry)="loadAccess()" />
         } @else {
           <dl class="dl org-dl">
             <div>
@@ -122,22 +122,20 @@
         <h2 id="p-pw">Password</h2>
         <p class="desc">You stay signed in here; other sessions are signed out when the password changes.</p>
         <p class="small muted num">
-          @if (policy().expiryDays) { Passwords expire every {{ policy().expiryDays }} days. }
+          @if (expiresAt(); as exp) { Yours expires on {{ exp | date }}. } @else if (policy().expiryDays) { Passwords expire every {{ policy().expiryDays }} days. }
           @if (policy().history) { Your last {{ policy().history }} can't be reused. }
         </p>
       </div>
       <div class="panel">
-        @if (loading()) {
-          <span class="skeleton" style="width:100%;height:200px"></span>
-        } @else {
-          <form class="pw" (submit)="$event.preventDefault(); changePassword()">
-            <input class="sr-only" autocomplete="username" [value]="me().username" readonly tabindex="-1" aria-hidden="true" />
+        <form class="pw" (submit)="$event.preventDefault(); changePassword()">
+            <input class="sr-only" autocomplete="username" [value]="me().email" readonly tabindex="-1" aria-hidden="true" />
             <div class="fields">
               <div class="field">
                 <label for="pw-cur">Current password</label>
                 <input id="pw-cur" class="ui-control" [type]="show() ? 'text' : 'password'" autocomplete="current-password" [value]="current()"
-                       (input)="current.set($any($event.target).value)" [class.invalid]="pwTried() && !current()" />
+                       (input)="current.set($any($event.target).value); pwError.set(null)" [class.invalid]="(pwTried() && !current()) || pwError()?.current" />
                 @if (pwTried() && !current()) { <span class="error">Enter your current password.</span> }
+                @else if (pwError()?.current) { <span class="error">{{ pwError()!.message }}</span> }
               </div>
               <div class="field">
                 <div class="label-row">
@@ -174,13 +172,23 @@
               }
             </ul>
 
+            @if (pwError(); as e) {
+              @if (!e.current) {
+                <div class="inline-error" role="alert"><app-icon name="circle-x" />
+                  <span>{{ e.message }}
+                    @if (e.list.length) { <ul class="err-list">@for (m of e.list; track m) { <li>{{ m }}</li> }</ul> }
+                  </span>
+                </div>
+              }
+            }
             <div class="panel-foot">
               <span class="muted small num meet">{{ passed() }} of {{ rules().length }} rules met</span>
-              <button type="submit" class="btn" [class.primary]="canChange()">Change password</button>
+              <button type="submit" class="btn" [class.primary]="canChange()" [disabled]="pwSaving()">{{ pwSaving() ? 'Changing…' : 'Change password' }}</button>
             </div>
           </form>
-        }
       </div>
     </section>
+
+    <app-notification-prefs [focus]="section() === 'notifications'" />
   </div>
 </div>

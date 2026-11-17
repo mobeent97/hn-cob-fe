@@ -1,13 +1,14 @@
 @if (openId(); as id) {
-  <app-org-detail [orgId]="id" [tabParam]="tabParam()" [canWrite]="canWrite()"
-                  (back)="close()" (viewAs)="viewAs($event)" (resend)="resend($event)" (status)="ask($event.kind, $event.org)" />
+  <app-org-detail [orgId]="id" [tabParam]="tabParam()" [canWrite]="canWrite()" [version]="detailVersion()"
+                  (back)="close()" (viewAs)="viewAs($event)" (resend)="resend($event)" (status)="ask($event.kind, $event.org)"
+                  (remove)="askDelete($event)" />
 } @else {
   <div class="page">
     <div class="title-row smooth-reveal">
       <div class="title-block">
         <h1>Organizations</h1>
         <p class="subline num">
-          @if (loading()) { <span class="skeleton" style="width:320px;height:12px"></span> } @else { {{ subline() }} }
+          @if (state.loading() && !list().length) { <span class="skeleton" style="width:320px;height:12px"></span> } @else { {{ subline() }} }
         </p>
       </div>
       @if (canWrite()) {
@@ -38,7 +39,9 @@
           </tr>
         </thead>
         <tbody>
-          @if (loading()) {
+          @if (state.error(); as e) {
+            <tr><td colspan="10" class="empty-row"><app-load-error [message]="e" (retry)="load()" /></td></tr>
+          } @else if (state.loading() && !list().length) {
             @for (i of [1, 2, 3, 4]; track i) {
               <tr>
                 <td><span class="skeleton" style="width:150px;height:14px"></span><span class="sub"><span class="skeleton" style="width:190px;height:10px"></span></span></td>
@@ -57,7 +60,7 @@
             @for (o of rows(); track o.id) {
               <tr class="clickable" (click)="open(o.id)">
                 <td>
-                  <span class="org-name primary-cell"><span class="sw" [style.background]="o.brandColour" aria-hidden="true"></span>{{ o.name }}</span>
+                  <span class="org-name primary-cell"><app-org-logo [url]="o.logoUrl" [name]="o.name" [colour]="o.brandColour" [size]="20" />{{ o.name }}</span>
                   <span class="sub legal">{{ o.legalName }}</span>
                 </td>
                 <td class="phone-only num">
@@ -84,8 +87,8 @@
                   }
                 </td>
                 <td class="num desk-only">{{ o.s.inService }}</td>
-                <td class="num desk-only">
-                  {{ o.s.users }}@if (o.limits.maxUsers) { <span class="muted"> / {{ o.limits.maxUsers }}</span> }
+                <td class="num desk-only" title="Active and invited users hold a seat">
+                  {{ o.s.seatsUsed }}@if (o.limits.maxUsers) { <span class="muted"> / {{ o.limits.maxUsers }}</span> }
                 </td>
                 <td class="num desk-only">{{ o.f.on }} <span class="muted">of {{ o.f.of }}</span></td>
                 <td class="num desk-only">{{ o.createdAt | date }}</td>
@@ -115,8 +118,28 @@
   <p class="confirm-body">{{ confirmCopy().body }}</p>
   <ng-container slot="footer">
     <button class="btn" (click)="confirmOpen.set(false)">Keep as is</button>
-    <button class="btn" [class.danger]="confirm()?.kind === 'suspend'" [class.primary]="confirm()?.kind === 'reactivate'" (click)="runConfirm()">
+    <button class="btn" [class.danger]="confirm()?.kind === 'suspend'" [class.primary]="confirm()?.kind === 'reactivate'" [disabled]="busy()" (click)="runConfirm()">
       {{ confirmCopy().action }}
     </button>
+  </ng-container>
+</app-dialog>
+
+<app-dialog [(open)]="deleteOpen" [heading]="'Delete ' + (deleteTarget()?.name ?? '') + '?'" width="460px"
+            subheading="Someone else with edit access to the deletion audit has to approve it.">
+  <div class="form">
+    <p class="confirm-body">
+      When it's approved, {{ deleteTarget()?.name }}, its users and its roles are removed for good. It must stay suspended or invited until then,
+      and it can't own any customers, consumers, devices or orders.
+    </p>
+    <div class="field">
+      <label for="o-del-reason">Reason</label>
+      <input id="o-del-reason" class="ui-control" maxlength="255" placeholder="Optional, e.g. contract ended" [value]="deleteReason()"
+             (input)="deleteReason.set($any($event.target).value)" />
+    </div>
+    @if (deleteError()) { <p class="inline-error" role="alert"><app-icon name="circle-x" />{{ deleteError() }}</p> }
+  </div>
+  <ng-container slot="footer">
+    <button class="btn" (click)="deleteOpen.set(false)">Keep it</button>
+    <button class="btn danger" [disabled]="busy()" (click)="requestDelete()">Request deletion</button>
   </ng-container>
 </app-dialog>

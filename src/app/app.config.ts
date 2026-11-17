@@ -1,10 +1,11 @@
 import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
-import { Store } from './core/data/store';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
 import { AuthService } from './core/auth/auth.service';
+import { SessionLoader } from './core/auth/session-loader';
+import { BrandTheme } from './core/theme/brand';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -16,15 +17,14 @@ export const appConfig: ApplicationConfig = {
       // No router view transitions: the incoming page fades in through IoTility's route-page-in (theme.css).
     ),
     provideHttpClient(withInterceptors([authInterceptor])),
-    // Restore the session from stored tokens (GET /auth/me) before the first route check; failure clears them.
-    provideAppInitializer(() => inject(AuthService).restoreSession()),
-    // Design preview: any URL with ?as=<userId> signs in as that sample user before the first route check.
-    // Applied after the session is restored, so it wins over the real user's default mock session.
-    provideAppInitializer(async () => {
-      const store = inject(Store);
-      await inject(AuthService).restoreSession();
-      const as = Number(new URLSearchParams(location.search).get('as'));
-      if (as && store.allUsers().some((u) => u.id === as)) store.signInAs(as);
+    // Restore the session from stored tokens (GET /auth/me/) and load its access, settings and organizations
+    // before the first route check; a failed restore clears the tokens.
+    provideAppInitializer(() => {
+      const auth = inject(AuthService);
+      const session = inject(SessionLoader);
+      // Starts the organization brand theme (BRANDING_MEDIA_EMAIL.md 1.4); it follows the session from here.
+      inject(BrandTheme);
+      return auth.restoreSession().then(() => session.load());
     }),
   ],
 };

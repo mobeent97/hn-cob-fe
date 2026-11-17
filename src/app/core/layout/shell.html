@@ -13,13 +13,24 @@
   <div class="sidebar-region" [class.open]="navOpen()" [class.collapsed]="railed()">
     <aside class="sidebar" [class.collapsed]="railed()" aria-label="Main navigation">
       <div class="brand">
-        <a class="brand-link" routerLink="/dashboard" aria-label="HyperNym Onboarding, overview">
-          <img class="brand-mark" src="assets/hypernym.svg" alt="" />
-          <span class="brand-text">
-            <strong>HyperNym</strong>
-            <small>Customer onboarding</small>
-          </span>
-        </a>
+        @if (orgBrand(); as b) {
+          <!-- A partner user's own organization (BRANDING_MEDIA_EMAIL.md 1.5): logo tile, or initials on brand-700. -->
+          <a class="brand-link" routerLink="/dashboard" [attr.aria-label]="b.name + ', customer onboarding, overview'">
+            <app-org-logo class="brand-mark org" [url]="b.logoUrl" [name]="b.name" fallback="initials" [size]="32" (failed)="logoFailed()" />
+            <span class="brand-text">
+              <strong>{{ b.name }}</strong>
+              <small>Customer onboarding</small>
+            </span>
+          </a>
+        } @else {
+          <a class="brand-link" routerLink="/dashboard" aria-label="HyperNym Onboarding, overview">
+            <img class="brand-mark" src="assets/hypernym.svg" alt="" />
+            <span class="brand-text">
+              <strong>HyperNym</strong>
+              <small>Customer onboarding</small>
+            </span>
+          </a>
+        }
         <button
           type="button"
           class="brand-toggle"
@@ -127,5 +138,4 @@
     </main>
   </div>
 
-  <app-preview-as [(open)]="previewOpen" />
 </div>

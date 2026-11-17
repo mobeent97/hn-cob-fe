@@ -1,6 +1,6 @@
 // Labels, command catalogue and sample series for the device page. Design-phase helpers only.
 import { CommandRecord, CommandStatus, DeviceTwin, IotDeviceState, TwinValue } from '../../core/data/models';
-import { TODAY, hubHours } from '../../core/data/mock-db';
+import { TODAY, hubHours } from '../../core/data/clock';
 import { fmtRelative } from '../../core/data/format';
 import { LinePoint } from '../../shared/charts/chart-data';
 

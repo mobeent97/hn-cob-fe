@@ -18,12 +18,12 @@
               <div class="pair">
                 <div class="field">
                   <label for="w-name">Name<span class="req">*</span></label>
-                  <input id="w-name" class="ui-control" maxlength="60" placeholder="As partners know it" [value]="name()" (input)="name.set($any($event.target).value)" [class.invalid]="err('name')" />
+                  <input id="w-name" class="ui-control" maxlength="150" placeholder="As partners know it" [value]="name()" (input)="name.set($any($event.target).value); clearServer('name')" [class.invalid]="err('name')" />
                   @if (err('name')) { <span class="error">{{ err('name') }}</span> }
                 </div>
                 <div class="field">
                   <label for="w-legal">Legal name<span class="req">*</span></label>
-                  <input id="w-legal" class="ui-control" maxlength="120" placeholder="As registered" [value]="legalName()" (input)="legalName.set($any($event.target).value)" [class.invalid]="err('legalName')" />
+                  <input id="w-legal" class="ui-control" maxlength="255" placeholder="As registered" [value]="legalName()" (input)="legalName.set($any($event.target).value); clearServer('legalName')" [class.invalid]="err('legalName')" />
                   @if (err('legalName')) { <span class="error">{{ err('legalName') }}</span> }
                 </div>
               </div>
@@ -94,14 +94,20 @@
               <div class="pair">
                 <div class="field">
                   <label for="w-aname">Full name<span class="req">*</span></label>
-                  <input id="w-aname" class="ui-control" maxlength="80" [value]="adminName()" (input)="adminName.set($any($event.target).value)" [class.invalid]="err('adminName')" />
+                  <input id="w-aname" class="ui-control" maxlength="120" [value]="adminName()" (input)="adminName.set($any($event.target).value); clearServer('adminName')" [class.invalid]="err('adminName')" />
                   @if (err('adminName')) { <span class="error">{{ err('adminName') }}</span> }
                 </div>
                 <div class="field">
                   <label for="w-aemail">Work email<span class="req">*</span></label>
-                  <input id="w-aemail" class="ui-control" type="email" [value]="adminEmail()" (input)="adminEmail.set($any($event.target).value)" [class.invalid]="err('adminEmail')" />
+                  <input id="w-aemail" class="ui-control" type="email" [value]="adminEmail()" (input)="adminEmail.set($any($event.target).value); clearServer('adminEmail', 'form')" [class.invalid]="err('adminEmail')" />
                   @if (err('adminEmail')) { <span class="error">{{ err('adminEmail') }}</span> }
+                  @else { <span class="hint">They get a link to set their password, valid for 7 days.</span> }
                 </div>
+              </div>
+              <div class="field">
+                <label for="w-aphone">Mobile</label>
+                <input id="w-aphone" class="ui-control num" type="tel" placeholder="+234 803 000 0000" [value]="adminPhone()" (input)="adminPhone.set($any($event.target).value); clearServer('adminPhone')" [class.invalid]="err('adminPhone')" />
+                @if (err('adminPhone')) { <span class="error">{{ err('adminPhone') }}</span> } @else { <span class="hint">Optional. Also used as the organization's contact.</span> }
               </div>
               <div class="sep"></div>
               <div class="pair">
@@ -116,7 +122,8 @@
                   @if (err('maxUsers')) { <span class="error">{{ err('maxUsers') }}</span> } @else { <span class="hint">Empty for no limit.</span> }
                 </div>
               </div>
-              <p class="muted small">Organization admin, Onboarding agent and Viewer roles are copied in, capped by the features you chose.</p>
+              <p class="muted small">Every role template (Organization admin, Onboarding agent, Viewer) is copied in, capped by the features you chose.</p>
+              @if (err('form'); as f) { <p class="inline-error" role="alert"><app-icon name="circle-x" />{{ f }}</p> }
             </div>
           }
         }
@@ -128,8 +135,8 @@
     <span class="footer-note muted num">Step {{ step() + 1 }} of {{ steps.length }}</span>
     @if (step() > 0) { <button class="btn" (click)="backStep()"><app-icon name="arrow-left" />Back</button> }
     @else { <button class="btn" (click)="open.set(false)">Cancel</button> }
-    <button class="btn primary" (click)="next()">
-      @if (step() < steps.length - 1) { Continue<app-icon name="arrow-right" /> } @else { <app-icon name="send" />Create and invite }
+    <button class="btn primary" [disabled]="saving()" (click)="next()">
+      @if (step() < steps.length - 1) { Continue<app-icon name="arrow-right" /> } @else if (saving()) { Creating… } @else { <app-icon name="send" />Create and invite }
     </button>
   </ng-container>
 </app-dialog>

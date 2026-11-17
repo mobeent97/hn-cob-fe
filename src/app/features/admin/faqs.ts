@@ -103,15 +103,15 @@ export function buildFaqs(s: PortalSettings): Faq[] {
     {
       id: 'acc-locked', topic: 'account', q: 'I\'m locked out or forgot my password. What now?',
       a: [
-        `After ${s.login.maxAttempts} wrong passwords your account locks for ${s.login.lockMinutes} minutes. Wait, or choose Forgot password on the sign-in page to get a reset link by email${s.login.otpOnReset ? ', followed by a one-time code' : ''}.`,
+        `After ${s.login.maxAttempts} wrong passwords your account locks for ${s.login.lockMinutes} minutes. Wait, or choose Forgot password on the sign-in page: we email you a 6-digit code to set a new password.`,
         `A new password needs at least ${s.password.minLength} characters${s.password.requireNumber ? ', a number' : ''}${s.password.requireSymbol ? ' and a symbol' : ''}${s.password.history ? `, and can't be one of your last ${s.password.history}` : ''}.`,
       ],
     },
     {
       id: 'acc-access', topic: 'account', q: 'How do I give a colleague access to the portal?',
       a: [
-        'Go to Users and choose New user. They receive an email to set their password. What they can see comes from their groups: each group sets None, Read, or Read & write per screen.',
-        'If no group fits, create one on the Groups screen. Super admins can also approve deletions and manage users.',
+        'Go to Users and choose New user. They receive an invitation email with a link to set their password, valid for 7 days. What they can see comes from their roles: each role sets None, Read, or Read & write per feature.',
+        'If no role fits, create one on the Roles screen, or copy a template. Active and invited users each hold one of your organization\'s seats.',
       ],
       link: { label: 'Open users', to: '/users' },
     },

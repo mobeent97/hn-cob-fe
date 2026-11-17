@@ -136,3 +136,7 @@
     @apply mt-0.5 ml-0 block;
   }
 }
+
+.confirm-body {
+  @apply m-0 leading-5.5 text-muted dark:text-brand-300;
+}

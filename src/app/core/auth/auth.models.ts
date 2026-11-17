@@ -12,6 +12,10 @@ export interface AuthOrganization {
   name: string;
   kind: 'Platform' | 'Partner' | string;
   status: string;
+  /** BRANDING_MEDIA_EMAIL.md 1.3: `#rrggbb`, or null when the organization has no brand. */
+  brand_colour?: string | null;
+  /** A read-only SAS URL (valid for at least 24 hours), or null. */
+  logo_url?: string | null;
 }
 
 export interface AuthUser {
@@ -24,6 +28,34 @@ export interface AuthUser {
   last_login: string | null;
   /** Null only for a superuser whose organization hasn't been assigned yet. */
   organization: AuthOrganization | null;
+  /** USERS_API "Me object" extensions. */
+  roles?: { id: number; name: string; is_admin: boolean }[];
+  manager?: { id: number; full_name: string; email: string } | null;
+  password_changed_at?: string | null;
+  /** Null when passwords never expire (`password.expiry_days` = 0). */
+  password_expires_at?: string | null;
+}
+
+export type AccessReason = null | 'platform_only' | 'capped_by_plan' | 'no_role' | 'superuser';
+
+/** GET /auth/me/access/ — the server's effective levels (USERS_API "Access object"). */
+export interface MeAccess {
+  is_superuser: boolean;
+  organization: { id: number; name: string; kind: string } | null;
+  /** Every feature key; `null` = no access. */
+  levels: Record<string, 'R' | 'RW' | null>;
+  /** In catalogue order, with why a level is what it is. */
+  features: { key: string; level: 'R' | 'RW' | null; org_level: 'R' | 'RW' | null; role_level: 'R' | 'RW' | null; reason: AccessReason }[];
+}
+
+/** POST /auth/set-password/verify/ — what an invitation or admin-reset link is for. */
+export interface SetPasswordInfo {
+  purpose: 'invite' | 'reset';
+  email: string;
+  full_name: string;
+  /** The inviting organization's brand (BRANDING_MEDIA_EMAIL.md 1.3); `kind` Platform keeps the default look. */
+  organization: { name: string; kind?: 'Platform' | 'Partner' | string; brand_colour?: string | null; logo_url?: string | null } | null;
+  expires_at: string;
 }
 
 export interface TokenPair {
@@ -58,6 +90,9 @@ export const AuthCode = {
   ResetTokenInvalid: 4015,
   TooManyRequests: 4016,
   PasswordChanged: 4017,
+  PasswordExpired: 4020,
+  WrongCurrentPassword: 4117,
+  LinkInvalid: 4121,
 } as const;
 
 export const NETWORK_ERROR_MESSAGE = "Can't reach the server. Check your connection and try again.";

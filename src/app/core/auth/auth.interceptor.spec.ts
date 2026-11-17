@@ -102,6 +102,19 @@ describe('authInterceptor', () => {
     expect(navigate).toHaveBeenCalledWith(['/login'], { queryParams: { returnUrl: '/customers?page=2' } });
   });
 
+  it('a 401 4005 on an API call (user or org no longer allowed, idle timeout) signs out without refreshing', async () => {
+    const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    vi.spyOn(router, 'url', 'get').mockReturnValue('/users');
+
+    const result = firstValueFrom(client.get(`${API}/users/`));
+    http.expectOne(`${API}/users/`).flush({ status: 4005, message: 'Your session has ended.', data: null }, unauthorized);
+
+    await expect(result).rejects.toMatchObject({ status: 401 });
+    http.expectNone(`${API}/auth/refresh-token/`);
+    expect(tokens.accessToken).toBeNull();
+    expect(navigate).toHaveBeenCalledWith(['/login'], { queryParams: { returnUrl: '/users' } });
+  });
+
   it('passes a second 401 after the retry through without looping', async () => {
     const result = firstValueFrom(client.get(`${API}/customers/`));
     http.expectOne(`${API}/customers/`).flush(null, unauthorized);

@@ -3,13 +3,15 @@
     <div class="title-block">
       <h1>Roles</h1>
       <p class="subline num">
-        @if (allOrgs()) {
-          {{ ownRoles().length }} roles across {{ sections().length - (templateCount() ? 1 : 0) }} organizations · {{ templateCount() }} templates
+        @if (state.loading() && !ownRoles().length && !templateCount()) {
+          <span class="skeleton" style="width:280px;height:12px"></span>
+        } @else if (allOrgs()) {
+          {{ ownRoles().length }} roles across {{ orgSections() }} organizations · {{ templateCount() }} templates
         } @else {
           {{ ownRoles().length }} {{ ownRoles().length === 1 ? 'role' : 'roles' }} in {{ writeOrg().name }}
           @if (templateCount()) { · {{ templateCount() }} {{ templateCount() === 1 ? 'template' : 'templates' }} to copy from }
         }
-        @if (noRole()) { · {{ noRole() }} {{ noRole() === 1 ? 'user has' : 'users have' }} no role }
+        @if (noRole(); as n) { · {{ n }} {{ n === 1 ? 'user has' : 'users have' }} no role }
       </p>
     </div>
     @if (canWrite()) {
@@ -34,7 +36,9 @@
           <th><span class="sr-only">Actions</span></th>
         </tr>
       </thead>
-      @if (loading()) {
+      @if (state.error(); as e) {
+        <tbody><tr><td colspan="5" class="empty-row"><app-load-error [message]="e" (retry)="load()" /></td></tr></tbody>
+      } @else if (state.loading() && !ownRoles().length && !templateCount()) {
         <tbody>
           @for (i of [1, 2, 3, 4, 5]; track i) {
             <tr>
@@ -58,18 +62,18 @@
               <tr class="clickable" (click)="edit(g)">
                 <td>
                   <span class="primary-cell">{{ g.name }}</span>
-                  @if (g.template) { <span class="pill tag">Template</span> }
+                  @if (g.tpl) { <span class="pill tag">Template</span> }
                   <span class="sub">{{ g.description }}</span>
                 </td>
                 <td class="phone-only num">
-                  @if (!g.template) { {{ g.members }} {{ g.members === 1 ? 'member' : 'members' }} · }
+                  @if (!g.tpl) { {{ g.members.total }} {{ g.members.total === 1 ? 'member' : 'members' }} · }
                   {{ g.sum.rw }} read & write · {{ g.sum.r }} read
                 </td>
                 <td class="num desk-only">
-                  @if (g.template) { <span class="dash">—</span> }
+                  @if (g.tpl) { <span class="dash">—</span> }
                   @else {
-                    {{ g.members }}
-                    @if (g.members !== g.activeMembers) { <span class="sub">{{ g.activeMembers }} active</span> }
+                    {{ g.members.total }}
+                    @if (g.members.total !== g.members.active) { <span class="sub">{{ g.members.active }} active</span> }
                   }
                 </td>
                 <td class="desk-only">
@@ -100,7 +104,7 @@
 
 <app-dialog [(open)]="open" variant="drawer" width="640px"
             [heading]="draft().id ? draft().name || 'Edit role' : 'New role'"
-            [subheading]="draftTemplate() ? 'Template · a starting point organizations copy' : (draftOrg()?.name ?? '') + (draft().id ? ' · ' + memberCount() + (memberCount() === 1 ? ' member' : ' members') : ' · choose what members can see and change')">
+            [subheading]="draftTemplate() ? 'Template · a starting point organizations copy' : draftOrgName() + (draft().id ? ' · ' + memberCount() + (memberCount() === 1 ? ' member' : ' members') : ' · choose what members can see and change')">
   <div class="form">
     @if (readOnly()) {
       <p class="ro-hint">
@@ -144,7 +148,7 @@
           @if (!draftTemplate() && draft().id) { · <strong class="reach">{{ reach() }} {{ reach() === 1 ? 'member gets' : 'members get' }} this access</strong> }
         </p>
         @if (draftOrg()?.kind === 'Partner') { <p class="muted small">Capped by {{ draftOrg()!.name }}'s plan. HyperNym-only features are not listed.</p> }
-        @else if (draftTemplate()) { <p class="muted small">Copies are capped by each organization's plan. HyperNym-only features are not listed.</p> }
+        @else if (draftTemplate()) { <p class="muted small">Copies are capped by each organization's plan; HyperNym-only features are dropped for partners.</p> }
       </div>
       @if (!readOnly()) {
         <div class="set-all">
@@ -162,7 +166,7 @@
         <div>
           <strong>{{ losers().length }} {{ losers().length === 1 ? 'member loses' : 'members lose' }} access</strong>
           <ul>
-            @for (l of losers(); track l.user.id) { <li><span class="who">{{ l.user.name }}</span> · {{ l.features.join(', ') }}</li> }
+            @for (l of losers(); track l.id) { <li><span class="who">{{ l.name }}</span> · {{ l.features.join(', ') }}</li> }
           </ul>
         </div>
       </div>
@@ -193,6 +197,7 @@
       }
     </table>
     @if (tried() && errors().permissions) { <span class="error">{{ errors().permissions }}</span> }
+    @if (errors().form; as f) { <p class="inline-error" role="alert"><app-icon name="circle-x" />{{ f }}</p> }
 
   </div>
   <ng-container slot="footer">
@@ -204,7 +209,15 @@
     } @else {
       @if (changed()) { <span class="muted footer-note num">{{ changed() }} {{ changed() === 1 ? 'change' : 'changes' }}</span> }
       <button class="btn" (click)="open.set(false)">Cancel</button>
-      <button class="btn primary" (click)="save()">{{ draft().id ? 'Save role' : 'Create role' }}</button>
+      <button class="btn primary" [disabled]="saving()" (click)="save()">{{ saving() ? 'Saving…' : draft().id ? 'Save role' : 'Create role' }}</button>
     }
+  </ng-container>
+</app-dialog>
+
+<app-dialog [(open)]="deleteOpen" [heading]="'Delete ' + (deleteTarget()?.name ?? '') + '?'" width="440px">
+  <p class="confirm-body">Nobody holds this role, so nothing changes for anyone. This can't be undone.</p>
+  <ng-container slot="footer">
+    <button class="btn" (click)="deleteOpen.set(false)">Keep the role</button>
+    <button class="btn danger" [disabled]="deleteBusy()" (click)="remove()">Delete role</button>
   </ng-container>
 </app-dialog>

@@ -10,6 +10,7 @@ const T = (t: string) => `${t} · HyperNym Onboarding`;
 export const routes: Routes = [
   { path: 'login', title: T('Sign in'), canActivate: [guestGuard], loadComponent: () => import('./features/auth/login').then((m) => m.Login) },
   { path: 'forgot-password', title: T('Forgot password'), loadComponent: () => import('./features/auth/forgot-password').then((m) => m.ForgotPassword) },
+  { path: 'set-password', title: T('Set your password'), loadComponent: () => import('./features/auth/set-password').then((m) => m.SetPassword) },
   { path: 'reset-password', title: T('Set a new password'), canActivate: [resetTokenGuard], loadComponent: () => import('./features/auth/reset-password').then((m) => m.ResetPassword) },
   {
     path: '',

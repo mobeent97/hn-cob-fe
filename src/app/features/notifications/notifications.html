@@ -9,9 +9,7 @@
       }
     </div>
     <div class="actions">
-      @if (canOpen('/settings')) {
-        <a class="btn" routerLink="/settings" [queryParams]="{ section: 'notifications' }"><app-icon name="sliders" />Preferences</a>
-      }
+      <a class="btn" routerLink="/profile" [queryParams]="{ section: 'notifications' }"><app-icon name="sliders" />Preferences</a>
       <button class="btn primary" [disabled]="loading() || !store.unread()" (click)="markAllRead()">
         <app-icon name="check-check" />Mark all read
       </button>
@@ -113,9 +111,7 @@
             <button class="btn sm" (click)="showAll()">View all notifications</button>
           } @else {
             <span>No notifications yet. Hardware orders, onboarding progress, deletion requests and device alerts will appear here.</span>
-            @if (canOpen('/settings')) {
-              <a class="btn sm" routerLink="/settings" [queryParams]="{ section: 'notifications' }">Choose what you get</a>
-            }
+            <a class="btn sm" routerLink="/profile" [queryParams]="{ section: 'notifications' }">Choose what you get</a>
           }
         </div>
       }

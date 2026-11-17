@@ -139,41 +139,79 @@ export interface UseCase {
   modules: string[];
 }
 
+export type UserStatus = 'Active' | 'Inactive' | 'Invited';
+/** A role a user holds, by id (USERS_API `roles[]`). `isAdmin` = Active with Users read & write. */
+export interface RoleRef {
+  id: number;
+  name: string;
+  isAdmin: boolean;
+}
+
+/** A portal user (USERS_API "User object"). Users sign in by email; there are no usernames. */
 export interface AdminUser {
   id: number;
   orgId: number;
+  orgName: string;
   /** Django superuser (created with `manage.py createsuperuser`); bypasses every permission. */
   isSuperuser: boolean;
   name: string;
-  username: string;
   email: string;
-  groups: string[];
-  manager: string | null;
-  status: CustomerStatus;
-  type: 'SA' | 'Admin';
+  phone: string;
+  roles: RoleRef[];
+  manager: { id: number; name: string; email: string } | null;
+  /** Invited until they set a password from the invitation link. */
+  status: UserStatus;
   lastLogin: string | null;
+  invitedAt: string | null;
+  createdAt: string | null;
 }
 
+/** A role (ROLES_API "Role object"). */
 export interface Group {
   id: number;
   /** null = a system template every organization can copy. */
   orgId: number | null;
+  orgName: string;
   name: string;
   description: string;
   status: CustomerStatus;
+  /** Only the features with a level; a missing key means none. */
   permissions: Record<string, Permission>;
+  /** `permissions` capped by the organization's plan (null for templates). */
+  effectivePermissions: Record<string, Permission> | null;
+  isTemplate: boolean;
+  /** Template key (`org-admin`, …), templates only. */
+  key: string | null;
+  /** The template this role was copied from. */
+  template: { id: number; name: string; key: string } | null;
+  isAdmin: boolean;
+  members: { total: number; active: number };
 }
 
+export type DeletionEntity = 'user' | 'organization' | 'customer';
+export type DeletionRequestStatus = 'Pending' | 'Cancelled' | 'Completed';
+/** A deletion request or a completed deletion (AUDIT_API "Deletion request object"). */
 export interface DeletionAudit {
   id: number;
-  orgId: number;
+  entityType: DeletionEntity;
+  entityId: number;
+  /** The tenant whose audit trail holds the row; null once that tenant is deleted. */
+  orgId: number | null;
+  orgName: string;
+  /** Snapshot of the deleted record's name (customer, user or organization). */
   customer: string;
   email: string;
+  reason: string;
+  status: DeletionRequestStatus;
+  requestedById: number | null;
   deletedBy: string;
+  requestedAt: string;
   approvedBy: string;
-  createdAt: string;
-  deletedAt: string;
+  decidedAt: string | null;
+  createdAt: string | null;
+  deletedAt: string | null;
   devices: string[];
+  related: { devices?: string[]; users?: string[]; roles?: string[] };
 }
 
 export type OrderStatus = 'Placed' | 'Packed' | 'Shipped' | 'Delivered' | 'Cancelled';
@@ -239,7 +277,9 @@ export interface Vehicle {
 export interface PortalSettings {
   password: { minLength: number; requireNumber: boolean; requireSymbol: boolean; expiryDays: number; history: number };
   pagination: { pageSize: number };
-  login: { sessionMinutes: number; maxAttempts: number; lockMinutes: number; otpOnReset: boolean };
+  login: { sessionMinutes: number; maxAttempts: number; lockMinutes: number };
+  updatedAt?: string | null;
+  updatedBy?: string | null;
 }
 
 export type NotificationKind = 'order' | 'onboarding' | 'deletion' | 'device' | 'contract' | 'account';
@@ -262,6 +302,8 @@ export interface NotificationPrefs {
   digest: 'off' | 'daily' | 'weekly';
   /** Quiet hours, 24h "HH:MM"; null when off. */
   quiet: { from: string; to: string } | null;
+  /** IANA zone the digest and quiet hours use. */
+  timezone: string;
 }
 
 // ── Azure IoT Hub (device management) ─────────────────────────
@@ -369,6 +411,30 @@ export interface Organization {
   features: Record<string, Permission>;
   limits: { maxCustomers: number | null; maxUsers: number | null };
   contact: { name: string; email: string; phone: string };
+  /** `#rrggbb`, or '' when the organization has no brand (data: shown as a swatch, never as the theme). */
   brandColour: string;
+  /** A read-only SAS URL for the logo, or null (BRANDING_MEDIA_EMAIL.md 1.3). */
+  logoUrl?: string | null;
+  /** From the full object only: when the logo was last uploaded or removed. */
+  logoUpdatedAt?: string | null;
   createdAt: string;
+  /** From GET /organizations/ only (not the options list). */
+  usage?: OrgUsage;
+  /** The first user holding a role copied from the org-admin template. */
+  admin?: { id: number; name: string; email: string; status: string } | null;
+  updatedAt?: string;
+}
+
+/** ORGANIZATIONS_API `usage`. Customers, consumers, devices and orders are 0 until those modules exist. */
+export interface OrgUsage {
+  users: number;
+  activeUsers: number;
+  invitedUsers: number;
+  seatsUsed: number;
+  roles: number;
+  customers: number;
+  consumers: number;
+  devices: number;
+  devicesInService: number;
+  orders: number;
 }

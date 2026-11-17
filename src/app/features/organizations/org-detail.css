@@ -149,3 +149,48 @@
     @apply max-w-none;
   }
 }
+
+.save-err {
+  @apply ml-2 text-danger;
+}
+
+/* ── Brand (logo and colour) ── */
+.brand-body {
+  @apply grid gap-6 sm:grid-cols-2;
+}
+.logo-block {
+  @apply flex items-start gap-4;
+}
+.logo-copy,
+.colour-block {
+  @apply flex min-w-0 flex-col gap-1.5;
+}
+.logo-copy strong,
+.colour-block strong {
+  @apply text-xs font-semibold;
+}
+.logo-actions {
+  @apply mt-1 flex flex-wrap gap-2;
+}
+.colour-input {
+  @apply mt-2 flex items-center gap-2;
+}
+.colour-input .ui-control {
+  @apply w-32;
+}
+/* The native colour well, sized and rounded like the swatches beside it. */
+.colour-well {
+  @apply size-7 flex-none cursor-pointer rounded-md border border-ink/14 bg-transparent p-0 dark:border-white/14;
+}
+.colour-well::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+.colour-well::-webkit-color-swatch {
+  @apply rounded-md border-0;
+}
+.colour-well::-moz-color-swatch {
+  @apply rounded-md border-0;
+}
+.confirm-body {
+  @apply leading-5.5 text-muted dark:text-brand-300;
+}

@@ -93,7 +93,8 @@
 .sidebar {
   --sidebar-motion: 260ms var(--ease-out);
   @apply flex h-full w-56 shrink-0 flex-col overflow-hidden text-white;
-  background: linear-gradient(180deg, #0a0a0f 0%, #1e0a3c 50%, #4c1d95 100%);
+  /* Follows the brand scale (an organization's brand replaces it); with the default purple it's #0a0a0f → #3b0764 → #581c87. */
+  background: linear-gradient(180deg, #0a0a0f 0%, var(--color-brand-950) 50%, var(--color-brand-900) 100%);
   contain: layout paint;
   will-change: width;
   transform: translateZ(0);
@@ -182,6 +183,11 @@
   .brand-toggle {
     @apply hidden;
   }
+}
+/* A partner's logo tile (app-org-logo) keeps its 32px square, on the rail too. */
+.sidebar .brand-mark.org {
+  width: var(--logo-size);
+  height: var(--logo-size);
 }
 
 .scope {

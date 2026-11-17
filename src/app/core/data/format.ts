@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { TODAY, nowIso } from './mock-db';
+import { TODAY, nowIso } from './clock';
 
 export const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const numFmt = new Intl.NumberFormat('en-GB');

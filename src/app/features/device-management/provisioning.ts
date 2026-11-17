@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { Store } from '../../core/data/store';
 import { RelativePipe } from '../../core/data/format';
 import { EnrollmentGroup, IotDeviceState, IotRegistration } from '../../core/data/models';
-import { HUB_NAME } from '../../core/data/iot-mock';
+import { HUB_NAME } from '../../core/data/iot-rules';
 import { Icon } from '../../shared/ui/icon';
 import { Menu, MenuItem } from '../../shared/ui/menu';
 import { Dialog } from '../../shared/ui/dialog';

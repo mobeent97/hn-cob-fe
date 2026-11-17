@@ -582,6 +582,23 @@
     @apply text-danger;
   }
 
+  /* Rows kept on screen while the next page or filter loads. */
+  tr.stale {
+    @apply opacity-60;
+    transition: opacity var(--duration-hover) ease;
+  }
+
+  /* A block that failed to load (<app-load-error>): what went wrong and Retry, inside that block. */
+  .load-error {
+    @apply flex items-center justify-between gap-3 rounded-xl border border-danger/30 bg-danger/5 px-4 py-3 text-xs text-ink dark:bg-danger/10 dark:text-white;
+  }
+  .load-error .msg {
+    @apply flex items-center gap-2;
+  }
+  .load-error .msg > app-icon {
+    @apply flex-none text-danger;
+  }
+
   /* ── Skeleton (ui-skeleton: tinted block with a soft shimmer) ── */
   .skeleton {
     @apply relative inline-block overflow-hidden rounded-md bg-line/80 dark:bg-dark-line/70;

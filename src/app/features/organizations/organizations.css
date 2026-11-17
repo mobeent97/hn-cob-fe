@@ -3,9 +3,9 @@
 .org-name {
   @apply inline-flex items-center gap-2;
 }
-/* Lines the legal name up under the name, past the swatch and its gap. */
+/* Lines the legal name up under the name, past the logo (or swatch) tile and its gap. */
 .legal {
-  @apply pl-5;
+  @apply pl-7;
 }
 
 .usage {

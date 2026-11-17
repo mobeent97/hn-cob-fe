@@ -15,7 +15,8 @@ import { Theme } from '../theme/theme';
 import { NotificationBell } from '../notifications/notification-bell';
 import { Access } from '../access/access';
 import { ScopeSwitcher } from './scope-switcher';
-import { PreviewAs } from './preview-as';
+import { OrgLogo } from '../../shared/ui/org-logo';
+import { usesOrgBrand } from '../theme/brand';
 
 const COLLAPSED_KEY = 'hn-sidebar-collapsed';
 /** Must match the sidebar's own width transition (--sidebar-motion in shell.css). */
@@ -31,7 +32,7 @@ const SIDEBAR_EASING = 'cubic-bezier(0.23, 1, 0.32, 1)';
   selector: 'app-shell',
   imports: [
     RouterOutlet, RouterLink, RouterLinkActive, TabIndicator, Tooltip, Icon, Menu, GlobalSearch, NotificationBell,
-    ScopeSwitcher, PreviewAs,
+    ScopeSwitcher, OrgLogo,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './shell.html',
@@ -48,16 +49,20 @@ export class Shell {
     NAV.map((g) => ({ ...g, items: g.items.filter((i) => this.allowed(i)) })).filter((g) => g.items.length),
   );
   protected readonly navFooter = computed(() => NAV_FOOTER.filter((i) => this.allowed(i)));
-  protected readonly previewOpen = signal(false);
   private readonly auth = inject(AuthService);
-  /** The signed-in user from the API; the mock Store user only when there is none (design preview). */
   protected readonly displayName = computed(() => this.auth.user()?.full_name || this.store.currentUser().name);
+  /** Superuser, or the organization the user works for. */
   protected readonly roleLabel = computed(() => {
-    const real = this.auth.user();
-    if (real) return real.is_superuser ? 'Superuser' : real.organization?.name || 'No organization';
-    const mock = this.store.currentUser();
-    return mock.isSuperuser ? 'Superuser' : mock.groups.join(', ') || 'No role';
+    const me = this.store.currentUser();
+    return me.isSuperuser ? 'Superuser' : this.auth.user()?.organization?.name || me.roles.map((r) => r.name).join(', ') || 'No role';
   });
+  /** A partner user's own organization heads the sidebar; platform users and superusers keep HyperNym's mark. */
+  protected readonly orgBrand = computed(() => {
+    const user = this.auth.user();
+    const org = user?.organization;
+    return usesOrgBrand(user) && org ? { name: org.name, logoUrl: org.logo_url ?? null } : null;
+  });
+  private logoRefetched = false;
   /** Phone drawer. */
   protected readonly navOpen = signal(false);
   /** Desktop icon-only sidebar, remembered between visits. */
@@ -79,11 +84,12 @@ export class Shell {
     return [
       { label: 'My profile', icon: 'circle-user', run: () => this.router.navigate(['/profile']) },
       { label: 'Notifications', icon: 'bell', run: () => this.router.navigate(['/notifications']) },
-      { label: 'Settings', icon: 'settings', run: () => this.router.navigate(['/settings']) },
+      ...(this.access.can('Settings')
+        ? [{ label: 'Settings', icon: 'settings' as const, run: () => this.router.navigate(['/settings']) }]
+        : []),
       { label: `Light theme${mark('light')}`, icon: 'sun', run: () => this.theme.set('light') },
       { label: `Dark theme${mark('dark')}`, icon: 'moon', run: () => this.theme.set('dark') },
       { label: `Match system${mark('system')}`, icon: 'panel', run: () => this.theme.set('system') },
-      { label: 'Preview as another user…', icon: 'users', run: () => this.previewOpen.set(true) },
       { label: 'Sign out', icon: 'logout', danger: true, run: () => this.signOut() },
     ];
   });
@@ -118,6 +124,13 @@ export class Shell {
       const before = untracked(() => this.content()?.nativeElement.getBoundingClientRect().left);
       untracked(() => afterNextRender(() => this.slideContent(before), { injector: this.injector }));
     });
+  }
+
+  /** The logo's SAS URL may have expired: fetch /auth/me/ once for a fresh one; after that the initials stay. */
+  protected logoFailed() {
+    if (this.logoRefetched) return;
+    this.logoRefetched = true;
+    this.auth.loadMe().catch(() => undefined);
   }
 
   private async signOut() {

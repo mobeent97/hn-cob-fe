@@ -4,46 +4,57 @@
       <h1>Deletion audit</h1>
       <p class="subline num">
         @if (pending().length) { {{ pending().length }} {{ pending().length === 1 ? 'request is' : 'requests are' }} waiting for approval · }
-        {{ store.audit().length }} customers deleted, {{ devicesRemoved() }} devices returned to stock
+        {{ summary().deleted }} deleted@if (summary().related.devices) {, {{ summary().related.devices }} devices returned to stock}
       </p>
       @if (access.ro()) { <app-ro-note noun="deletion requests and the audit log" /> }
     </div>
     <div class="actions">
-      <button class="btn" (click)="export()" [disabled]="!rows().length"><app-icon name="download" />Export CSV</button>
+      <button class="btn" (click)="export()" [disabled]="!count() || exporting()"><app-icon name="download" />{{ exporting() ? 'Exporting…' : 'Export CSV' }}</button>
     </div>
   </div>
 
   <section class="card smooth-reveal">
     <div class="card-head">
       <div>
-        <h2>Pending deletion requests</h2>
+        <h2>Waiting for approval</h2>
         <p class="card-sub">
-          @if (canApprove()) { Approving deletes the account and returns its devices to stock. This can't be undone. }
+          @if (canApprove()) { Approving deletes the record for good and returns any devices to stock. Someone other than the requester approves. }
           @else { Waiting for an administrator with edit access to the deletion audit to approve or cancel. }
         </p>
       </div>
     </div>
     <div class="card-body">
-      @if (loading()) {
+      @if (pendingState.error(); as e) {
+        <app-load-error [message]="e" (retry)="loadPending()" />
+      } @else if (pendingState.loading() && !pending().length) {
         <div class="pending-row"><span class="skeleton" style="width:200px;height:14px"></span><span class="skeleton" style="width:160px;height:28px"></span></div>
       } @else {
-        @for (c of pending(); track c.id) {
+        @for (r of pending(); track r.id) {
           <div class="pending-row">
             <div class="who">
-              <span class="primary-cell">{{ c.company }}</span>
-              <span class="sub num">@if (orgs.showOrg()) { <app-org-tag [id]="c.orgId" /> · }{{ c.email }} · {{ c.devices.length }} devices · customer since {{ c.createdAt | date }}</span>
+              <span class="primary-cell">{{ r.customer }} <span class="pill">{{ typeLabel[r.entityType] }}</span></span>
+              <span class="sub num">
+                @if (orgs.showOrg()) { <app-org-tag [id]="r.orgId" /> · }{{ r.email }}
+                @if (relatedLine(r); as rel) { · {{ rel }} }
+                · asked by {{ r.deletedBy }} {{ r.requestedAt | rel }}
+                @if (r.reason) { · “{{ r.reason }}” }
+              </span>
             </div>
-            @if (canApprove()) {
-              <div class="row-actions">
-                <button class="btn sm" (click)="cancel(c)">Cancel request</button>
-                <button class="btn sm danger" (click)="askApprove(c)">Approve deletion</button>
-              </div>
-            } @else {
-              <span class="pill warning">Awaiting approval</span>
-            }
+            <div class="row-actions">
+              @if (canCancel(r)) { <button class="btn sm" (click)="cancel(r)">Cancel request</button> }
+              @if (canApprove()) {
+                @if (ownRequest(r)) {
+                  <span class="pill warning" title="Someone else must approve your deletion request.">Needs another approver</span>
+                } @else {
+                  <button class="btn sm danger" (click)="askApprove(r)">Approve deletion</button>
+                }
+              } @else if (!canCancel(r)) {
+                <span class="pill warning">Awaiting approval</span>
+              }
+            </div>
           </div>
         } @empty {
-          <div class="empty">No deletion requests are waiting. Requests made from a customer's menu appear here.</div>
+          <div class="empty">No deletion requests are waiting. Requests made from Users, Organizations or a customer's menu appear here.</div>
         }
       }
     </div>
@@ -54,13 +65,20 @@
       <div class="left">
         <label class="search">
           <app-icon name="search" />
-          <input class="ui-control" type="search" placeholder="Customer, email, person or device ID" aria-label="Search the audit"
+          <input class="ui-control" type="search" placeholder="Name, email, person or ID" aria-label="Search the audit"
                  [value]="q()" (input)="q.set($any($event.target).value)" />
         </label>
+        <label class="sr-only" for="a-type">Type</label>
+        <app-select id="a-type" class="auto" [value]="type()" (valueChange)="pickType($event)">
+          <app-option value="all">All types</app-option>
+          <app-option value="user" [selected]="type() === 'user'">Users</app-option>
+          <app-option value="organization" [selected]="type() === 'organization'">Organizations</app-option>
+          <app-option value="customer" [selected]="type() === 'customer'">Customers</app-option>
+        </app-select>
         @if (orgs.showOrg()) { <app-org-filter [(value)]="orgId" /> }
       </div>
       <div class="right">
-        <span class="count num">{{ rows().length }} {{ rows().length === 1 ? 'deletion' : 'deletions' }}</span>
+        <span class="count num">{{ count() }} {{ count() === 1 ? 'deletion' : 'deletions' }}</span>
       </div>
     </div>
 
@@ -68,20 +86,24 @@
       <table class="table stack">
         <thead>
           <tr>
-            <th>Customer</th>
+            <th>Deleted</th>
+            <th class="desk-only">Type</th>
             @if (orgs.showOrg()) { <th class="desk-only">Organization</th> }
             <th>Requested by</th>
             <th>Approved by</th>
-            <th class="num">Customer since</th>
-            <th class="num">Deleted</th>
-            <th class="num">Devices</th>
+            <th class="num">Created</th>
+            <th class="num">Deleted on</th>
+            <th class="num">Related</th>
           </tr>
         </thead>
         <tbody>
-          @if (loading()) {
+          @if (logState.error(); as e) {
+            <tr><td [attr.colspan]="cols()" class="empty-row"><app-load-error [message]="e" (retry)="loadLog()" /></td></tr>
+          } @else if (logState.loading() && !rows().length) {
             @for (i of [1, 2, 3]; track i) {
               <tr>
                 <td><span class="skeleton" style="width:160px;height:14px"></span><span class="sub"><span class="skeleton" style="width:180px;height:10px"></span></span></td>
+                <td class="desk-only"><span class="skeleton" style="width:70px;height:20px"></span></td>
                 @if (orgs.showOrg()) { <td class="desk-only"><span class="skeleton" style="width:100px;height:14px"></span></td> }
                 <td><span class="skeleton" style="width:110px;height:14px"></span></td>
                 <td><span class="skeleton" style="width:110px;height:14px"></span></td>
@@ -91,32 +113,33 @@
               </tr>
             }
           } @else {
-            @for (a of pageRows(); track a.id) {
-              <tr>
+            @for (a of rows(); track a.id) {
+              <tr [class.stale]="logState.loading()">
                 <td>
                   <span class="primary-cell">{{ a.customer }}</span>
                   <span class="sub">{{ a.email }}</span>
                 </td>
-                @if (orgs.showOrg()) { <td class="desk-only"><app-org-tag [id]="a.orgId" /></td> }
-                <td class="phone-only num">Deleted {{ a.deletedAt | date }} · {{ a.deletedBy }}, approved by {{ a.approvedBy }}</td>
+                <td class="desk-only"><span class="pill">{{ typeLabel[a.entityType] }}</span></td>
+                @if (orgs.showOrg()) { <td class="desk-only">@if (a.orgId != null) { <app-org-tag [id]="a.orgId" /> } @else { {{ a.orgName || '—' }} }</td> }
+                <td class="phone-only num">{{ typeLabel[a.entityType] }} · deleted {{ a.deletedAt | date }} · {{ a.deletedBy }}, approved by {{ a.approvedBy }}</td>
                 <td class="desk-only">{{ a.deletedBy }}</td>
                 <td class="desk-only">{{ a.approvedBy }}</td>
-                <td class="num desk-only">{{ a.createdAt | date }}</td>
+                <td class="num desk-only">@if (a.createdAt) { {{ a.createdAt | date }} } @else { <span class="dash">—</span> }</td>
                 <td class="num desk-only">{{ a.deletedAt | date }}<span class="sub">{{ a.deletedAt | rel }}</span></td>
                 <td class="num keep">
-                  @if (a.devices.length) {
-                    <button class="btn sm ghost count-btn num" (click)="showDevices(a)" [attr.aria-label]="'Show ' + a.devices.length + ' device IDs'">
-                      {{ a.devices.length }}<app-icon name="chevron-right" [size]="14" />
+                  @if (relatedCount(a); as n) {
+                    <button class="btn sm ghost count-btn num" (click)="showRelated(a)" [attr.aria-label]="'Show ' + n + ' related items'">
+                      {{ n }}<app-icon name="chevron-right" [size]="14" />
                     </button>
                   } @else { 0 }
                 </td>
               </tr>
             } @empty {
               <tr>
-                <td [attr.colspan]="orgs.showOrg() ? 7 : 6" class="empty-row">
+                <td [attr.colspan]="cols()" class="empty-row">
                   <div class="empty">
-                    @if (q()) { Nothing in the audit matches “{{ q() }}”. <button class="btn sm" (click)="q.set('')">Clear search</button> }
-                    @else { No customer has been deleted yet. }
+                    @if (filtered()) { Nothing in the audit matches these filters. <button class="btn sm" (click)="clearFilters()">Clear filters</button> }
+                    @else { Nothing has been deleted yet. }
                   </div>
                 </td>
               </tr>
@@ -126,34 +149,36 @@
       </table>
     </div>
 
-    @if (!loading() && rows().length) {
-      <app-pager [total]="rows().length" [size]="size()" [(page)]="page" noun="deletions" />
+    @if (!logState.error() && count() > size()) {
+      <app-pager [total]="count()" [size]="size()" [(page)]="page" noun="deletions" />
     }
   </div>
 </div>
 
-<app-dialog [(open)]="approveOpen" [heading]="'Delete ' + (target()?.company ?? '') + '?'" width="460px">
-  @if (target(); as c) {
+<app-dialog [(open)]="approveOpen" [heading]="'Delete ' + (target()?.customer ?? '') + '?'" width="460px">
+  @if (target(); as r) {
     <p class="confirm-body">
-      The account, its users and its settings are removed. Its {{ c.devices.length }} devices return to stock as Available.
-      The deletion is recorded in this audit under your name.
+      {{ approveCopy() }} The deletion is recorded in this audit under your name. This can't be undone.
     </p>
+    @if (r.reason) { <p class="confirm-body muted">Reason given: “{{ r.reason }}”</p> }
+    @if (approveError()) { <p class="inline-error" role="alert"><app-icon name="circle-x" />{{ approveError() }}</p> }
   }
   <ng-container slot="footer">
-    <button class="btn" (click)="approveOpen.set(false)">Keep the customer</button>
-    <button class="btn danger" (click)="approve()">Delete {{ target()?.company }}</button>
+    <button class="btn" (click)="approveOpen.set(false)">Keep it</button>
+    <button class="btn danger" [disabled]="busy()" (click)="approve()">{{ busy() ? 'Deleting…' : 'Delete ' + (target()?.customer ?? '') }}</button>
   </ng-container>
 </app-dialog>
 
-<app-dialog [(open)]="devicesOpen" heading="Devices returned to stock"
-            [subheading]="(shown()?.customer ?? '') + ' · ' + (shown()?.devices?.length ?? 0) + ' devices'" width="420px">
-  @if (shown(); as a) {
+<app-dialog [(open)]="relatedOpen" heading="Removed with it"
+            [subheading]="(shown()?.customer ?? '') + ' · ' + (shown() ? relatedCount(shown()!) : 0) + ' items'" width="420px">
+  @for (g of shownGroups(); track g.key) {
+    <h3 class="ids-head">{{ g.label }}</h3>
     <ul class="ids">
-      @for (d of a.devices; track d) { <li class="mono">{{ d }}</li> }
+      @for (d of g.ids; track d) { <li [class.mono]="g.mono">{{ d }}</li> }
     </ul>
   }
   <ng-container slot="footer">
-    <button class="btn" (click)="copyIds()"><app-icon name="copy" />Copy IDs</button>
-    <button class="btn primary" (click)="devicesOpen.set(false)">Close</button>
+    <button class="btn" (click)="copyIds()"><app-icon name="copy" />Copy</button>
+    <button class="btn primary" (click)="relatedOpen.set(false)">Close</button>
   </ng-container>
 </app-dialog>

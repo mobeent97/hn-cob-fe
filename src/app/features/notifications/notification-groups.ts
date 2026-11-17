@@ -1,5 +1,5 @@
 import { MONTHS } from '../../core/data/format';
-import { TODAY } from '../../core/data/mock-db';
+import { TODAY } from '../../core/data/clock';
 import { AppNotification } from '../../core/data/models';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];

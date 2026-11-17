@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signa
 import { RouterLink } from '@angular/router';
 import { Store } from '../../core/data/store';
 import { AuthService } from '../../core/auth/auth.service';
+import { SettingsApi } from '../../core/api/settings.api';
 import { AuthCode, AuthError, NETWORK_ERROR_MESSAGE } from '../../core/auth/auth.models';
 import { Icon } from '../../shared/ui/icon';
 import { AuthLayout } from './auth-layout';
@@ -37,6 +38,9 @@ interface Rule {
               You'll sign in with it from now on.
             </p>
           </div>
+          @if (expired) {
+            <p class="form-note" role="status"><app-icon name="info" /><span>Your password has expired. Choose a new one to continue.</span></p>
+          }
 
           <div class="field">
             <label for="new-pw">New password</label>
@@ -122,6 +126,12 @@ export class ResetPassword {
   private readonly auth = inject(AuthService);
   private readonly form = viewChild<ElementRef<HTMLFormElement>>('form');
   private readonly reset = this.auth.readResetToken();
+  /** Arrived from a sign-in refused with 403 4020 (password expired). */
+  protected readonly expired = !!(history.state as { expired?: unknown } | null)?.expired;
+
+  constructor() {
+    loadPolicy(inject(SettingsApi), this.store);
+  }
 
   protected readonly email = signal<string>(this.reset?.email ?? '');
   protected readonly pw = signal('');
@@ -201,4 +211,12 @@ export class ResetPassword {
     }
     this.error.set({ message: err.message, list: [], expired: false });
   }
+}
+
+/** Public screens read the rules from GET /settings/password-policy/; the defaults stay if it fails. */
+export function loadPolicy(api: SettingsApi, store: Store) {
+  api.passwordPolicy().then(
+    (password) => store.settings.update((s) => ({ ...s, password })),
+    () => undefined,
+  );
 }

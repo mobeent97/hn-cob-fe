@@ -1,4 +1,4 @@
-import { Store } from '../../core/data/store';
+import { Organization } from '../../core/data/models';
 
 export interface OrgStats {
   customers: number;
@@ -7,32 +7,28 @@ export interface OrgStats {
   devices: number;
   users: number;
   activeUsers: number;
+  invitedUsers: number;
+  seatsUsed: number;
   roles: number;
   orders: number;
 }
 
-/** Usage per organization, across every tenant (call inside a computed). */
-export function orgStats(store: Store): Map<number, OrgStats> {
-  const m = new Map<number, OrgStats>();
-  const get = (id: number) => {
-    let s = m.get(id);
-    if (!s) m.set(id, (s = { customers: 0, consumers: 0, inService: 0, devices: 0, users: 0, activeUsers: 0, roles: 0, orders: 0 }));
-    return s;
+/**
+ * Usage of one organization, from its `usage` (GET /organizations/ and /organizations/{id}/).
+ * Customers, consumers, devices and orders stay 0 until those modules exist (ORGANIZATIONS_API).
+ */
+export function statsOf(o: Organization | null | undefined): OrgStats {
+  const u = o?.usage;
+  return {
+    customers: u?.customers ?? 0,
+    consumers: u?.consumers ?? 0,
+    inService: u?.devicesInService ?? 0,
+    devices: u?.devices ?? 0,
+    users: u?.users ?? 0,
+    activeUsers: u?.activeUsers ?? 0,
+    invitedUsers: u?.invitedUsers ?? 0,
+    seatsUsed: u?.seatsUsed ?? 0,
+    roles: u?.roles ?? 0,
+    orders: u?.orders ?? 0,
   };
-  for (const o of store.organizations()) get(o.id);
-  for (const c of store.customers.all()) get(c.orgId).customers++;
-  for (const c of store.consumers.all()) get(c.orgId).consumers++;
-  for (const d of store.devices.all()) {
-    const s = get(d.orgId);
-    s.devices++;
-    if (d.status === 'Sold') s.inService++;
-  }
-  for (const u of store.allUsers()) {
-    const s = get(u.orgId);
-    s.users++;
-    if (u.status === 'Active') s.activeUsers++;
-  }
-  for (const g of store.groups.all()) if (g.orgId != null) get(g.orgId).roles++;
-  for (const o of store.orders.all()) get(o.orgId).orders++;
-  return m;
 }

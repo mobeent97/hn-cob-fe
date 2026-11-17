@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
-import { hubHours, hubMinutes } from '../../core/data/mock-db';
+import { hubHours, hubMinutes } from '../../core/data/clock';
 import { RouterLink } from '@angular/router';
 import { Store } from '../../core/data/store';
 import { DateTimePipe, fmtNum, fmtRelative } from '../../core/data/format';
@@ -71,7 +71,7 @@ export class FleetHealth {
 
   // ── Messages: one source of truth ──
   protected readonly messagesToday = computed(() => this.store.iotStates().reduce((a, s) => a + s.messagesToday, 0));
-  /** Hours since local midnight (9.5 at 09:30), the same basis iot-mock uses. */
+  /** Hours since local midnight (9.5 at 09:30), in UAE time (core/data/clock.ts). */
   private readonly hoursElapsed = hubHours(this.store.today) + hubMinutes(this.store.today) / 60;
   private readonly todayBuckets = Math.ceil(this.hoursElapsed);
   protected readonly projected = computed(() => Math.round((this.messagesToday() / this.hoursElapsed) * 24));
@@ -93,7 +93,8 @@ export class FleetHealth {
   );
   protected readonly peak = computed(() => {
     const full = this.hourly().filter((d) => !d.marked);
-    return full.reduce((a, b) => (b.value > a.value ? b : a), full[0]);
+    // No hub metrics yet (empty until the IoT API exists): a neutral "00" with 0 messages.
+    return full.reduce((a, b) => (b.value > a.value ? b : a), full[0] ?? { label: hourLabel(0), value: 0, marked: false });
   });
   protected readonly nowLabel = hourLabel(hubHours(this.store.today));
   protected readonly nowTime = `${String(hubHours(this.store.today)).padStart(2, '0')}:${String(hubMinutes(this.store.today)).padStart(2, '0')}`;

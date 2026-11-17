@@ -168,3 +168,11 @@
     transition: none;
   }
 }
+
+/* Form-level notice (an expired password, a link's purpose): the info tint of .form-error. */
+.form-note {
+  @apply flex items-start gap-2 rounded-xl border border-info/30 bg-info/10 px-3 py-2.5 text-xs leading-[18px] text-info;
+}
+.form-note app-icon {
+  @apply mt-px;
+}

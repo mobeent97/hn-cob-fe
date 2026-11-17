@@ -6,21 +6,27 @@ import { Router } from '@angular/router';
 import { Store } from '../data/store';
 import { Icon } from '../../shared/ui/icon';
 import { Tooltip } from '@iotility/shared-ui';
+import { OrgLogo } from '../../shared/ui/org-logo';
 
 /**
- * The tenant scope, under the product name. Platform users (HyperNym) choose "All organizations"
- * or one tenant, and every list follows. Partner users see their own organization, fixed.
+ * The tenant scope, under the product name. Each organization shows its logo (a SAS URL), or its colour swatch.
+ * Platform users (HyperNym) choose "All organizations"
+ * or one tenant (the list is GET /organizations/options/, loaded at sign-in), and every list follows. Partner users see their own organization, fixed.
  * The list opens in the browser's top layer (a popover), so the sidebar's overflow clip — which its collapse
  * animation needs — can't cut it off, even on the 5rem rail.
  */
 @Component({
   selector: 'app-scope-switcher',
-  imports: [Icon, Tooltip],
+  imports: [Icon, Tooltip, OrgLogo],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (store.crossTenant()) {
       <button #trigger class="trigger" aria-haspopup="listbox" [tooltip]="store.scopeOrg()?.name ?? 'All organizations'" [position]="'right'" [disabled]="!compact()" [attr.aria-expanded]="open()" (click)="toggle($event)">
-        <span class="sw" [style.background]="store.scopeOrg()?.brandColour ?? 'var(--color-brand-400)'"></span>
+        @if (store.scopeOrg(); as so) {
+          <app-org-logo [url]="so.logoUrl" [name]="so.name" [colour]="so.brandColour" [size]="compact() ? 24 : 20" />
+        } @else {
+          <span class="sw all"></span>
+        }
         <span class="text">
           <strong>{{ store.scopeOrg()?.name ?? 'All organizations' }}</strong>
           <small>{{ store.scopeOrg() ? store.scopeOrg()!.kind : orgs().length + ' organizations' }}</small>
@@ -39,10 +45,10 @@ import { Tooltip } from '@iotility/shared-ui';
           @for (o of orgs(); track o.id) {
             <li>
               <button role="option" [attr.aria-selected]="store.activeOrgId() === o.id" (click)="choose(o.id)">
-                <span class="sw" [style.background]="o.brandColour"></span>
+                <app-org-logo [url]="o.logoUrl" [name]="o.name" [colour]="o.brandColour" [size]="20" />
                 <span class="text">
                   <strong>{{ o.name }}</strong>
-                  <small>{{ o.kind }} · {{ o.countries.join(', ') }}{{ o.status !== 'Active' ? ' · ' + o.status : '' }}</small>
+                  <small>{{ o.kind }}{{ o.countries.length ? ' · ' + o.countries.join(', ') : '' }}{{ o.status !== 'Active' ? ' · ' + o.status : '' }}</small>
                 </span>
                 @if (store.activeOrgId() === o.id) { <app-icon name="check" [size]="14" /> }
               </button>
@@ -51,8 +57,8 @@ import { Tooltip } from '@iotility/shared-ui';
         </ul>
       }
     } @else {
-      <div class="trigger static" [title]="store.currentOrg().legalName">
-        <span class="sw" [style.background]="store.currentOrg().brandColour"></span>
+      <div class="trigger static" [title]="store.currentOrg().legalName || store.currentOrg().name">
+        <app-org-logo [url]="store.currentOrg().logoUrl" [name]="store.currentOrg().name" [colour]="store.currentOrg().brandColour" [size]="compact() ? 24 : 20" />
         <span class="text"><strong>{{ store.currentOrg().name }}</strong><small>Partner organization</small></span>
       </div>
     }
