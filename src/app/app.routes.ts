@@ -1,18 +1,21 @@
 import { Routes } from '@angular/router';
 import { Shell } from './core/layout/shell';
 import { featureGuard } from './core/access/access';
+import { authGuard, guestGuard, resetTokenGuard } from './core/auth/auth.guard';
 
 // Screen map mirrors the legacy portal (legacy-flows/00-live-capture.md), regrouped by job.
 // Every screen is lazy-loaded; titles feed the browser tab via the TitleStrategy default.
 const T = (t: string) => `${t} · HyperNym Onboarding`;
 
 export const routes: Routes = [
-  { path: 'login', title: T('Sign in'), loadComponent: () => import('./features/auth/login').then((m) => m.Login) },
+  { path: 'login', title: T('Sign in'), canActivate: [guestGuard], loadComponent: () => import('./features/auth/login').then((m) => m.Login) },
   { path: 'forgot-password', title: T('Forgot password'), loadComponent: () => import('./features/auth/forgot-password').then((m) => m.ForgotPassword) },
-  { path: 'reset-password', title: T('Set a new password'), loadComponent: () => import('./features/auth/reset-password').then((m) => m.ResetPassword) },
+  { path: 'reset-password', title: T('Set a new password'), canActivate: [resetTokenGuard], loadComponent: () => import('./features/auth/reset-password').then((m) => m.ResetPassword) },
   {
     path: '',
     component: Shell,
+    // Signed-in users only (core/auth); signed-out visitors go to /login?returnUrl=…
+    canActivate: [authGuard],
     // Every child screen is checked against the user's feature access (core/access).
     canActivateChild: [featureGuard],
     children: [

@@ -114,7 +114,7 @@
         <app-notification-bell />
         <app-menu class="account" trigger="custom" [items]="accountMenu()" label="Account menu">
           <span class="profile-copy">
-            <strong>{{ user().name }}</strong>
+            <strong>{{ displayName() }}</strong>
             <small>{{ roleLabel() }}</small>
           </span>
           <span class="profile-avatar" aria-hidden="true">{{ initials() }}</span>

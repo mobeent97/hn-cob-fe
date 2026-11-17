@@ -1,6 +1,8 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Store } from '../../core/data/store';
+import { AuthService } from '../../core/auth/auth.service';
+import { AuthCode, AuthError, NETWORK_ERROR_MESSAGE } from '../../core/auth/auth.models';
 import { Icon } from '../../shared/ui/icon';
 import { AuthLayout } from './auth-layout';
 import { AuthSteps } from './auth-steps';
@@ -16,6 +18,8 @@ interface Rule {
  * Set a new password — "Does my new password meet the policy?"
  * The checklist is built from Settings → password policy and ticks as each rule passes,
  * so the server check (still required) never surprises anyone. Nothing is stored here.
+ * Submits POST /auth/reset-password/ with the reset token /forgot-password left in sessionStorage
+ * (resetTokenGuard sends visitors without one back there).
  */
 @Component({
   selector: 'app-reset-password',
@@ -49,8 +53,8 @@ interface Rule {
           <div class="field">
             <label for="confirm-pw">Confirm new password</label>
             <input id="confirm-pw" class="ui-control ui-control-lg" [type]="show() ? 'text' : 'password'" autocomplete="new-password"
-                   [class.invalid]="mismatch()" [value]="confirm()" (input)="confirm.set($any($event.target).value)" />
-            @if (mismatch()) {
+                   [class.invalid]="mismatch() || serverMismatch()" [value]="confirm()" (input)="confirm.set($any($event.target).value); serverMismatch.set(false)" />
+            @if (mismatch() || serverMismatch()) {
               <span class="error">The two passwords don't match yet.</span>
             }
           </div>
@@ -73,6 +77,24 @@ interface Rule {
               <span class="t-text-soft-new" [attr.aria-hidden]="!busy()">Saving…</span>
             </span>
           </button>
+          <div aria-live="polite">
+            @if (error(); as e) {
+              <div class="form-error" role="alert">
+                <app-icon name="circle-x" />
+                <span>
+                  {{ e.message }}
+                  @if (e.list.length) {
+                    <ul>
+                      @for (m of e.list; track m) { <li>{{ m }}</li> }
+                    </ul>
+                  }
+                  @if (e.expired) {
+                    <a class="link" routerLink="/forgot-password">Request a new code</a>
+                  }
+                </span>
+              </div>
+            }
+          </div>
           <a class="back" routerLink="/login"><app-icon name="arrow-left" />Back to sign in</a>
         </form>
       } @else {
@@ -97,16 +119,20 @@ interface Rule {
 })
 export class ResetPassword {
   private readonly store = inject(Store);
+  private readonly auth = inject(AuthService);
   private readonly form = viewChild<ElementRef<HTMLFormElement>>('form');
-  private timer?: ReturnType<typeof setTimeout>;
+  private readonly reset = this.auth.readResetToken();
 
-  protected readonly email = signal<string>((history.state?.email as string | undefined) ?? '');
+  protected readonly email = signal<string>(this.reset?.email ?? '');
   protected readonly pw = signal('');
   protected readonly confirm = signal('');
   protected readonly show = signal(false);
   protected readonly busy = signal(false);
   protected readonly done = signal(false);
   protected readonly tried = signal(false);
+  /** The server refused the pair as different (400 4013). */
+  protected readonly serverMismatch = signal(false);
+  protected readonly error = signal<{ message: string; list: string[]; expired: boolean } | null>(null);
 
   protected readonly rules = computed<Rule[]>(() => {
     const p = this.store.settings().password;
@@ -123,26 +149,56 @@ export class ResetPassword {
     () => (this.tried() || this.confirm().length >= this.pw().length) && !!this.confirm() && this.confirm() !== this.pw(),
   );
 
-  constructor() {
-    inject(DestroyRef).onDestroy(() => clearTimeout(this.timer));
-  }
-
-  protected submit(ev: Event) {
+  protected async submit(ev: Event) {
     ev.preventDefault();
     if (this.busy()) return;
     this.tried.set(true);
+    this.error.set(null);
     if (!this.valid()) {
       const f = this.form()?.nativeElement;
       if (f) replayShake(f);
       return;
     }
+    if (!this.reset) return;
     this.busy.set(true);
-    this.timer = setTimeout(() => {
-      // Drop both values from memory as soon as the (future) request is sent.
-      this.pw.set('');
-      this.confirm.set('');
+    try {
+      await this.auth.resetPassword(this.reset.token, this.pw(), this.confirm());
+    } catch (err) {
       this.busy.set(false);
-      this.done.set(true);
-    }, 800);
+      this.showError(err);
+      const f = this.form()?.nativeElement;
+      if (f) replayShake(f);
+      return;
+    }
+    // Drop both values from memory as soon as the request has succeeded; the token is single use.
+    this.auth.clearResetToken();
+    this.pw.set('');
+    this.confirm.set('');
+    this.busy.set(false);
+    this.done.set(true);
+  }
+
+  private showError(err: unknown) {
+    if (!(err instanceof AuthError)) {
+      this.error.set({ message: NETWORK_ERROR_MESSAGE, list: [], expired: false });
+      return;
+    }
+    if (err.code === AuthCode.PasswordMismatch) {
+      this.serverMismatch.set(true);
+      this.error.set({ message: err.message, list: [], expired: false });
+      return;
+    }
+    if (err.code === AuthCode.PasswordWeak) {
+      const raw = err.data?.['errors'];
+      const list = Array.isArray(raw) ? raw.map(String) : [];
+      this.error.set({ message: err.message, list, expired: false });
+      return;
+    }
+    if (err.code === AuthCode.ResetTokenInvalid) {
+      this.auth.clearResetToken();
+      this.error.set({ message: err.message, list: [], expired: true });
+      return;
+    }
+    this.error.set({ message: err.message, list: [], expired: false });
   }
 }

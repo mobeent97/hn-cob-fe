@@ -1,5 +1,8 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../core/auth/auth.service';
+import { AuthError } from '../../core/auth/auth.models';
+import { safeReturnUrl } from '../../core/auth/auth.guard';
 import { Icon } from '../../shared/ui/icon';
 import { AuthLayout } from './auth-layout';
 import { Globe } from './globe';
@@ -11,9 +14,9 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * Sign in — "Let me in, or tell me plainly why not."
- * Design phase: any credentials work except the password "wrong", which shows the error state.
- * The password is sent once (over TLS when the API exists) and is never stored or encrypted
- * on the client.
+ * POST /auth/login/ (AuthService). 401/403/423 show the server's message inline; 423 says when
+ * the lock ends. The password is sent once (over TLS outside local dev) and is never stored or
+ * encrypted on the client.
  */
 @Component({
   selector: 'app-login',
@@ -33,7 +36,7 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           <input id="email" class="ui-control ui-control-lg" type="email" autocomplete="username" inputmode="email" spellcheck="false"
                  [class.invalid]="tried() && emailError()" [attr.aria-invalid]="tried() && !!emailError()"
                  [attr.aria-describedby]="tried() && emailError() ? 'email-err' : null"
-                 [value]="email()" (input)="email.set($any($event.target).value); error.set(false)" />
+                 [value]="email()" (input)="email.set($any($event.target).value); error.set('')" />
           @if (tried() && emailError()) {
             <span class="error" id="email-err">{{ emailError() }}</span>
           }
@@ -44,7 +47,7 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           <div class="pw">
             <input id="password" class="ui-control ui-control-lg" [type]="show() ? 'text' : 'password'" autocomplete="current-password"
                    [class.invalid]="tried() && !password()" [attr.aria-invalid]="tried() && !password()"
-                   [value]="password()" (input)="password.set($any($event.target).value); error.set(false)" />
+                   [value]="password()" (input)="password.set($any($event.target).value); error.set('')" />
             <button type="button" class="reveal" (click)="show.set(!show())"
                     [attr.aria-label]="show() ? 'Hide password' : 'Show password'" [attr.aria-pressed]="show()">
               <app-icon [name]="show() ? 'eye-off' : 'eye'" />
@@ -74,7 +77,7 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           @if (error()) {
             <p class="form-error" role="alert">
               <app-icon name="circle-x" />
-              <span>That email and password don't match. Check both and try again, or reset your password.</span>
+              <span>{{ error() }}</span>
             </p>
           }
         </div>
@@ -86,15 +89,17 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 })
 export class Login {
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly auth = inject(AuthService);
   private readonly form = viewChild.required<ElementRef<HTMLFormElement>>('form');
-  private timer?: ReturnType<typeof setTimeout>;
 
   protected readonly email = signal(localStorage.getItem(REMEMBER_KEY) ?? '');
   protected readonly password = signal('');
   protected readonly remember = signal(!!localStorage.getItem(REMEMBER_KEY));
   protected readonly show = signal(false);
   protected readonly busy = signal(false);
-  protected readonly error = signal(false);
+  /** The message under the button; empty when there is nothing to say. */
+  protected readonly error = signal('');
   protected readonly tried = signal(false);
 
   protected readonly emailError = computed(() => {
@@ -104,15 +109,11 @@ export class Login {
     return '';
   });
 
-  constructor() {
-    inject(DestroyRef).onDestroy(() => clearTimeout(this.timer));
-  }
-
-  protected submit(ev: Event) {
+  protected async submit(ev: Event) {
     ev.preventDefault();
     if (this.busy()) return;
     this.tried.set(true);
-    this.error.set(false);
+    this.error.set('');
     if (this.emailError() || !this.password()) {
       replayShake(this.form().nativeElement);
       return;
@@ -122,17 +123,33 @@ export class Login {
     else localStorage.removeItem(REMEMBER_KEY);
 
     this.busy.set(true);
-    this.timer = setTimeout(() => {
-      this.busy.set(false);
-      if (this.password() === 'wrong') {
+    try {
+      await this.auth.login(this.email().trim(), this.password());
+      this.password.set('');
+      await this.router.navigateByUrl(safeReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl')));
+    } catch (err) {
+      // A refused sign-in empties the password; a network failure keeps it for another try.
+      if (!(err instanceof AuthError) || !err.isNetwork) {
         this.password.set('');
         this.tried.set(false);
-        this.error.set(true);
-        replayShake(this.form().nativeElement);
-        return;
       }
-      this.password.set('');
-      void this.router.navigate(['/dashboard']);
-    }, 900);
+      this.error.set(loginMessage(err));
+      replayShake(this.form().nativeElement);
+    } finally {
+      this.busy.set(false);
+    }
   }
+}
+
+/** 423 names the time the lock ends; everything else shows the server's own message. */
+function loginMessage(err: unknown): string {
+  if (!(err instanceof AuthError)) return 'Something went wrong. Try again.';
+  if (err.httpStatus === 423) {
+    const until = new Date(String(err.data?.['locked_until'] ?? ''));
+    if (!isNaN(until.getTime())) {
+      const hhmm = until.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+      return `Too many attempts. Try again at ${hhmm}.`;
+    }
+  }
+  return err.message;
 }

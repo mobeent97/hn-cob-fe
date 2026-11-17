@@ -1,7 +1,7 @@
 export const environment = {
   production: true,
   envName: 'production',
-  apiUrl: 'https://PRODUCTION_BACKEND_URL', // TODO: set to production BACKEND_URL
+  apiUrl: 'https://PRODUCTION_BACKEND_URL/api/v1', // TODO: set to production BACKEND_URL
   // OpenFreeMap vector styles, the same IoTility uses (light / dark follow the .dark class).
   mapLightStyleUrl: 'https://tiles.openfreemap.org/styles/liberty',
   mapDarkStyleUrl: 'https://tiles.openfreemap.org/styles/dark',

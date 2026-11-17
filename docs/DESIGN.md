@@ -227,3 +227,26 @@ IoTility's tokens: `--duration-press` (160ms), `--duration-hover` (150), `--dura
   - `101` is Vodafone's admin, `102` a Vodafone onboarding agent, `103` a Vodafone support viewer.
   - `104` is MTN's admin.
   - `2` is HyperNym onboarding staff.
+
+## Authentication
+
+- **Contract:** `hn-cob-be/docs/AUTH_API.md` (Auth API v1). `environment.apiUrl` ends in `/api/v1`
+  (`http://localhost:8000/api/v1` locally).
+- **`AuthService`** (`core/auth/auth.service.ts`) holds the signed-in `user()` and
+  `isAuthenticated()` signals and makes every auth call: login, refresh, logout, me, forgot
+  password, verify code and reset password. Failures become an `AuthError` (`core/auth/auth.models.ts`)
+  with the HTTP status, the envelope's `status` code, its `message` (shown to the user as is) and `data`.
+- **Tokens:** `TokenStorageService` keeps the JWT access and refresh tokens in `localStorage`. Refresh
+  rotates both. *Remember my email* stores only the email, never the password. The reset token
+  from the code step lives in `sessionStorage` until the password is changed.
+- **Interceptor** (`core/auth/auth.interceptor.ts`): adds `Authorization: Bearer <access>` to calls to
+  `environment.apiUrl` only, but not to the public auth endpoints. No cookies are used. A 401 refreshes once,
+  and calls that fail at the same time share that refresh, then the request is retried. If the refresh fails,
+  the session is cleared and the user goes to `/login?returnUrl=…`.
+- **Start-up:** an app initializer calls `restoreSession()` (`GET /auth/me/`) when tokens exist. If that
+  fails, the tokens are cleared quietly. The `?as=` design preview is applied after it.
+- **Routes:** `authGuard` protects the shell. `guestGuard` sends a signed-in user away from `/login`.
+  `resetTokenGuard` sends visitors without a reset token from `/reset-password` to `/forgot-password`.
+- **Still mock:** only the auth screens and the header's name and role use the API. Every other screen,
+  and roles and feature access, still use the mock `Store`. A real superuser gets the mock superuser
+  session (`store.signInAs(1)`). Roles and organizations will come from the API later.

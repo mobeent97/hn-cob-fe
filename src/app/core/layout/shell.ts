@@ -6,6 +6,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { filter } from 'rxjs';
 import { TabIndicator, Tooltip } from '@iotility/shared-ui';
 import { Store } from '../data/store';
+import { AuthService } from '../auth/auth.service';
 import { Icon } from '../../shared/ui/icon';
 import { Menu, MenuItem } from '../../shared/ui/menu';
 import { NAV, NAV_FOOTER, NavItem } from './nav';
@@ -48,10 +49,15 @@ export class Shell {
   );
   protected readonly navFooter = computed(() => NAV_FOOTER.filter((i) => this.allowed(i)));
   protected readonly previewOpen = signal(false);
-  protected readonly roleLabel = computed(() =>
-    this.user().isSuperuser ? 'Superuser' : this.user().groups.join(', ') || 'No role',
-  );
-  protected readonly user = this.store.currentUser;
+  private readonly auth = inject(AuthService);
+  /** The signed-in user from the API; the mock Store user only when there is none (design preview). */
+  protected readonly displayName = computed(() => this.auth.user()?.full_name || this.store.currentUser().name);
+  protected readonly roleLabel = computed(() => {
+    const real = this.auth.user();
+    if (real) return real.is_superuser ? 'Superuser' : real.organization?.name || 'No organization';
+    const mock = this.store.currentUser();
+    return mock.isSuperuser ? 'Superuser' : mock.groups.join(', ') || 'No role';
+  });
   /** Phone drawer. */
   protected readonly navOpen = signal(false);
   /** Desktop icon-only sidebar, remembered between visits. */
@@ -78,13 +84,14 @@ export class Shell {
       { label: `Dark theme${mark('dark')}`, icon: 'moon', run: () => this.theme.set('dark') },
       { label: `Match system${mark('system')}`, icon: 'panel', run: () => this.theme.set('system') },
       { label: 'Preview as another user…', icon: 'users', run: () => this.previewOpen.set(true) },
-      { label: 'Sign out', icon: 'logout', danger: true, run: () => this.router.navigate(['/login']) },
+      { label: 'Sign out', icon: 'logout', danger: true, run: () => this.signOut() },
     ];
   });
 
   protected readonly initials = computed(() =>
-    this.user()
-      .name.split(' ')
+    this.displayName()
+      .split(/\s+/)
+      .filter(Boolean)
       .map((p) => p[0])
       .slice(0, 2)
       .join(''),
@@ -111,6 +118,11 @@ export class Shell {
       const before = untracked(() => this.content()?.nativeElement.getBoundingClientRect().left);
       untracked(() => afterNextRender(() => this.slideContent(before), { injector: this.injector }));
     });
+  }
+
+  private async signOut() {
+    await this.auth.logout();
+    await this.router.navigate(['/login']);
   }
 
   private allowed(item: NavItem) {
