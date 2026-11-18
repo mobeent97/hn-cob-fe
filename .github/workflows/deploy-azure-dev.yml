@@ -1,0 +1,69 @@
+# Builds the app with the azure-dev configuration and deploys it to Azure App Service
+# app-hypernym-portal-dev (rg-dev, HyperNym Azure) on every push to dev. Can also be run by hand
+# from the Actions tab.
+#
+# Login is OIDC, so the repository needs no secrets: the managed identity id-gh-hypernym-portal-fe-dev
+# trusts only this repository's dev branch and may deploy only to this app (Website Contributor).
+# The IDs below are identifiers, not secrets. Do not add a GitHub `environment:` to the job: that
+# changes the OIDC subject and the login fails (AADSTS700213).
+name: Deploy dev to Azure App Service
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-azure-dev
+  cancel-in-progress: false
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AZURE_RESOURCE_GROUP: rg-dev
+  AZURE_WEBAPP: app-hypernym-portal-dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci --no-audit --no-fund
+
+      - run: npm run build:azure-dev
+
+      # The app serves this folder with `pm2 serve /home/site/wwwroot --no-daemon --spa`
+      # (its startup command), which sends unknown paths to index.html so deep links work.
+      - name: Package
+        run: cd dist/hn-cob-fe/browser && zip -qr "$GITHUB_WORKSPACE/site.zip" .
+
+      - uses: azure/login@v2
+        with:
+          client-id: 04df5aad-5b71-4326-ac16-32633b0b1ed1
+          tenant-id: 84116f83-4d71-446f-87f5-bb670f6bce16
+          subscription-id: d295df0e-3a25-4053-8cee-bade8edfb9fd
+
+      - name: Deploy
+        run: >
+          az webapp deploy -g "$AZURE_RESOURCE_GROUP" -n "$AZURE_WEBAPP"
+          --src-path site.zip --type zip --clean true --restart true
+
+      # Free tier: the app sleeps when idle, so the first request after a deploy can take a minute.
+      - name: Check the site
+        run: |
+          url="https://$AZURE_WEBAPP.azurewebsites.net"
+          for i in $(seq 1 18); do
+            root=$(curl -s -o /dev/null -w '%{http_code}' "$url/" || true)
+            deep=$(curl -s -o /dev/null -w '%{http_code}' "$url/login" || true)
+            if [ "$root" = 200 ] && [ "$deep" = 200 ]; then echo "OK: / $root, /login $deep"; exit 0; fi
+            echo "waiting: / $root, /login $deep"; sleep 10
+          done
+          exit 1

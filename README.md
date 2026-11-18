@@ -73,7 +73,16 @@ Each configuration swaps in its own file from `src/environments/` (`apiUrl` = ba
 npm run build:dev       # environment.ts
 npm run build:staging   # environment.staging.ts
 npm run build:prod      # environment.prod.ts
+npm run build:azure-dev # environment.azure-dev.ts (the Azure dev deployment below)
 ```
+
+### Azure dev deployment (branch `dev`)
+
+Every push to `dev` runs `.github/workflows/deploy-azure-dev.yml`: it builds with `build:azure-dev` and deploys
+to the Azure App Service **app-hypernym-portal-dev** (rg-dev, Free tier), https://app-hypernym-portal-dev.azurewebsites.net.
+The backend is `hypernym-portal-be` (hn-cob-be, branch `dev`) at
+https://devgateway.hypernymbiz.com/hypernym-portal-be/api/v1, whose `CORS_ALLOWED_ORIGINS` already lists this app.
+Merge `development` into `dev` to release; the workflow can also be run by hand from the Actions tab.
 
 > Set the real backend URLs in `environment.staging.ts` and `environment.prod.ts` before deploying,
 > and add the frontend origin to the backend's `CORS_ALLOWED_ORIGINS` / `CSRF_TRUSTED_ORIGINS`.

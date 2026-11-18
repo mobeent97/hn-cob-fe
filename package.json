@@ -9,7 +9,8 @@
     "test": "ng test",
     "build:dev": "ng build --configuration development",
     "build:staging": "ng build --configuration staging",
-    "build:prod": "ng build --configuration production"
+    "build:prod": "ng build --configuration production",
+    "build:azure-dev": "ng build --configuration azure-dev"
   },
   "private": true,
   "packageManager": "npm@11.19.0",

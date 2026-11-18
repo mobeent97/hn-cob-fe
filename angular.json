@@ -84,6 +84,27 @@
                   "with": "src/environments/environment.staging.ts"
                 }
               ]
+            },
+            "azure-dev": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "60kB",
+                  "maximumError": "68kB"
+                }
+              ],
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.azure-dev.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -99,6 +120,9 @@
             },
             "staging": {
               "buildTarget": "hn-cob-fe:build:staging"
+            },
+            "azure-dev": {
+              "buildTarget": "hn-cob-fe:build:azure-dev"
             }
           },
           "defaultConfiguration": "development"
