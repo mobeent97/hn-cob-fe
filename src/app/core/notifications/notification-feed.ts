@@ -11,4 +11,9 @@ export const KIND_META: Record<NotificationKind, { label: string; icon: IconName
   account: { label: 'Account & security', icon: 'shield', description: 'Policy changes, new sign-ins and password resets.' },
 };
 
-// TODO(API): new notifications arrive by server push (WebSocket / SSE) — see docs/ROADMAP.md.
+const OTHER = { label: 'Other', icon: 'bell' as IconName, description: '' };
+
+/** KIND_META for a kind this build may not know yet (the server can add kinds before the portal does). */
+export function kindMeta(kind: string): { label: string; icon: IconName; description: string } {
+  return (KIND_META as Record<string, (typeof KIND_META)[NotificationKind]>)[kind] ?? OTHER;
+}

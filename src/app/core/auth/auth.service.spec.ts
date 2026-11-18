@@ -8,6 +8,7 @@ import { AuthUser } from './auth.models';
 import { AuthService } from './auth.service';
 import { authInterceptor } from './auth.interceptor';
 import { TokenStorageService } from './token-storage.service';
+import { PushDevice } from '../notifications/push-device';
 
 const API = `${environment.apiUrl}/auth`;
 const USER: AuthUser = {
@@ -98,6 +99,22 @@ describe('AuthService', () => {
     expect(tokens.accessToken).toBeNull();
     expect(tokens.refreshToken).toBeNull();
     expect(auth.user()).toBeNull();
+  });
+
+  it("logout sends this browser's push token and then deletes it (PUSH_NOTIFICATIONS.md 6.3)", async () => {
+    tokens.save('a1', 'r1');
+    const device = TestBed.inject(PushDevice);
+    const forgetter = vi.fn(() => Promise.resolve());
+    device.token = 'fcm-token-1234567890';
+    device.forgetter = forgetter;
+    const done = auth.logout();
+    const req = http.expectOne(`${API}/logout/`);
+    expect(req.request.body).toEqual({ refresh: 'r1', push_token: 'fcm-token-1234567890' });
+    expect(forgetter).not.toHaveBeenCalled();
+    req.flush(ok({}));
+    await done;
+    expect(forgetter).toHaveBeenCalled();
+    expect(device.token).toBeNull();
   });
 
   it('logout clears the session even when the server call fails, without trying a refresh', async () => {

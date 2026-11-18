@@ -199,18 +199,41 @@ IoTility's tokens: `--duration-press` (160ms), `--duration-hover` (150), `--dura
 
 ## Notifications
 
-- **Data:** `Store.notifications` holds the list and `unread` the count. Use `markRead`,
-  `markAllRead`, `removeNotifications` and `pushNotification`. Preferences live in
-  `Store.notificationPrefs` (GET/PUT `/notifications/preferences/`), with in-app and email settings per
-  kind, a digest, quiet hours and a time zone. Every user edits their own on **My profile → Notifications**
-  (`/profile?section=notifications`, the bell's *Preferences* link); the platform-only Settings page
-  doesn't show them.
-- **Labels:** `KIND_META` (`core/notifications/notification-feed.ts`) gives each kind its label,
-  icon and description.
+Contract: `hn-cob-be/docs/PUSH_NOTIFICATIONS.md` (module 5c).
+
+- **Feed:** persisted on the server (`core/api/notifications.api.ts`). `NotificationCenter`
+  (`core/notifications/notification-center.ts`) fills the bell's `Store.notifications` (the latest 6) and
+  `Store.unread` on sign-in, on window focus, every 60 s while visible (unread count only) and at once on a
+  foreground push; its `changes` signal ticks on focus and push. Every write goes through it (read/unread,
+  read-all, delete, restore) and the `unread` in each answer updates the badge. No WebSocket or SSE.
+- **Page:** `FeedPager` (`core/notifications/feed-pager.ts`) pages the feed with the server's keyset cursor
+  (20 per "Load more"), takes the All/Unread counts and the kind counts from the first page, and syncs the
+  loaded rows in place (`/notifications/sync/`, a stale token reloads the first page). A row read on the
+  Unread tab stays until the filters change. Delete is server-side at once; Undo calls restore.
+- **Links** are portal routes (`/audit?request=42`), opened with `router.navigateByUrl` so query parameters
+  survive; `routeOf()` (`core/notifications/link.ts`) sends anything else to `/notifications`. Audit honours
+  `?request=`.
+- **Labels:** `KIND_META` (`core/notifications/notification-feed.ts`) gives each kind its label, icon and
+  description; `kindMeta()` falls back to "Other" for a kind this build doesn't know.
 - **Bell:** in the header, FleetPoint's bell and panel. The badge pops and the bell swings when the count
-  rises. The panel shows the latest 6.
-- **Feed:** `NotificationFeed` stands in for server push until the API exists. It delivers an
-  event about every 90 seconds while the tab is visible.
+  rises. The panel shows the latest 6, refreshed when it opens.
+- **Preferences** live in `Store.notificationPrefs` (GET/PUT `/notifications/preferences/`): in the portal,
+  email and **Browser** (push) per kind, a digest, quiet hours (no email or push inside them) and a time
+  zone. Every user edits their own on **My profile → Notifications** (`/profile?section=notifications`).
+- **Browser push** (`PushService`, `core/notifications/push.service.ts`): FCM through the modular Firebase
+  SDK, loaded lazily, with the web config from `GET /notifications/push/config/` (never at build time).
+  - The worker is `public/firebase-messaging-sw.js` (plain JS, no SDK or CDN), registered with the narrow
+    scope `/firebase-cloud-messaging-push-scope` so it never controls page loads. Hosting must serve it as
+    `application/javascript`, `Cache-Control: no-cache`, with no SPA fallback.
+  - The "Browser notifications" switch asks for permission **only on click** and shows the unsupported,
+    iOS-tab (Add to Home Screen, `public/manifest.webmanifest`), blocked, off and on states
+    (`pushState()`, `core/notifications/push-state.ts`). On is per user and browser
+    (`localStorage['hn.push.on.<userId>']`); at sign-in it re-registers silently, at most daily.
+  - Foreground pushes refresh the bell and show an info toast with Open in the focused tab; a clicked
+    system notification routes the existing tab in place. Sign-out sends `push_token` to `/auth/logout/`
+    and deletes the Firebase token (capped at 1.5 s).
+  - Icons: `public/assets/push/` (`icon-192.png`, `icon-512.png`, `badge-72.png`), exported from
+    `bell-source.svg`.
 
 ## Organizations and access (multi-tenant)
 
@@ -266,5 +289,5 @@ IoTility's tokens: `--duration-press` (160ms), `--duration-hover` (150), `--dura
   `resetTokenGuard` sends visitors without a reset token from `/reset-password` to `/forgot-password`.
 - **Connected modules** (typed services in `core/api/<module>.api.ts`, which unwrap the envelope and throw
   `ApiError` with the server's message and `fieldErrors`): Users, Roles, Organizations, Deletion audit,
-  Settings and notification preferences, plus My profile (`/auth/me/…`). Users are identified by email;
+  Settings and notification preferences, the notification feed and browser push, plus My profile (`/auth/me/…`). Users are identified by email;
   there are no usernames. Every other module's list still starts empty (`TODO(API)` in `store.ts`).

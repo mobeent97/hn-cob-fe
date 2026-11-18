@@ -30,15 +30,15 @@ export const DEFAULT_SETTINGS: PortalSettings = {
   login: { sessionMinutes: 30, maxAttempts: 5, lockMinutes: 15 },
 };
 
-/** SETTINGS_API defaults, shown until GET /notifications/preferences/ answers. */
+/** SETTINGS_API defaults (push: PUSH_NOTIFICATIONS.md 1.4), shown until GET /notifications/preferences/ answers. */
 export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
   channels: {
-    order: { inApp: true, email: true },
-    onboarding: { inApp: true, email: false },
-    deletion: { inApp: true, email: true },
-    device: { inApp: true, email: false },
-    contract: { inApp: true, email: true },
-    account: { inApp: true, email: false },
+    order: { inApp: true, email: true, push: true },
+    onboarding: { inApp: true, email: false, push: false },
+    deletion: { inApp: true, email: true, push: true },
+    device: { inApp: true, email: false, push: true },
+    contract: { inApp: true, email: true, push: false },
+    account: { inApp: true, email: false, push: false },
   },
   digest: 'daily',
   quiet: { from: '20:00', to: '07:00' },

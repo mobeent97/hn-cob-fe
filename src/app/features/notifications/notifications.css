@@ -93,6 +93,10 @@
   @apply flex items-center gap-2.5 pt-0.5 text-xs whitespace-nowrap text-muted dark:text-brand-300;
   transition: opacity var(--duration-hover) ease;
 }
+/* The organization the event is about (cross-tenant users viewing every organization). */
+.org {
+  @apply max-w-40 truncate rounded-full bg-canvas px-2 py-0.5 text-[11px] dark:bg-dark-canvas;
+}
 /* The unread dot cross-fades with the read state. */
 .dot {
   @apply size-2 rounded-full bg-brand-600 opacity-0 dark:bg-brand-400;

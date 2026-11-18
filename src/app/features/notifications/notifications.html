@@ -10,7 +10,7 @@
     </div>
     <div class="actions">
       <a class="btn" routerLink="/profile" [queryParams]="{ section: 'notifications' }"><app-icon name="sliders" />Preferences</a>
-      <button class="btn primary" [disabled]="loading() || !store.unread()" (click)="markAllRead()">
+      <button class="btn primary" [disabled]="loading() || marking() || !store.unread()" (click)="markAllRead()">
         <app-icon name="check-check" />Mark all read
       </button>
     </div>
@@ -23,16 +23,17 @@
       <div class="left">
         <label class="check select-all">
           <input type="checkbox" [checked]="allShownSelected()" [indeterminate]="someSelected()"
-                 [disabled]="loading() || !shown().length" (change)="toggleAll($any($event.target).checked)" />
+                 [disabled]="loading() || !rows().length" (change)="toggleAll($any($event.target).checked)" />
           <span>Select all</span>
         </label>
       </div>
       <div class="right">
         <label class="sr-only" for="kind">Kind</label>
         <app-select id="kind" class="kind" [value]="kind()" (valueChange)="kind.set($event)">
-          <app-option value="all" [selected]="kind() === 'all'">All kinds ({{ kindCounts().all }})</app-option>
+          <!-- [label] (a signal) rather than text content, so the closed select updates when the counts arrive. -->
+          <app-option value="all" [selected]="kind() === 'all'" [label]="'All kinds (' + kindCounts().all + ')'" />
           @for (k of kinds; track k) {
-            <app-option [value]="k" [selected]="kind() === k">{{ meta[k].label }} ({{ kindCounts()[k] }})</app-option>
+            <app-option [value]="k" [selected]="kind() === k" [label]="meta(k).label + ' (' + kindCounts()[k] + ')'" />
           }
         </app-select>
       </div>
@@ -55,6 +56,8 @@
           }
         </ul>
       </div>
+    } @else if (feed.error(); as err) {
+      <app-load-error [message]="err" (retry)="reload()" />
     } @else {
       @for (g of groups(); track g.label) {
         <section class="day" [attr.aria-labelledby]="'d-' + $index">
@@ -67,17 +70,18 @@
                     <input type="checkbox" [checked]="selected().has(n.id)" [attr.aria-label]="'Select: ' + n.title"
                            (change)="toggle(n.id, $any($event.target).checked)" />
                   </label>
-                  <a class="main" [class.nolink]="!canOpen(n.link)" [routerLink]="canOpen(n.link) ? n.link : null" (click)="open(n)"
+                  <a class="main" [class.nolink]="!canOpen(n.link)" [attr.href]="canOpen(n.link) ? n.link : null" (click)="open($event, n)"
                      [attr.title]="canOpen(n.link) ? null : 'You don’t have access to this screen'">
-                    <span class="ic" [title]="meta[n.kind].label"><app-icon [name]="meta[n.kind].icon" [size]="15" /></span>
+                    <span class="ic" [title]="meta(n.kind).label"><app-icon [name]="meta(n.kind).icon" [size]="15" /></span>
                     <span class="text">
                       <span class="title">
                         <span class="sr-only">{{ n.read ? '' : 'Unread: ' }}</span>{{ n.title }}
                       </span>
                       <span class="body">{{ n.body }}</span>
-                      <span class="sr-only">{{ meta[n.kind].label }}.</span>
+                      <span class="sr-only">{{ meta(n.kind).label }}.</span>
                     </span>
                     <span class="meta">
+                      @if (showOrg() && n.orgName) { <span class="org" [title]="n.orgName">{{ n.orgName }}</span> }
                       <time class="num" [attr.datetime]="n.at" [title]="n.at | datetime">{{ n.at | rel }}</time>
                       <span class="dot" aria-hidden="true"></span>
                     </span>
@@ -116,10 +120,16 @@
         </div>
       }
 
-      @if (more()) {
+      @if (feed.hasMore()) {
         <div class="load-more">
-          <span class="num muted">Showing {{ shown().length }} of {{ rows().length }}</span>
-          <button class="btn sm" (click)="limit.set(limit() + 20)">Load {{ more() > 20 ? 20 : more() }} more</button>
+          <span class="num muted">Showing {{ rows().length }} of {{ feed.count() }}</span>
+          @if (feed.moreError(); as err) {
+            <app-load-error [message]="err" (retry)="feed.more()" />
+          } @else {
+            <button class="btn sm" [disabled]="feed.loadingMore()" (click)="feed.more()">
+              {{ feed.loadingMore() ? 'Loading…' : 'Load ' + more() + ' more' }}
+            </button>
+          }
         </div>
       }
     }

@@ -30,7 +30,7 @@
         <div class="pending-row"><span class="skeleton" style="width:200px;height:14px"></span><span class="skeleton" style="width:160px;height:28px"></span></div>
       } @else {
         @for (r of pending(); track r.id) {
-          <div class="pending-row">
+          <div class="pending-row" [id]="'request-' + r.id" [class.target]="r.id === highlight()">
             <div class="who">
               <span class="primary-cell">{{ r.customer }} <span class="pill">{{ typeLabel[r.entityType] }}</span></span>
               <span class="sub num">

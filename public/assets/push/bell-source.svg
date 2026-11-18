@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Push notification icon source (hn-cob-be/docs/PUSH_NOTIFICATIONS.md 5.4). The portal's top-bar bell
+  (Lucide "bell", ISC licence) in HyperNym purple #7e22ce at 60 % of the canvas, on an opaque white
+  square with a 20 % corner radius. icon-192.png and icon-512.png are exported from this file;
+  badge-72.png is the same glyph in white on transparent (id="glyph"), with no background.
+  Module 17 exports ic_stat_bell and the app icons from here.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect id="tile" width="512" height="512" rx="102.4" ry="102.4" fill="#ffffff"/>
+  <g id="glyph" transform="translate(102.4 102.4) scale(12.8)" fill="none" stroke="#7e22ce" stroke-width="2"
+     stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10.268 21a2 2 0 0 0 3.464 0"/>
+    <path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/>
+  </g>
+</svg>

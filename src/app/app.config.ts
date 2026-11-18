@@ -6,6 +6,8 @@ import { authInterceptor } from './core/auth/auth.interceptor';
 import { AuthService } from './core/auth/auth.service';
 import { SessionLoader } from './core/auth/session-loader';
 import { BrandTheme } from './core/theme/brand';
+import { NotificationCenter } from './core/notifications/notification-center';
+import { PushService } from './core/notifications/push.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -24,6 +26,9 @@ export const appConfig: ApplicationConfig = {
       const session = inject(SessionLoader);
       // Starts the organization brand theme (BRANDING_MEDIA_EMAIL.md 1.4); it follows the session from here.
       inject(BrandTheme);
+      // The bell's feed (refresh on sign-in, focus, a 60 s unread poll) and browser push (PUSH_NOTIFICATIONS.md 6).
+      inject(NotificationCenter);
+      inject(PushService);
       return auth.restoreSession().then(() => session.load());
     }),
   ],

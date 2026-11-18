@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
+import {
+  ChangeDetectionStrategy, Component, DestroyRef, Injector, afterNextRender, computed, effect, inject, input, signal, untracked,
+} from '@angular/core';
 import { Store } from '../../core/data/store';
 import { DatePipe, RelativePipe } from '../../core/data/format';
 import { DeletionAudit, DeletionEntity } from '../../core/data/models';
@@ -55,6 +57,14 @@ export class Audit {
   protected readonly count = signal(0);
   protected readonly summary = signal<DeletionSummary>(NO_SUMMARY);
 
+  /** `?request={id}` from a notification link (PUSH_NOTIFICATIONS.md 6.1): scroll to that pending request and mark it. */
+  readonly request = input<string | undefined>();
+  protected readonly highlight = computed(() => {
+    const id = Number(this.request());
+    return Number.isInteger(id) && id > 0 ? id : null;
+  });
+  private readonly injector = inject(Injector);
+
   /** The organization filter as the API param: the toolbar pick (all-organizations view) or the switcher's. */
   private readonly orgParam = computed<number | null>(() => {
     if (!this.store.crossTenant()) return null;
@@ -84,6 +94,16 @@ export class Audit {
     effect(() => {
       const q = this.logQuery();
       untracked(() => void this.loadLog(q));
+    });
+    effect(() => {
+      const id = this.highlight();
+      if (id == null || !this.pending().some((r) => r.id === id)) return;
+      untracked(() =>
+        afterNextRender(() => {
+          const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+          document.getElementById(`request-${id}`)?.scrollIntoView({ block: 'center', behavior: reduced ? 'auto' : 'smooth' });
+        }, { injector: this.injector }),
+      );
     });
   }
 

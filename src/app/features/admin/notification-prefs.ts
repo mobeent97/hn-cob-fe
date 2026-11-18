@@ -5,6 +5,8 @@ import { Store } from '../../core/data/store';
 import { NotificationKind, NotificationPrefs } from '../../core/data/models';
 import { KIND_META } from '../../core/notifications/notification-feed';
 import { SettingsApi } from '../../core/api/settings.api';
+import { PushService } from '../../core/notifications/push.service';
+import { PUSH_STATE_TEXT } from '../../core/notifications/push-state';
 import { ApiError, errorText } from '../../core/api/api-client';
 import { Toaster } from '../../shared/ui/toast';
 import { LoadError, loadState } from '../../shared/ui/load-state';
@@ -63,6 +65,9 @@ export class NotificationPrefsPanel {
   private readonly api = inject(SettingsApi);
   private readonly toast = inject(Toaster);
   protected readonly state = loadState();
+  /** This browser's push switch (saved at once, device state, PUSH_NOTIFICATIONS.md 6.4). */
+  protected readonly push = inject(PushService);
+  protected readonly pushText = PUSH_STATE_TEXT;
   protected readonly saving = signal(false);
 
   /** True when the page was opened at this section: scroll to it and mark it briefly. */
@@ -80,6 +85,8 @@ export class NotificationPrefsPanel {
 
   constructor() {
     void this.load();
+    this.push.recheck();
+    void this.push.loadConfig();
     effect(() => {
       const el = this.section()?.nativeElement;
       if (!this.focus() || this.state.loading() || !el) return;
@@ -138,19 +145,27 @@ export class NotificationPrefsPanel {
     const d = this.notif();
     const inApp = this.kinds.filter((k) => d.channels[k].inApp).length;
     const email = this.kinds.filter((k) => d.channels[k].email).length;
+    const push = this.kinds.filter((k) => d.channels[k].push).length;
     const digest = { off: 'one email per event', daily: 'a daily digest at 08:00', weekly: 'a weekly digest on Monday' }[d.digest];
-    const parts = [`${inApp} of ${this.kinds.length} kinds in the portal.`, email ? `${email} by email, as ${digest}.` : 'No email.'];
+    const parts = [
+      `${inApp} of ${this.kinds.length} kinds in the portal.`,
+      email ? `${email} by email, as ${digest}.` : 'No email.',
+      push ? `${push} as browser notifications.` : 'No browser notifications.',
+    ];
     if (d.quietOn && this.quietSpan()) parts.push(`Quiet ${d.from}–${d.to}.`);
     return parts.join(' ');
   });
 
   protected readonly emailCount = computed(() => this.kinds.filter((k) => this.notif().channels[k].email).length);
 
-  protected setChannel(k: NotificationKind, ch: 'inApp' | 'email', on: boolean) {
+  protected setChannel(k: NotificationKind, ch: 'inApp' | 'email' | 'push', on: boolean) {
     this.notif.update((d) => ({ ...d, channels: { ...d.channels, [k]: { ...d.channels[k], [ch]: on } } }));
   }
   protected setNotif<K extends keyof NotifDraft>(k: K, v: NotifDraft[K]) {
     this.notif.update((d) => ({ ...d, [k]: v }));
+  }
+  protected togglePush(on: boolean) {
+    void (on ? this.push.enable() : this.push.disable());
   }
   protected discardNotif() {
     this.serverError.set('');

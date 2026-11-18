@@ -79,13 +79,6 @@ export class Store {
     const id = this.scopeOrgId();
     return id == null ? () => true : (r: { orgId: number | null }) => r.orgId === id || r.orgId === null;
   });
-  /** Rows with orgId null are platform-only: hidden from partners. */
-  private readonly byOrgOrPlatform = computed(() => {
-    const id = this.scopeOrgId();
-    const platform = this.crossTenant();
-    return id == null ? () => true : (r: { orgId: number | null }) => r.orgId === id || (platform && r.orgId === null);
-  });
-
   // Tenant data — every list starts empty and fills from its API (docs/ROADMAP.md).
   /** The rows the Users screen last loaded (GET /users/, one page). */
   private readonly _users = signal<AdminUser[]>([]);
@@ -122,10 +115,14 @@ export class Store {
   /** GET /settings/ at sign-in (page size, password rules, session); defaults until it answers. */
   readonly settings = signal<PortalSettings>(ref.DEFAULT_SETTINGS);
   readonly today = TODAY;
-  readonly notifications = scoped(signal<AppNotification[]>([]), this.byOrgOrPlatform); // TODO(API): GET /notifications/
+  /**
+   * The bell: the signed-in user's latest notifications (GET /notifications/?limit=6) and their unread
+   * total. Filled and kept fresh by NotificationCenter; the Notifications page pages the feed itself.
+   */
+  readonly notifications = signal<AppNotification[]>([]);
+  readonly unread = signal(0);
   /** The signed-in user's own preferences (GET /notifications/preferences/, loaded by Profile). */
   readonly notificationPrefs = signal<NotificationPrefs>(ref.DEFAULT_NOTIFICATION_PREFS);
-  readonly unread = computed(() => this.notifications().filter((n) => !n.read).length);
 
   // ── Azure IoT Hub (device management) — TODO(API): /iot/* (docs/ROADMAP.md) ──
   readonly hub = signal<HubMetrics>(EMPTY_HUB);
@@ -210,24 +207,6 @@ export class Store {
   /** Lifecycle events for a device. TODO(API): GET /inventory/devices/{id}/history/. */
   deviceHistory(_d: Device): DeviceEvent[] {
     return [];
-  }
-
-  // ── Notifications ──────────────────────────────────────────
-  markRead(ids: number[], read = true) {
-    const set = new Set(ids);
-    this.notifications.update((xs) => xs.map((n) => (set.has(n.id) ? { ...n, read } : n)));
-  }
-  markAllRead() {
-    this.notifications.update((xs) => xs.map((n) => ({ ...n, read: true })));
-  }
-  removeNotifications(ids: number[]) {
-    const set = new Set(ids);
-    this.notifications.update((xs) => xs.filter((n) => !set.has(n.id)));
-  }
-  pushNotification(n: Omit<AppNotification, 'id' | 'read' | 'at'>) {
-    const full: AppNotification = { ...n, id: Math.max(0, ...this.notifications.all().map((x) => x.id)) + 1, read: false, at: nowIso() };
-    this.notifications.update((xs) => [full, ...xs]);
-    return full;
   }
 
   // ── IoT Hub operations — TODO(API): POST /iot/devices/{id}/commands/, PATCH /iot/devices/{id}/twin/ ──
@@ -322,6 +301,8 @@ export class Store {
       this.audit.all.set([]);
       this.settings.set(ref.DEFAULT_SETTINGS);
       this.notificationPrefs.set(ref.DEFAULT_NOTIFICATION_PREFS);
+      this.notifications.set([]);
+      this.unread.set(0);
       return;
     }
     const prevId = this.sessionUser()?.id;

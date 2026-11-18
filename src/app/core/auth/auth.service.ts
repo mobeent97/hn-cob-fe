@@ -8,6 +8,7 @@ import {
   VerifyCodeData,
 } from './auth.models';
 import { TokenStorageService } from './token-storage.service';
+import { PushDevice } from '../notifications/push-device';
 
 /** Set on a request to stop the interceptor refreshing and retrying it after a 401 (logout uses it). */
 export const SKIP_AUTH_REFRESH = new HttpContextToken<boolean>(() => false);
@@ -27,6 +28,7 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly tokens = inject(TokenStorageService);
   private readonly store = inject(Store);
+  private readonly push = inject(PushDevice);
   private readonly base = `${environment.apiUrl}/auth`;
 
   private readonly _user = signal<AuthUser | null>(null);
@@ -63,18 +65,28 @@ export class AuthService {
     return this.refreshInFlight;
   }
 
-  /** Revokes the refresh token on the server, then always clears the local session, even if that call fails. */
+  /**
+   * Revokes the refresh token on the server (and this browser's push token, PUSH_NOTIFICATIONS.md 4.2), then
+   * always clears the local session, even if that call fails. Firebase's token is deleted best effort, capped
+   * at 1.5 s.
+   */
   async logout(): Promise<void> {
     const refresh = this.tokens.refreshToken;
+    const pushToken = this.push.token;
     try {
       if (refresh) {
         await firstValueFrom(
-          this.http.post(`${this.base}/logout/`, { refresh }, { context: new HttpContext().set(SKIP_AUTH_REFRESH, true) }),
+          this.http.post(
+            `${this.base}/logout/`,
+            pushToken ? { refresh, push_token: pushToken } : { refresh },
+            { context: new HttpContext().set(SKIP_AUTH_REFRESH, true) },
+          ),
         );
       }
     } catch {
       /* the server may already consider the token dead; signing out locally is what matters */
     } finally {
+      await this.push.forget();
       this.clearSession();
     }
   }
@@ -164,8 +176,9 @@ export class AuthService {
     );
   }
 
-  /** Forgets the tokens and the user locally (no server call). */
+  /** Forgets the tokens and the user locally (no server call). A forced sign-out also deletes the push token. */
   clearSession(): void {
+    void this.push.forget();
     this.tokens.clear();
     this._user.set(null);
     this.store.setSession(null);

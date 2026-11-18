@@ -65,9 +65,25 @@ describe('SettingsApi', () => {
     const done = api.savePreferences({ ...DEFAULT_NOTIFICATION_PREFS, quiet: null, timezone: 'Asia/Qatar' });
     const req = http.expectOne(`${API}/notifications/preferences/`);
     expect(req.request.method).toBe('PUT');
-    expect(req.request.body.channels.order).toEqual({ in_app: true, email: true });
+    expect(req.request.body.channels.order).toEqual({ in_app: true, email: true, push: true });
     expect(req.request.body).toMatchObject({ digest: 'daily', quiet: null, timezone: 'Asia/Qatar' });
     req.flush(ok(req.request.body, 4503));
-    expect((await done).channels.order).toEqual({ inApp: true, email: true });
+    expect((await done).channels.order).toEqual({ inApp: true, email: true, push: true });
+  });
+
+  it('fills a channel the server leaves out from the contract defaults (push: orders, deletions, devices)', async () => {
+    const done = api.preferences();
+    http.expectOne(`${API}/notifications/preferences/`).flush(ok({
+      channels: {
+        order: { in_app: true, email: true }, onboarding: { in_app: true, email: false }, deletion: { in_app: false, email: true },
+        device: { in_app: true, email: false }, contract: { in_app: true, email: true }, account: { in_app: true, email: false, push: true },
+      },
+      digest: 'off', quiet: null, timezone: 'UTC',
+    }));
+    const p = await done;
+    expect(p.channels.order.push).toBe(true);
+    expect(p.channels.onboarding.push).toBe(false);
+    expect(p.channels.deletion).toEqual({ inApp: false, email: true, push: true });
+    expect(p.channels.account.push).toBe(true);
   });
 });

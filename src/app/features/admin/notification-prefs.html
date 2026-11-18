@@ -1,7 +1,7 @@
     <section class="row notif-row smooth-reveal" style="--reveal-delay: 120ms" id="notifications" #section [class.flash]="flash()" aria-labelledby="s-notif">
       <div class="label-col">
         <h2 id="s-notif">Notifications</h2>
-        <p class="desc">What reaches you in the portal and by email. These choices are yours; other staff set their own.</p>
+        <p class="desc">What reaches you in the portal, by email and as browser notifications. These choices are yours; other staff set their own.</p>
         <p class="summary num">{{ notifSummary() }}</p>
       </div>
       <div class="panel">
@@ -10,12 +10,36 @@
         } @else if (state.error(); as err) {
           <app-load-error [message]="err" (retry)="load()" />
         } @else {
+          @switch (push.state()) {
+            @case ('loading') {
+              <span class="skeleton push-sk"></span>
+            }
+            @case ('unavailable') {}
+            @default {
+              <div class="switch-row push-row">
+                <div>
+                  <span class="switch-title">Browser notifications</span>
+                  <span class="switch-desc">{{ pushText[push.state()] }}</span>
+                  @if (push.state() === 'on') {
+                    <button type="button" class="link-btn" (click)="push.sendTest()">Send a test notification</button>
+                  }
+                </div>
+                @if (push.state() === 'on' || push.state() === 'off') {
+                  <label class="toggle"><input type="checkbox" aria-label="Browser notifications on this browser"
+                         [checked]="push.state() === 'on'" [disabled]="push.busy()"
+                         (change)="togglePush($any($event.target).checked)" /></label>
+                }
+              </div>
+            }
+          }
+
           <table class="kinds">
             <thead>
               <tr>
                 <th scope="col">Notify me about</th>
                 <th scope="col" class="ch">In the portal</th>
                 <th scope="col" class="ch">Email</th>
+                <th scope="col" class="ch">Browser</th>
               </tr>
             </thead>
             <tbody>
@@ -34,6 +58,10 @@
                   <td class="ch">
                     <label class="toggle"><input type="checkbox" [attr.aria-label]="kindMeta[k].label + ' by email'"
                            [checked]="notif().channels[k].email" (change)="setChannel(k, 'email', $any($event.target).checked)" /></label>
+                  </td>
+                  <td class="ch">
+                    <label class="toggle"><input type="checkbox" [attr.aria-label]="kindMeta[k].label + ' as browser notifications'"
+                           [checked]="notif().channels[k].push" (change)="setChannel(k, 'push', $any($event.target).checked)" /></label>
                   </td>
                 </tr>
               }
@@ -70,7 +98,7 @@
           <div class="switch-row">
             <div>
               <span class="switch-title">Quiet hours</span>
-              <span class="switch-desc">No emails in this window. They are held and sent when it ends; the portal still collects everything.</span>
+              <span class="switch-desc">No emails or push notifications in this window. Emails are held and sent when it ends, push notifications are skipped; the portal still collects everything.</span>
             </div>
             <label class="toggle"><input type="checkbox" aria-label="Quiet hours" [checked]="notif().quietOn"
                    (change)="setNotif('quietOn', $any($event.target).checked)" /></label>

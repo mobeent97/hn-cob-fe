@@ -285,19 +285,27 @@ export interface PortalSettings {
 export type NotificationKind = 'order' | 'onboarding' | 'deletion' | 'device' | 'contract' | 'account';
 export interface AppNotification {
   id: number;
-  /** null = platform-level (only platform staff see it). */
+  /** The tenant the event is about (`organization.id`); null = platform-level. */
   orgId: number | null;
+  /** Its name, for the Organization label on cross-tenant screens. */
+  orgName: string | null;
+  /** `created_at`. */
   at: string;
   kind: NotificationKind;
   title: string;
   body: string;
-  /** Router link the notification opens. */
-  link: string[];
+  /** A platform-neutral portal route (`/audit?request=42`), opened with `navigateByUrl`; '' when there is none. */
+  link: string;
   read: boolean;
 }
+export interface NotificationChannels {
+  inApp: boolean;
+  email: boolean;
+  push: boolean;
+}
 export interface NotificationPrefs {
-  /** Per kind: shown in the portal, and/or sent by email. */
-  channels: Record<NotificationKind, { inApp: boolean; email: boolean }>;
+  /** Per kind: shown in the portal, sent by email, and/or pushed to the user's browsers and devices. */
+  channels: Record<NotificationKind, NotificationChannels>;
   /** Email digest instead of one email per event. */
   digest: 'off' | 'daily' | 'weekly';
   /** Quiet hours, 24h "HH:MM"; null when off. */

@@ -58,6 +58,19 @@
   @apply pt-3;
 }
 
+.push-sk {
+  @apply mb-3 block h-14 w-full;
+}
+.row .push-row {
+  @apply mb-3 border-t-0 border-b border-line pt-0 pb-3.5 dark:border-dark-line;
+}
+.link-btn {
+  @apply mt-1 cursor-pointer self-start border-0 bg-transparent p-0 text-[13px] font-medium text-brand-600 dark:text-brand-300;
+}
+.link-btn:hover {
+  @apply underline underline-offset-3;
+}
+
 .digest {
   @apply border-t border-line pt-3.5 dark:border-dark-line;
 }

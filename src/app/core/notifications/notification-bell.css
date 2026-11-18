@@ -104,6 +104,12 @@ li:not(.unread) .text strong {
 .dot {
   @apply mt-1.5 size-2 flex-none rounded-full bg-brand-500;
 }
+.item.sk {
+  @apply cursor-default;
+}
+.failed {
+  @apply p-4;
+}
 .none {
   @apply px-5 py-10 text-center text-xs text-muted dark:text-brand-300;
 }

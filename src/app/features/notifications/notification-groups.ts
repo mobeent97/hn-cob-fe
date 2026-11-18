@@ -21,10 +21,10 @@ export interface DayGroup {
 }
 
 /** Rows arrive newest first; consecutive rows on the same day share a heading. */
-export function groupByDay(rows: AppNotification[]): DayGroup[] {
+export function groupByDay(rows: AppNotification[], today: Date = new Date()): DayGroup[] {
   const out: DayGroup[] = [];
   for (const n of rows) {
-    const label = dayLabel(n.at);
+    const label = dayLabel(n.at, today);
     const last = out[out.length - 1];
     if (last?.label === label) last.items.push(n);
     else out.push({ label, items: [n] });

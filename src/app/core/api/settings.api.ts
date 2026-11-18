@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { ApiEnvelope } from '../auth/auth.models';
 import { NotificationKind, NotificationPrefs, PortalSettings } from '../data/models';
+import { DEFAULT_NOTIFICATION_PREFS } from '../data/reference';
 import { apiUrl, unwrap } from './api-client';
 
 /** Settings API v1: portal settings and the signed-in user's notification preferences (SETTINGS_API.md). */
@@ -28,8 +29,15 @@ export interface SettingsPatch {
   login?: Partial<SettingsDto['login']>;
 }
 
+/** One kind's channels (PUSH_NOTIFICATIONS.md 1.4: a registry, so GET returns every registered channel). */
+export interface ChannelsDto {
+  in_app: boolean;
+  email: boolean;
+  push: boolean;
+}
+
 export interface NotificationPrefsDto {
-  channels: Record<NotificationKind, { in_app: boolean; email: boolean }>;
+  channels: Record<NotificationKind, ChannelsDto>;
   digest: 'off' | 'daily' | 'weekly';
   quiet: { from: string; to: string } | null;
   timezone: string;
@@ -70,16 +78,18 @@ export function settingsErrorKey(path: string): string {
 
 export function toPrefs(d: NotificationPrefsDto): NotificationPrefs {
   const channels = {} as NotificationPrefs['channels'];
-  for (const [k, v] of Object.entries(d.channels) as [NotificationKind, { in_app: boolean; email: boolean }][]) {
-    channels[k] = { inApp: v.in_app, email: v.email };
+  for (const [k, v] of Object.entries(d.channels) as [NotificationKind, Partial<ChannelsDto>][]) {
+    // A channel the server doesn't send yet keeps its contract default (effective value = stored or default).
+    const def = DEFAULT_NOTIFICATION_PREFS.channels[k] ?? { inApp: true, email: false, push: false };
+    channels[k] = { inApp: v.in_app ?? def.inApp, email: v.email ?? def.email, push: v.push ?? def.push };
   }
   return { channels, digest: d.digest, quiet: d.quiet ? { ...d.quiet } : null, timezone: d.timezone };
 }
 
 export function fromPrefs(p: NotificationPrefs): NotificationPrefsDto {
   const channels = {} as NotificationPrefsDto['channels'];
-  for (const [k, v] of Object.entries(p.channels) as [NotificationKind, { inApp: boolean; email: boolean }][]) {
-    channels[k] = { in_app: v.inApp, email: v.email };
+  for (const [k, v] of Object.entries(p.channels) as [NotificationKind, NotificationPrefs['channels'][NotificationKind]][]) {
+    channels[k] = { in_app: v.inApp, email: v.email, push: v.push };
   }
   return { channels, digest: p.digest, quiet: p.quiet ? { ...p.quiet } : null, timezone: p.timezone };
 }
