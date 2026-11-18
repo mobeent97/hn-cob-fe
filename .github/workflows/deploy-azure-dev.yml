@@ -36,6 +36,11 @@ jobs:
           node-version: 24
           cache: npm
 
+      # Use the npm that package.json names in packageManager (the one that wrote package-lock.json):
+      # the newer npm bundled with the runner's Node reports the lock file as out of sync.
+      - name: Use the project's npm
+        run: npm install -g --no-audit --no-fund "$(node -p "require('./package.json').packageManager")" && npm --version
+
       - run: npm ci --no-audit --no-fund
 
       - run: npm run build:azure-dev
