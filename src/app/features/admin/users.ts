@@ -22,8 +22,12 @@ type Draft = { id: number | null; orgId: number | null; name: string; email: str
 type Errors = Partial<Record<'orgId' | 'name' | 'email' | 'phone' | 'roles' | 'manager' | 'form', string>>;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
-/** USERS_API: `+<1–4 digit country code> <6–15 digits, spaces or dashes>`. */
-const PHONE_RE = /^\+\d{1,4}[ -][0-9][0-9 -]{4,18}[0-9]$/;
+/** USERS_API: `+`, country code and number (spaces or dashes optional), 8 to 15 digits in all. */
+const PHONE_RE = /^\+[0-9][0-9 -]{5,22}[0-9]$/;
+const phoneOk = (p: string) => {
+  const digits = p.replace(/\D/g, '').length;
+  return PHONE_RE.test(p) && digits >= 8 && digits <= 15;
+};
 const NO_COUNTS: UserCounts = { all: 0, active: 0, inactive: 0, invited: 0, never_signed_in: 0 };
 export const SUPERUSER_REASON = 'Superusers are managed with manage.py createsuperuser';
 
@@ -404,7 +408,7 @@ export class Users {
     else if (d.name.trim().length > 120) e.name = 'Keep the name under 120 characters.';
     if (!d.email) e.email = 'Enter their work email.';
     else if (!EMAIL_RE.test(d.email) || d.email.length > 254) e.email = 'Enter an email such as name@company.com.';
-    if (d.phone.trim() && !PHONE_RE.test(d.phone.trim())) e.phone = 'Include the country code, like +974 5512 3456.';
+    if (d.phone.trim() && !phoneOk(d.phone.trim())) e.phone = 'Include the country code, like +974 5512 3456.';
     if (d.orgId != null && !d.roleIds.length) e.roles = 'Choose at least one role.';
     const o = this.original();
     const admin = (ids: number[]) => ids.some((id) => this.dialogRoles().some((g) => g.id === id && isAdminRole(g)));
